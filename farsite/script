@@ -1,0 +1,24 @@
+the way to run: 
+.lcp| .input| igition.shp| barrier.shp| output_name_| (0)| 
+
+
+To see a shp file. 
+ ogrinfo -so -al 
+
+
+The output contains: 
+	1. ArrivalTime.asc  -----------------need to see output. 
+	2. CorwnFire.asc  
+	3. FlameLength.asc --------------------flam length.
+	4. HeatPerUnitArea.asc ------------------- see 
+	5. ignitions.asc ------------------------ why nothing. 
+	6. intensity.asc --------------------- oooh see 
+	7. Perimeters.asc 
+	8. reaction_intensity.asc ------------------------- what is reaction intensity? 
+	9. spotGrid.asc (0/1) ---- want to see output. 
+	10. spread_direction.asc 
+	11. Spread_rate.asc  ------------------- need see. 
+	12. igit_timings.txt ----- want to see output 
+
+
+

@@ -1,0 +1,1 @@
+$home/fangqiliu/Downloads/farsite-master/examples//examples/cougarCreek/input/cougarCreek.lcp <pathToFarsiteRepo>/farsite/examples/cougarCreek/input/cougarCreek.input <pathToFarsiteRepo>/farsite/examples/cougarCreek/input/cougarCreek_polygonIgnit.shp 0 <pathToFarsiteRepo>/farsite/examples/cougarCreek/output/cougarCreek_polygonIgnit 0

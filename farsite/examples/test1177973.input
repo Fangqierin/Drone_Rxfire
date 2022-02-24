@@ -1,0 +1,365 @@
+#
+
+############################################################################################################################################################################################
+## int main() is found in TestFARSITE.cpp. It immediately calls openMPMain() or linuxMain() inside itself. LinuxMain() checks the command line input, then parses the input file. ##########
+## it repeats the same actions for each line of the command line input file, first loading the single landscape file, then loading the single inputs file, then setting the ignitions ######
+## from the single ignition file, loads the single barrier file if available (0 if not), then launches farsite. After launching farsite, it uses the output setting to determine the  ######
+## desired output files. Then all the used up memory is garbage collected and the process is repeated for the next line of the command line input file.                               ######
+############################################################################################################################################################################################
+## This .input file is all about the LoadFarsiteInputs() function called in LinuxMain() of TestFarsite.cpp. The idea is to figure out all the possible inputs that are needed and     ######
+## possible for Linux Farsite, with exampless for each option. The files tend to be of the same appearance as the desired input. Explanations here do not cover an overall view of the ######
+## class structures, say the constructors, so look them up for yourself if you need to understand more. Also it is tough to put in how the verification of the input occurs, but an   ######
+## attempt to summarize how verification of inputs is done is present in the explanations here.                                                                                       ######
+############################################################################################################################################################################################
+## So the LoadFarsiteInputs() function is a member function of CFarsite found in FARSITE.cpp, FARSITE.h, and farsite.hpp. The constructor for each new CFarsite is run at the start of #####
+## each loop in LinuxMain(). CFarsite has a private data member which is a pointer to a Farsite5 class, which is found in Farsite5.cpp and Farsite5.h. This Farsite5 class appears to be ###
+## the heart of this Linux Farsite application, as it is huge and manages and holds all the other classes and all the workings of the whole application. Other stuff manages it, but it ####
+## is where all the different parts seem to come together. The CFarsite constructor creates an instance of the Farsite5 class calling the pointer to it m_pFarsite, so the Farsite5   ######
+## constructor is called here each time a new CFarsite is created. The Farsite5 class appears to inherit from the Burn, Attack, IgnitionFile, Vectorize, and ShapeFileUtils classes   ######
+## found in fsx4.hpp and fsxwburn4.cpp, fsxwattk.h and fsxwattk.cpp, fsxwignt.h and fsxwignt.cpp, fsx4.hpp and fsxwvect.cpp, fsxwshap.h and fsxwshap.cpp respectively. Note that these #####
+## are just the inherited classes, so many more classes are declared as members of the Farsite5 class.                                                                                 #####
+############################################################################################################################################################################################
+############################################################################################################################################################################################
+## CFarsite::LoadFarsiteInputs() in FARSITE.cpp basically only calls Farsite5::LoadInputsFile(char *inputFileName) from Farsite5.cpp. Farsite5::LoadInputsFile() is the heart of all the ###
+## inputs in farsite. Many of the functions it calls are actually of class ICF, which is found in icf_def.h, icf_chk.cpp, and icf_input.cpp where icf_def.h defines the class, icf_chk.cpp #
+## has all the input validation and error handling functions and data, and icf_input.cpp has all the functions for loading the input. The ICF class is actually quite well documented and ##
+## is fairly easy to read, but it appears to be a collection of inputs that are shared across more applications than farsite, hence why there is flammap, fconst, fsim, burnwindow,    #####
+## randig, and others. So there are functions available to farsite, but that aren't used in farsite. These also aren't changed much with the Assembla repository version of this code, #####
+## at least not for the farsite portion of it. ICF::Input() actually looks like it is used across each application, while stuff like ICF::FarsiteWindNinja() called by                 #####
+## ICF::InputFarsite() is the style of stuff that varies across each application. None of these farsite used stuff changes much.                                                       #####
+############################################################################################################################################################################################
+## Now Farsite5::LoadInputsFile() first runs ICF::InputFarsite() to load in ALL the inputs, or at least it does most of the loading (some things have filenames checked but the inputs #####
+## in a given file aren't always loaded in, especially for the newer stuff). Second Farsite5::LoadInputsFile() runs ICF::ValidateFarsite() which checks all those inputs for errors.   #####
+## Again note that while a lot of inputs are checked on the spot in ICF::InputFarsite(), this is more of an overall check to see if each thing has been set correctly for the simulation. ##
+## After ICF::ValidateFarsite() in Farsite5::LoadInputsFile(), most of the functions are Farsite5 functions that simply take all the stored information as is needed from the ICF class, ###
+## and loads the stored information into the actual containers used for the simulation that are data members of the Farsite5 class. So these are frequently data members that are actual ###
+## classes called and controlled by the Farsite5 class as part of its members. So data are loaded in from the ICF class into the Farsite5 class.                                      ######
+############################################################################################################################################################################################
+## Note that while much of the input data for the ICF class is checked on the spot to see if it is good format, when a data file is used instead of data in the .input file, it seems ######
+## like half the data files are loaded in on the spot, while many others are only validated that the files exist. So the data in files for half the cases aren't checked and the data ######
+## isn't loaded until the load functions in Farsite5. I think this was a way to avoid repetitions with loading info, but it makes it terribly confusing when trying to setup and trying ####
+## to understand how the verification of the data is done. Hence why I am trying to write this explanation .input file.                                                               ######
+############################################################################################################################################################################################
+## Finally, the Assembla Farsite had some extra lines at the end of Farsite5::LoadInputsFile() for opening and verifying the gridded winds atm file. Unfortunately because of the order, ###
+## when these gridded winds are finally used inside of farsite, as is found in the FELocalSite::GetFireEnvironment function defined in fsxwfms2.cpp, the error checking to determine    ####
+## which style of input winds to use isn't quite so clear. This won't be so much of a problem if some of the conflicting option handlers done in the ICF class are improved. Worse,     ####
+## it is going to be a lot of work to try to edit this gridded wind .atm file stuff to more correctly match the windows application format given at firelab.org.                        ####
+############################################################################################################################################################################################
+############################################################################################################################################################################################
+## So while at first glance it seems extremely organized cause of all the comments and the nice organization, the placement of the stuff is still kind of a mixed organization and the #####
+## format of a lot of stuff is not similar between many of the different inputs. Seems like it is a beautiful rats nest that looks great till you actually need to adjust it for more than #
+## a single exception. Once you need to edit even a little bit too much, not having all the verification consistently in one spot or the opening of files always verifying format on the ###
+## spot and some of the order of the validation stuff, it seems like there is a chance to mess things up without care.                                                                 #####
+############################################################################################################################################################################################
+####  The rest of this document is going to show all the inputs as they come in, in the order and class and function that calls them, with the needed format explained with exampless,   ####
+####  with explanations to try to get an idea of what is actually needed and what is optional and what exceptions should be thrown or what is a conflicting option, or if the functions ####
+####  are even used in the same way as everything else (cause yes there are tons of exceptions to what seems the closest to the normal format, like generate gridded winds and gridded  ####
+####  winds .atm file as these are checked as inputs but nothing appears to be done with them till outside or are halfway done inside and halfway done outside the ICF class. So they ######
+####  are very much exceptions to the norm).   Hope this helps :)                                                                                                                       ####
+############################################################################################################################################################################################
+
+
+############################################################################################################################################################################################
+################################  icf_input.cpp file, function ICF::Input, called by ICF::InputFarsite, called by Farsite5::LoadInputsFile  ################################################
+############################################################################################################################################################################################
+
+### required inputs: set FUEL_MOISTURES_DATA or FUEL_MOISTURE_FILE with same values/info
+### required values: fuelModel (0 is default set all to this), 1hr, 10hr, 100hr, liveH(herbatious), liveW(woody)
+### required values information: these are all values of the percent initial moisture. If conditioning is set, these values for each will be adjusted in the internal memory for shading, weather, and topography.
+#FUEL_MOISTURES_DATA: 1
+#0 3 4 6 70 100
+##
+#FUEL_MOISTURE_FILE: /home/latwood/Documents/windninjaPanther/test1177973/currentInput/test.fms
+### other information: note that FUEL_MOISTURES_DATA is directly loaded by ICF::FuelMoistData(), but FUEL_MOISTURE_FILE is only checked to see if it can open in ICF::Input(). The FUEL_MOISTURE_FILE data is loaded during Farsite5::LoadInputsFile() by the Farsite5::LoadFuelMoist() function. If there is a FUEL_MOISTURE_FILE, Farsite5::LoadFuelMoist() calls Farsite5::LoadFuelMoistureFile() to finally validate and get the fuel moistures data from the file. Both Farsite5::LoadFuelMoist() and Farsite5::LoadFuelMoistureFile() then call Farsite5::SetInitialFuelMoistures() to actually set the fuel moistures in the Farsite5 class. Hm, an issue that might come up later. The ICF fuel moistures then are only set when using the FUEL_MOISTURES_DATA, not the FUEL_MOISTURE_FILE, yet Farsite5::FMC_LoadInputs() used by Farsite5::Run_CondDLL() found in Far_Cond.cpp uses the ICF version, not the farsite5 version, and that appears called a lot in Farsite5::FarsiteSimulationLoop().
+
+
+### optional inputs: set CUSTOM_FUELS_FILE or CUSTOM_FUELS_DATA
+### required values: FMNum(Fuel Model Number), FMCode (Fuel Model Code), 1hr(1hr fuel loading), 10hr(10hr fuel loading), 100hr(100hr fuel loading), liveH(live Herbatious fuel loading), liveW(live Woody fuel loading), FMType(fuel model type), 1HSAV(1hr Surface to Volume Ratio) , LiveHSAV(live Herbatious Surface to Volume Ratio), LiveWSAV(live Woody Surface to Volume Ratio), Depth(fuel bed depth), XtMoist(moisture of extinction), DHt(dead fuel heat content), LHt(live fuel heat content), FMName(fuel model name)
+### required values information: FMNum(Fuel Model Number) is an integer between 14 and 89, FMCode (Fuel Model Code) is a user defined string of 7 chars, fuel loading is tones/acre or metric tonnes/hectare, FMType(fuel model type) is "static" or "dynamic", Surface to Volume Ratios are 1/ft or 1/cm, Depth(fuel bed depth) is ft or cm, XtMoist(moisture of extinction) is a percent, heat contents are BTU/lb or J/Kg, FMName(fuel model name) is a user defined string kind of like a comment
+#CUSTOM_FUELS_UNITS: English
+#CUSTOM_FUELS_DATA: 2
+#19 FM19 2.25 1.50 3.71 0.00 1.00 static 2000 1800 1500 0.60 25 8000.00 8000.00 Between 8 & 10
+#21 FM21 2.00 0.00 0.00 0.00 0.50 static 3000 1800 1500 1.00 14 8000.00 8000.00 Light green grass
+##
+### other information: note that CUSTOM_FUELS_DATA is directly loaded by ICF::CustomFuelData(), but CUSTOM_FUELS_FILE is only checked to see if it can open in ICF::Input(). The CUSTOM_FUELS_FILE data is loaded during Farsite5::LoadInputsFile() by the Farsite5::LoadCustomFuelsData() function. If there is a CUSTOM_FUELS_FILE, Farsite5::LoadCustomFuelsData() calls Farsite5::LoadCustomFuelFile() to finally validate and get the fuel moistures data from the file. Farsite5::LoadCustomFuelFile() appears to load the data directly into the Farsite5 style class without calling a function, while Farsite5::LoadCustomFuelsData() does it by calling the Farsite5::SetNewFuel() function. The way Farsite5::LoadCustomFuelFile() deals with data validation seems more sophisticated than all the other types of custom fuel validation and can even handle old custom fuel file formats.
+
+
+### required inputs: RAWS or RAWS_FILE with same values/info or WEATHER_FILE or WEATHER_DATA with same values/info or and WIND_FILE or WIND_DATA
+### required values RAWS: year, month, day, hour/time, temp(temperature), humid(humidity), ppt(hourly precipitation), wspeed(wind speed), wdir(wind direction), cldcover(cloud cover)
+#RAWS_ELEVATION: 4159
+#RAWS_UNITS: English
+#RAWS: 2
+#2013 4 26 1200 77 26 0.00 4 220 25
+#2013 4 26 1300 79 23 0.00 4 225 32
+##
+#RAWS_FILE: /home/latwood/Documents/windninjaPanther/test1177973/currentInput/test.raws
+### other information RAWS: Appears to only like values, not file names of gridded information even though this is basically what a wind and weather .atm file is for the windows version
+### other information RAWS: note that both RAWS and RAWS_FILE are directly read in the data using ICF::RAWS_WeatherData() and ICF::RAWS_WeatherDataFile(), so RAWS_FILE does not just check to see if the file can be opened like some other inputs. Year is there but isn't actually used, and actually appears to be replaced with a pseudo year, as the last line of RAWS data is duplicated to add in another 6 hours of RAWS data. There is some strange stuff going on with the dates/time of the input wind and weather data compared to the FARSITE_END_TIME, probably related to how much data is needed for each thing. Just trying to use the RAWS vs wind and weather data, it appears that RAWS times can go all the way up perfectly to FARSITE_END_TIME, but the wind and weather need something like 60 minutes of buffer time, so one timestep of extra data past the FARSITE_END_TIME. Validation and use of the RAWS is done when doing checks against wind and weather data, as well as a ton by the fuel conditioning class, so maybe the fuel conditioning and time of the burn is what makes the dates/time so complex. Interestingly, the RAWS data verifier is actually found in icf_inputs.cpp not in icf_chk.cpp like normal for most everything else, and is run immediately upon receiving the data. Finally, the RAWS data is loaded into the farsite5 class during Farsite5::LoadInputsFile() by the Farsite5::LoadWind_RAWS() function, as Farsite5::LoadWind_Table() determines whether the needed wind data comes from RAWS data or from Wind data. Interesting to note is that in this RAWS loading into farsite5, it only loads the wind data, not the weather, and has a note saying the weather isn't needed, so the RAWS weather isn't loaded during most of the regular input steps, even in Farsite5::LoadInputsFile(). The weather part appears to get loaded in the conditioning stuff.
+######
+### required values WEATHER: month, day, precip(daily precipitation), hour1(hour minimum temperature recorded), hour2(hour maximum temperature recorded), temp1(minimum temperature), temp2(maximum temperature), humid1(maximum humidity), humid2(minimum humidity), elevation, rt1(precipitation start time), rt2(precipitation end time)
+### required values information WEATHER: daily precipitation is hundredths of inches or milimeters and evenly distributed during the precipitation period (rt1 and rt2), valid times for hour1, hour2, rt1, and rt2 are between 0 and 2300, temperatures are degrees Fahrenheit or Celsius, humidities are percent, elevation is feet or meters above sealevel and doesn't have to match the landscape elevation, all this at least according to firelab farsite distribution. Seems to get mad if precip is zero and the rt1 and/or rt2 exist.
+#WEATHER_DATA_UNITS: English
+#WEATHER_DATA: 2
+#4 25 07 600 1800 74 81 40 20 4159 1830 2000
+#4 26 00 600 1800 75 79 28 24 4159
+##
+#WEATHER_FILE: /home/latwood/Documents/windninjaPanther/test1177973/currentInput/test.wtr
+### other information WEATHER: note that both WEATHER_DATA and WEATHER_FILE are directly read in the data using ICF::WeatherDataCmd() and ICF::WeatherDataFile(), so WEATHER_FILE doesn't just check to see if the file can be opened like some other inputs. The weather data is loaded into the farsite5 class during Farsite5::LoadInputsFile() by the Farsite5::LoadWeatherStream function. While year isn't an input, it still exists as part of the weather data struct in icf_def.h
+######
+### required values WIND: month, day, hour, speed, direction, cloudCover
+### required values information WIND: wind is either 20ft in mph or (6.096 m I think) in km/hr. The windows version allows wind direction to be -1 for uphill and -2 for downhill winds but is usually 0 to 359. Interestingly this format seems the same as the .atm winds only file which is the gridded wind output from WindNinja, but the function that reads this input appears to only want values and not filenames. So it is still a domain average wind of that format, not gridded wind. There is a separate function called gridded wind diurnal that allows this, but I don't think the farsite internals are set to handle this function. Both of these gridded wind functions are flammap initialization only so they are currently not in use (farsite initialization does not use them!). Interestingly all these inputs that are farsite only that I am putting in here are actually the same function call used by flammap as well. We just added a new farsite .atm stuff that does do the gridded winds the right way.
+#WIND_DATA_UNITS: English
+#WIND_DATA: 2
+#8 10 0   1 54 0
+#8 10 100 2 67 0
+##
+#WIND_FILE: /home/latwood/Documents/windninjaPanther/test1177973/currentInput/test.wnd
+### other information Wind: note that both WIND_DATA and WIND_FILE are directly read in the data using ICF::WindDataFile() and ICF::WindData(), so WIND_FILE doesn't just check to see if the file can be opened like some other inputs. The wind data is loaded into the farsite5 class during Farsite5::LoadInputsFile() by the Farsite5::LoadWind_Regular() function, as Farsite5::LoadWind_Table() determines whether the needed wind data comes from RAWS data or from Wind data.
+#####
+### other information: error handling for invalid farsite start and end times is usually caused by missing the required combination of these wind and weather files.
+
+
+### optional input: ROS_ADJUST_FILE
+### required values: just filename with path to file
+### required values in file according to Windows Farsite: FuelMod, AdjustmentFactor
+### other information Windows Farsite inputs: FuelMod is an integer value between 1 and 256 where 1-13 are restricted to the 13 standard fire behavior models used by original Rothermel, some numbers 90-219 are reserved for Scott and Burgan models, and models 14-89 are custom fuel models specified in the custom fuels file stuff.
+# windows examples:
+# 01 1.000
+# 02 1.000
+# 03 0.500
+# 04 0.750
+# 05 1.000
+# . . . .
+##
+#ROS_ADJUST_FILE: /home/latwood/Documents/windninaPanther/test1177973/currentInput/test.adj
+### other information: this is technically checked for between the RAWS and the WEATHER, though those data and WIND are grouped together in required use. Interestingly there isn't a data version of this and it just checks that the file exists and can be opened without reading in or testing the data. The data is loaded in Farsite5::LoadROSAdjustFile() during Farsite5::LoadInputsFile(). Turns out that the windows examples matches the Linux farsite version.
+
+
+### might be optional input: FOLIAR_MOISTURE_CONTENT
+### required values: just a single number between 0 and 100 percent, an integer
+#FOLIAR_MOISTURE_CONTENT: 70
+### other information: is just set and validated that it is a number and not a string, so validation comes after many more inputs. It is loaded during Farsite5::LoadInputsFile() by Farsite5::LoadFoliarMoist(), which calls Farsite5::SetFoliarMoistureContent(). For some odd reason Farsite5::SetFoliarMoistureContent() lets the content be above 100%.
+
+
+### might be optial input: CROWN_FIRE_METHOD
+### required values: text of the method
+#CROWN_FIRE_METHOD: Finney
+#CROWN_FIRE_METHOD: Reinhardt
+### other information: is just set so any validation on whether it is a good value comes after many more inputs. It is loaded during Farsite5::LoadInputsFile() by Farsite5::LoadCrownFireMethod().
+
+
+### optional input: ANALYSIS_AREA_EAST or ANALYSIS_AREA_WEST or ANALYSIS_AREA_NORTH or ANALYSIS_AREA_SOUTH
+### required values: text of the method
+#ANALYSIS_AREA_EAST: 
+#ANALYSIS_AREA_WEST: 
+#ANALYSIS_AREA_NORTH: 
+#ANALYSIS_AREA_SOUTH: 
+### other information: is just set so any validation on whether it is a good value comes after many more inputs, heck could probably set all these at once probably. It is for running a subset of the landscape. Looks like if it is a number, it just sets some variable to true. Turns out that while these can be set, there is nothing in the code that currently uses them.
+
+
+### might be optional input: SPOTTING_SEED
+### required values: just a single number for the total amount of expected spots
+#SPOTTING_SEED: 253114
+### other information: is just set and validated that it is a number and not a string, so validation of whether it is a proper value comes after many more inputs. In the later section, the rest of the needed spotting variables are set. This is used/loaded during Farsite5::LoadInputsFile() by Random::SetFixedSeed() from the rand3.cpp, after loading and using a bunch of other spotting variables.
+ 
+
+############################################################################################################################################################################################
+#######   Note that while this is run, so a bunch more windninja input variables are checked, nothing appears to be done with them! So they are verified, but not used.           ##########
+################                icf_input.cpp file, function ICF::FarsiteWindNinja, called by ICF::InputFarsite, called by Farsite5::LoadInputsFile             ############################
+############################################################################################################################################################################################
+
+### optional input: GRIDDED_WINDS_GENERATE
+### required values: Yes or No
+#GRIDDED_WINDS_GENERATE: Yes
+### other information: while this is checked, all the gridded winds variables are only used by ICF::InputFlammap which is never used by ICF::InputFarsite, so I don't think it is ever actually used. I tried running a simulation with this set to "Yes" and nothing changed, it used my wind data that I supplied. Trying to look up usage for all these farsiteWindNinja variables shows them used in various WindNinja functions found in Far_WN.cpp, but again it looks like they exist as a checked input, but are never actually used for anything.
+
+### optional input: GRIDDED_WINDS_HEIGHT
+### required values: not sure, don't even see a units to go with it
+#GRIDDED_WINDS_HEIGHT: 20
+### other information: only appears to be checked to see if it is a number and not a string
+
+### optional input: GRIDDED_WINDS_RESOLUTION
+### required values: not sure, don't even see a units to go with it
+#GRIDDED_WINDS_RESOLUTION: 30
+### other information: only appears to be checked to see if it is a number and not a string
+
+### commented out input: GRIDDED_WINDS_LONGITUDE
+### required values: a value between -180.0 and 180.0
+###GRIDDED_WINDS_LONGITUDE: 140
+### other information: only appears to be checked to see if it is a number and not a string
+
+### commented out input: GRIDDED_WINDS_TIMEZONE
+### required values: a value between -12 and 12 where -7 is Mountain time and -6 is Mountain daylight savings time
+###GRIDDED_WINDS_TIMEZONE: -7
+### other information: only appears to be checked to see if it is a number and not a string
+
+### optional input: GRIDDED_WINDS_DIRECTION_BIN
+### required values: not sure, don't even see a units to go with it
+#GRIDDED_WINDS_DIRECTION_BIN: 180
+### other information: only appears to be checked to see if it is a number and not a string
+
+### optional input: GRIDDED_WINDS_SPEED_BIN
+### required values: not sure, don't even see a units to go with it
+#GRIDDED_WINDS_SPEED_BIN: 5
+### other information: only appears to be checked to see if it is a number and not a string
+
+
+############################################################################################################################################################################################
+#################################             icf_input.cpp file, function ICF::InputFarsite, called by Farsite5::LoadInputsFile, continues             ####################################
+############################################################################################################################################################################################
+
+### required inputs: FARSITE_END_TIME and FARSITE_START_TIME
+### required values: Mt/Dy Hr:Mn (12/19 1020)  or  Mt Dy Hr:Mn (12 19 1020)  or   Mt Dy Hr Min (12 19 10 20)
+#FARSITE_END_TIME: 05 06 2000
+#FARSITE_START_TIME: 05 03 1200
+### other information: The ICF::Set_Date() function is used for other date inputs as well, and basically just checks to see if the date is a valid number, not if it is within realistic limits. Part of the realistic limits involves checking the FARSITE_START_TIME and FARSITE_END_TIME against weather and wind data start and end times. Because this validation against the wind and weather occurs before checking if wind and weather exist, there are some rather cryptic and buggy things going on with these inputs. Note that if the input file has nothing, it first warns of fuel moisture data being missing, if that is supplied, it warns of the FARSITE_START_DATE being off, if that date is supplied it gets mad because it can't verify it against the weather date. So even though a bunch of options are required, the program acts like they aren't until the final validation, and it doesn't even do that very well. The data are loaded using Farsite5::SetStartMonth(), StartDay(), StartHour(), EndMonth(), EndDay(), EndHour(). Note that there is no use of Farsite5::SetStart or End Year(), so the year may not be directly used.
+
+### required inputs: FARSITE_TIMESTEP
+### required values: just a number
+#FARSITE_TIMESTEP: 60
+### other information: only appears to be checked to see if it is a number and not a string. While the inputs are loaded by Farsite5::SetActualTimeStep() during Farsite5::LoadInputsFile(), it is just a simple set the value from icf to farsite5.
+
+
+### commented out inputs: FARSITE_SECONDARY_VISIBLESTEP
+### required values: just a number
+#FARSITE_SECONDARY_VISIBLESTEP: 180
+### other information: only appears to be checked to see if it is a number and not a string. There are no functions currently set to load this input.
+
+
+### commented out inputs: FARSITE_VISIBLESTEP
+### required values: just a number
+#FARSITE_VISIBLESTEP: 120
+### other information: only appears to be checked to see if it is a number and not a string. There are no functions currently set to load this input.
+
+
+### required inputs: FARSITE_DISTANCE_RES
+### required values: just a number
+#FARSITE_DISTANCE_RES: 30.0
+### other information: only appears to be checked to see if it is a number and not a string. While the inputs are loaded by Farsite5::Farsite5::SetDistRes() during Farsite5::LoadInputsFile(), it is just a simple set the value from icf to farsite5.
+
+
+### required inputs: FARSITE_PERIMETER_RES
+### required values: just a number
+#FARSITE_PERIMETER_RES: 60.0
+### other information: only appears to be checked to see if it is a number and not a string. While the inputs are loaded by Farsite5::SetPerimRes() during Farsite5::LoadInputsFile(), it is just a simple set the value from icf to farsite5.
+
+
+### required inputs: FARSITE_SPOT_GRID_RESOLUTION
+### required values: just a number
+#FARSITE_SPOT_GRID_RESOLUTION: 15.0
+### other information: only appears to be checked to see if it is a number and not a string. This is not really loaded but is used directly from the ICF class. Instead, if it has not received a set value, it instead receives a value of zero as can be seen during Farsite5::LoadInputsFile().
+
+
+### required inputs: FARSITE_MIN_IGNITION_VERTEX_DISTANCE
+### required values: just a number
+#FARSITE_MIN_IGNITION_VERTEX_DISTANCE: 15.0
+### other information: only appears to be checked to see if it is a number and not a string. This is not really loaded but is used directly from the ICF class in the StandardizePolygon::RemoveIdenticalPoints() function found in fsxwignt.cpp.
+
+
+### required inputs: FARSITE_SPOT_IGNITION_DELAY
+### required values: just a number
+#FARSITE_SPOT_IGNITION_DELAY: 0
+### other information: only appears to be checked to see if it is a number and not a string. While the inputs are loaded by Farsite5::IgnitionDelay() during Farsite5::LoadInputsFile(), it is just a simple set the value from icf to farsite5.
+
+
+### required inputs: FARSITE_SPOT_PROBABILITY
+### required values: just a number between 0 and 100
+#FARSITE_SPOT_PROBABILITY: 0.05
+### other information: only appears to be checked to see if it is a number and not a string. This one is interesting because it is checked during Farsite5::LoadInputsFile() to enable spotting and spot fire growth before setting the probability of ignition through the Farsite5::PercentIgnition() function.
+
+
+### required inputs: FARSITE_ACCELERATION_ON
+### required values: just a number 0 for no and 1 for yes
+#FARSITE_ACCELERATION_ON: 1
+### other information: only appears to be checked to see if it is a number and not a string. While the inputs are loaded by Farsite5::SetAccelerationON() during Farsite5::LoadInputsFile(), it is just a simple set the value from icf to farsite5.
+
+
+### required inputs: FARSITE_MINIMUM_SPOT_DISTANCE
+### required values: just a number
+#FARSITE_MINIMUM_SPOT_DISTANCE: 30
+### other information: only appears to be checked to see if it is a number and not a string. This is not really loaded but is used directly from the ICF class in the Embers::Flight() function found in fsxwspot.cpp.
+
+
+### optional inputs: FARSITE_BURN_PERIODS
+### required values: Month, Day, HourStart, HourEnd
+#FARSITE_BURN_PERIODS: 4
+#05 03 1200 1959
+#05 04 1200 1959
+#05 05 1200 1959
+#05 06 1200 1959
+### other information: doesn't appear to have the option of doing file input. Sets a year by using some tricks with the month and day. It is loaded during Farsite5::LoadInputsFile() by Farsite5::LoadBurnPeriods().
+
+
+### optional inputs: FARSITE_IGNITION_FILE
+### required values: not sure
+#FARSITE_IGNITION_FILE: filepath/filename
+### other information: only appears to open the file to see if it exists. Confusing thing is that ignitions are already supplied in the command line input, so is this for additional ignitions?
+### more information: looks like it is actually the past way to load in the ignition file, but it looks like a way to forcibly override the command line ignition file, as it just copies over the input file string. But the input file is loaded before the ignition file in the command line, so the ignition file loaded in the input file should be overloaded by the command line ignition file. Fortunately, the Farsite5::CreateIgnitionGrid() function deletes all past ignition grid stuff before recreating itself, so I don't think there is a memory leak.
+
+
+### optional inputs: FARSITE_BARRIER_FILE
+### required values: not sure
+#FARSITE_BARRIER_FILE: filepath/filename
+### other information: only appears to open the file to see if it exists. Confusing thing is that a barrier file is already supplied in the command line input, so is this for additional barriers?
+### more information: This isn't verified or loaded, at least not until Farsite5::LaunchFarsite(), and the loading is done by Farsite5::SetBarrier(). Since this is loaded during Farsite5::LaunchFarsite(), the FARSITE_BARRIER_FILE that is loaded in gets overwritten by the command line barrier file.
+
+
+### required inputs: FARSITE_FILL_BARRIERS
+### required values: just a number 0 for no and 1 for yes
+#FARSITE_FILL_BARRIERS: 1
+### other information: only appears to be checked to see if it is a number and not a string. This is never loaded, but is directly used in Farsite5::SetBarrier(). The default is to always use the input barrier file, so I guess it can be overridden to ignore the barrier file if this is set to 0.
+
+
+### new and supposed to be optional inputs: FARSITE_ATM_FILE
+### required values: month, day, hour, speedFile, dirFile
+### other information: month, day, and hour are just values, speedFile and dirFile are ascii files. You can supply more than a single line of this information, but not the same times and the ascii grids have to cover the extent of the landscape file.
+#FARSITE_ATM_FILE: /home/latwood/Documents/windninjaPanther/test1177973/currentInput/test.atm
+### other information: This is newly added to the code and so is not done the same as the conventional means. The file is checked to see if it will open, but everything is only loaded during Farsite5::LoadInputsFile() using all the CWindGrids and CAtmWindGrid class functions in Farsite5. It looks like the everything is first loaded, with only verification of the format, during CWindGrids::Create(). CWindGrids::Create() loads in each line of the .atm file as a separate time of winds by using the CAtmWindGrid::Load() function on each line, and stuffing each of the resulting CAtmWindGrid created class variables into the std::vector<CAtmWindGrid *> m_vpGrids member of CWindGrids, where the CAtmWindGrid::Load() function stores all the values of the given time into the data members of each created CAtmWindGrid class. Then verification of whether the types of inputs work correctly is done by CWindGrids::CheckCoverage() and CWindGrids::CheckTimes() right after running CWindGrids::SetSimTimes() to organize all the stored .atm wind information by time. CWindGrids::CheckCoverage() compares the read in resolutions from the wind and speed files found in the .atm file, with the grid resolution. Technically I think it uses something with the corners to do this, but the important thing is it checks to see if the winds cover enough of the domain. CWindGrids::CheckTimes() appears not to check if there are repeated times, or if the times match the simulation, but rather if the simulation time was correctly set by CWindGrids::SetSimTimes(). So the simulation time should be zero by that point.
+
+
+############################################################################################################################################################################################
+################                                 Now function ICF::InputFarsite(), called by Farsite5::LoadInputsFile(), has finished                                  #####################
+##########         so Farsite5::LoadInputsFile() continues with true validation of all above inputs instead of just the simple validation mentioned up to this point         ###############
+################                            So the above inputs are placed in the order the program reads them in and does stuff with them                             #####################
+###################                               but all proceeding sections are about the order that all these inputs are validated                              #########################
+############################################################################################################################################################################################
+###################                                all inputs not mentioned above are either used by ICF::InputFlammap, or not at all                              #########################
+############################################################################################################################################################################################
+#################################           Farsite5::LoadInputsFile() continues, focus is on ICF::ValidateFarsite() found in icf_chk.cpp               ####################################
+############################################################################################################################################################################################
+
+
+### ICF::ChkFueMoi() is run by ICF::ValidateFarsite(), checks to make sure that either FUEL_MOISTURES_DATA or FUEL_MOISTURE_FILE are used, an error if none or if both. Checks each of the resulting moisture data to see if they are within the limits of 2 to 300 percent. Also checks to make sure that only one default model is specified. The verification to make sure the model numbers are reasonable (less than 256) is done in Farsite5::SetAllMoistures() called by Farsite5::LoadFuelMoist() and Farsite5::LoadFuelMoistureFile() during Farsite5::LoadInputsFile().
+
+### ICF::ChkFolMoi() is run by ICF::ValidateFarsite(), checks to make sure that FOLIAR_MOISTURE_CONTENT is set, an error if it is not. Checks to make sure the foliar moisture content is between 0 and 200 percent. Farsite5::LoadFoliarMoist(), called during Farsite5::LoadInputsFile(), sets FOLIAR_MOISTURE_CONTENT to a default value of 100 percent if it wasn't set in the inputs, so I guess FOLIAR_MOISTURE_CONTENT is actually treated as a semi-optional parameter.
+
+### ICF::Chk_FarsiteStartEnd() is run by ICF::ValidateFarsite(), calls ICF::Chk_FarsiteDate() on both the start and end dates. ICF::Chk_FarsiteDate() runs a ton of different date and time functions to make sure the dates are valid and to deal with leap years and a bunch of other time phenomenon, to make sure the days fit within the limit of the days of a given month, and to make sure that the hours are between 0 and 2359. Then the most important and confusing part of this whole date/time stuff, it checks the FARSITE_START_TIME or FARSITE_END_TIME, whichever is the current one to be checked, to see if they correctly match the start and end times of the whatever weather data is loaded. All these comparisons come from i_FarTotMin which is the FARSITE_START_TIME or FARSITE_END_TIME date converting the years and days and minutes of the date to total minutes, and from i_WtrTotMin which is the weather or RAWS version of the same thing, either the first weather or RAWS data entry or the last depending on if ICF::Chk_FarsiteDate() is being run for FARSITE_START_TIME or FARSITE_END_TIME. Unfortunately I have no idea if the validation has been done to make sure this weather data is even validated to be correct data and in proper order, for sure it is assumed to exist at this point even if it does not based off of the error messages that pop up starting from a blank inputs file.
+### If it is RAWS weather, the times can go right up to be equal, but for regular weather, the times need a buffer since the conditioning goes past the FARSITE_END_TIME. So for RAWS, FARSITE_START_TIME has to be at least greater than and not equal to the starting RAWS time, whereas for regular weather, FARSITE_START_TIME has to be at least a whole day greater than but not equal to the starting weather time. Now for the end times, for RAWS, FARSITE_END_TIME has to be at least less than but not equal to the last RAWS time less the FARSITE_TIMESTEP. So basically at least less than what seems like almost one step back in the last of the RAWS weather data. For regular weather, FARSITE_END_TIME has to be at least less than but not equal to the last weather data time.
+### Important to note is that while there are these restrictions on the times, there are situations where you try to make the FARSITE_END_TIME be smaller or the FARSITE_START_TIME be greater, but then run into other errors, so it seems like at times certain datasets won't even allow the simulation to run. For examples, with the following last line of RAWS:
+#2013 5 6 2000 51 82 0.00 7 220 65
+## and the following last line of Weather:
+#5 6 0 700 1300 48 57 82 65 4159
+## a FARSITE_END_TIME of 05 06 2000, seems to work great for the RAWS, but is somehow way too big for the Weather. In the end, a FARSITE_END_TIME of 05 06 100 is too big, and even of 05 06 001 is too big. A FARSITE_END_TIME of 05 06 0 works great, but naturally the simulation doesn't run as long. A FARSITE_END_TIME of 05 05 2359 is also fine. Hm, can't get the other problem to repeat. Also is important it appears that somehow it counts the last day of a given weather entry as 2359 minutes instead of using the last hour of data.
+
+### ICF::Chk_FarsiteCondInputs() is run by ICF::ValidateFarsite(), checks the wind and weather data to verify that there is both wind and weather data, either by RAWS that has both, or separate wind and weather not RAWS. Must have RAWS or wind and weather. Then if the data is not RAWS, ICF::Chk_FarsiteCondInputs() runs ICF::ChkWeather(), ICF::ChkWind(), and ICF::ChkWeaWinDay(). If the original checks say there is only RAWS data, then ICF::Chk_FarsiteCondInputs() runs ICF::Chk_RAWSData(). 
+## ICF::ChkWeather() checks to make sure that the time in the weather data is valid and that, that the daily precipitation is between 0 and 10000 in 100th of an inch (ex 10 = 0.1 inches) , that the humidity is within 1 and 100 percent, that the elevation is within 0 and 14000 whatever the units are probably ft, checks to make sure the precip start and end time exist if there is any precip, and don't exist if there isn't any precip. Then it checks to make sure the days are consecutive and that there aren't any repeated dates.
+## ICF::ChkWind() checks for valid dates, if the cloud cover is within 0 and 100 percent, and if there are any non-consecutive dates.
+## ICF::ChkWeaWinDay() checks to make sure the beginning and ending wind and weather dates match. Since weather is in terms of days, the hours aren't checked.
+## ICF::Chk_RAWSData() checks to make sure the dates are valid, makes sure that all times are consecutive (includes hours/mins this time), makes sure there are no repeated times, and that there is never more than 12 hours of time gap between any of the consecutive times.
+### so it almost seems like the problem with validating the farsite start and end times using the wind and weather should be solved by simply putting this checker function before the other.
+
+### ICF::ChkFarsiteTimeStep() is run by ICF::ValidateFarsite(), just makes sure that the FARSITE_TIMESTEP is within 1 and 360 minutes.
+
+### ICF::ChkFarsiteResolutions() is run by ICF::ValidateFarsite(), makes sure that FARSITE_DISTANCE_RES and FARSITE_PERIMETER_RES are within 1 and 500 probably ft. Also makes sure that FARSITE_PERIMETER_RES is less than FARSITE_DISTANCE_RES.
+
+### ICF::ChkFarsiteSpotProb() is run by ICF::ValidateFarsite(), just makes sure that FARSITE_SPOT_PROBABILITY is within 0 and 1 minute.
+
+### ICF::ChkFarsiteSpotGridResolution() is run by ICF::ValidateFarsite(), makes sure that if FARSITE_SPOT_GRID_RESOLUTION isn't set, it is given a default value later, but if FARSITE_SPOT_GRID_RESOLUTION is set, it makes sure the value is less than 5000.
+
+### ICF::ChkFarsiteSpotDelay() is run by ICF::ValidateFarsite(), makes sure that FARSITE_SPOT_IGNITION_DELAY is within 0 and 320 minutes.
+
+### ICF::ChkBurnPeriods_New() is run by ICF::ValidateFarsite(), makes sure the burn period data has all dates required, throws an error if they are out of order or if the end is before the start. Confusing to me is I want to say this input isn't even loaded until after this function is called, as it is loaded in Farsite5::LoadBurnPeriods().
+
+### ICF::ChkCustomFuels() is run by ICF::ValidateFarsite(), makes sure each custom fuel is within 14 and 256, that the moisture of extinction and a bunch of other values aren't negative, that the heats are not too large.
+
+
