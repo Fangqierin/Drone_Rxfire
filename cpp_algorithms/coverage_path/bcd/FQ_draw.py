@@ -15,7 +15,6 @@ import shapely
 import shapely.geometry
 from collections import defaultdict
 shape=[]
-
 from skimage.draw import polygon
 def get_hv_wh(BunsiteBound):
     """
