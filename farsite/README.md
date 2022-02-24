@@ -1,4 +1,4 @@
-## Here we use the [FARSITE model](firelab.org/https://www.firelab.org/project/farsite) to simulate the Rxfires. 
+## Here we use the [FARSITE model](https://github.com/firelab/farsite) to simulate the Rxfires. 
 ### To run this code: 
 
 ```
