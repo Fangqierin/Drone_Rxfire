@@ -7,7 +7,7 @@ sys.path.append('../../../')
 from cpp_algorithms.common_helpers import imshow, imshow_scatter
 from shapely.geometry import Point, Polygon
 from pathlib import Path
-from zipfile import ZipFile
+# from zipfile import ZipFile
 from geopy import distance
 from skimage import measure
 from skimage.draw import polygon
@@ -15,6 +15,7 @@ import shapely
 import shapely.geometry
 from collections import defaultdict
 shape=[]
+
 from skimage.draw import polygon
 def get_hv_wh(BunsiteBound):
     """
@@ -91,10 +92,9 @@ def UpadteEFA(Pmap, area_map,time,EFA):
 def logEFA(EFAdict, filename, shape, Res):
     f = open(filename, "w") 
     for key in EFAdict.keys():
-        row=EFAdict[key]
-        plt.scatter(list(row[0]/Res), list(row[1]/Res))
-        plt.show()
-        f.write(f"{key} {list(row[0]/Res)} {list(row[1]/Res)}\n")
+        row=np.array(EFAdict[key])
+        row=row
+        f.write(f"{key} {list(row[0])} {list(row[1])}\n")
         #print(f"{key} {list(row[0])} {list(row[1])}")
     f.close() 
 def GetEFA(filename):
@@ -104,8 +104,7 @@ def GetEFA(filename):
     print(len(lines)) 
     for line in lines: 
         print(f"FQ {line}")
-    
-    
+
 
 dir='/home/fangqiliu/eclipse-workspace/Fire_simulation/Fire_sim/farsite/Rxfire/Burn_1/output/'
 map2=[]
@@ -127,11 +126,8 @@ shape=area_map_.shape
 logEFA(EFAdict, "EFAdict.csv",shape, 10)
 GetEFA("EFAdict.csv")
 
+
 # EFA[EFA==0]=255
 # print(EFAdict)
 # imshow(EFA, figsize=(8, 8), cmap="cividis")   
 # plt.show()
-
-
-
-
