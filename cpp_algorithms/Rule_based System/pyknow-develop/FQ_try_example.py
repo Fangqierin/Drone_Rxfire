@@ -13,8 +13,6 @@ class Phase2(Fact):
     pass
 class Time(Fact):
     pass
-
-
 class TaskGenerator(KnowledgeEngine):
     @DefFacts()
     def startup(self):
@@ -73,7 +71,6 @@ class TaskGenerator(KnowledgeEngine):
     @Rule (Phase2(~L(-1))& AS.f<<Grid(state='B',id=MATCH.id,time=MATCH.t)& Phase2(MATCH.ct))
     def IM(self,f,id,t,ct):
         tasks[id]['IM']=max(t,ct)
-    
 Timer=0
 tasks=defaultdict(dict)
 t=TaskGenerator()
@@ -105,9 +102,6 @@ t.run()
 #print(t.facts)
 print(f"TASKS: {tasks}")
 print(t.facts)
-
-
-
 
 
 
