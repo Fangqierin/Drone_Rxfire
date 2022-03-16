@@ -60,7 +60,7 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0,CRS = f"EPSG:4326"):
         mix *= scale/mx
         mix = np.int64(mix)
         br,bc=mix.T # for the fire perimeter 
-        print(f"FQ see len prim {len(br)}")
+        #print(f"FQ see len prim {len(br)}")
         empty[br, bc]=0
         #print(f"FQ see {mix} {prim[0]}, {[0]+bc} {bc.shape}")
         prim[0]=prim[0]+list(br)
@@ -134,7 +134,7 @@ def PutIginition(filename,dir):
     os.system(c2)
     print(f"Run {c1}")
 
-shape=[]
+shape=[] 
 dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/Rxfire/Burn_1/output/Burn_1'
 map2=[]
 Pmap=[0]

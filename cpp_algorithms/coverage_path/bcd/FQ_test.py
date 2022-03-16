@@ -13,7 +13,6 @@ from common_helpers import imshow, imshow_scatter
 import matplotlib.pyplot as plt
 import geopandas as gpd
 from skimage.draw import polygon
-
 from common_helpers import get_all_area_maps, get_random_coords, get_area_map
 
 def visit(matrix, x, y, memory):
@@ -72,7 +71,6 @@ def bous_preprocess(area_map):
     matrix[area_map == 0] = 255
     #print(f"FQ area_map{area_map}   matrix  {matrix}")
     return matrix
-
 def AstarPath(M, Memory, path):
     for q in path:
         x=q[0]

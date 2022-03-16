@@ -16,7 +16,7 @@ class Time(Fact):
 class TaskGenerator(KnowledgeEngine):
     @DefFacts()
     def startup(self):
-        for i in range(100):
+        for i in range(3):
             yield (Grid(id=i,state='UK',time=0))
         yield (Time(Timer))
         yield(Phase2(-1))
