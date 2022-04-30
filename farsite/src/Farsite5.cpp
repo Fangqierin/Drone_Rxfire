@@ -8255,7 +8255,6 @@ int  Farsite5::FarsiteSimulationLoop()
 int i_Ret,  CondSw = 0;
 //bool b;
 //char cr_ErrMes[1000];
-printf("FQFQFQFQ: Are we in in FarsiteSimulationLoop!!! \n");
     i_Ret = 1;
 
 // Init the Burn Spot Grid Class, this keeps track of burned cells and spot hits
@@ -8328,7 +8327,6 @@ printf("FQFQFQFQ: Are we in in FarsiteSimulationLoop!!! \n");
 
 			if (ProcNum < 3) 				// if all inputs ready for FARSITE model
 			{
-				//printf("FQFQFQFQ: Did we get here ProcNum < 3?? !!! \n");
 				if (NextFireAfterInterrupt == 0)
 					CountFires();
 				if (ProcNum == 1)
@@ -10188,7 +10186,6 @@ bool Farsite5::InquireInBurnPeriod(double SimTime)
 {
 	if (!rbp)
 		return true;
-	//printf("FQFQFQFQ: See lastaccess %ld NumRelativeData  %ld \n", LastAccess, NumRelativeData);
 	for (long i = LastAccess + 1; i < NumRelativeData; i++)
 	{
 		if (SimTime > rbp[i].Start)
@@ -10814,9 +10811,9 @@ int Farsite5::CreateIgnitionGrid()
 		for(int s = 0; s < nShapes; s++ )
 		{
 			pShape = SHPReadObject( hSHP, s );
-			printf("FQ, See the  Shape: %d\n",pShape);
+			//printf("FQ, See the  Shape: %d\n",pShape);
 			//NumPts=0;
-			printf("FQ, See the ignition Shape: %d\n",pShape->nSHPType);
+			//printf("FQ, See the ignition Shape: %d\n",pShape->nSHPType);
 			//pShape->nSHPType=1; // Change the fire igintion method!!!!!!!!!!!!!!!!!!!!!!!
 			switch(pShape->nSHPType)
 			{
@@ -11264,7 +11261,6 @@ int Farsite5::WritePerimetersShapeFile(char *trgName)
 		VertexX = new double[NumVertices];
 		VertexY = new double[NumVertices];
 		VertexZ=new double[NumVertices];
-		//printf("FQFQFQFQFQ: see the perimData %d \n",NumVertices);
 		//ofstream myfile;
 		//myfile.open ("../Output/try.csv");
 		//myfile << NumVertices<<'\n';
@@ -11276,16 +11272,13 @@ int Farsite5::WritePerimetersShapeFile(char *trgName)
 			VertexZ[i] = 0.0;
 			/* FQFQFQFQFQ: I add this!*/
 			//myfile << VertexX[i]<<','<<VertexY[i]<<'\n';
-			//printf("FQFQFQFQFQ: see the perimData X %f Y %f  \n",VertexX[i],VertexY[i]);
 		}
 		//myfile.close();
-		//printf("FQFQFQFQFQ: see the NumParts  %d %d \n",NumParts,NumVertices);
 		pSHP = SHPCreateObject(nShapeType, -1, NumParts, NULL, NULL, NumVertices,
 			VertexX, VertexY, VertexZ, NULL);
 
 		//Seee FQFQ
 
-		//printf("FQFQFQFQFQ: see the perimData  minutes %d \n",perimData->GetElapsedMinutes());
 		if (perimData->GetElapsedMinutes()!=curtime){
 			if (curtime!=0){
 			SHPClose(hSHP2);}
@@ -11977,7 +11970,6 @@ void Farsite5::WritePerimeter2Shapefile(int num, long curFire)
 //int Farsite5::WritePerimeterCSV2( long CurFire)/// why there is a 1???
 //{
 //
-//	printf("FQFQFQFQ: Write CSV file.\nFile: %s");
 //
 //	char fName1[MAX_PATH];//, fName2[MAX_PATH];
 //	sprintf(fName1, "%.0f_%ld_%d_Perim1.csv", burn.SIMTIME, CurFire);

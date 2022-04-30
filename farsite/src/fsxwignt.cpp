@@ -88,7 +88,7 @@ void IgnitionFile::SelectFileInput()
 bool IgnitionFile::ShapeInput()
 {
 
-	printf("FQFQFQFQ: We are in the ShapeInput \n");
+	//printf("FQFQFQFQ: We are in the ShapeInput \n");
 	SHPHandle hSHP;
 	SHPObject* pSHP;
 	int nShapeType, nEntities;
@@ -112,7 +112,7 @@ bool IgnitionFile::ShapeInput()
 		}
 
 		NewFire = pFarsite->GetNewFires();
-		printf("FQFQFQFQ: What's the shapetype in shape input %d \n",nShapeType);
+		//printf("FQFQFQFQ: What's the shapetype in shape input %d \n",nShapeType);
 		//nShapeType=1; /////// I add thisssss!!!!!!!!!!!!!!!!!!!!!!!FQFQFQ
 		switch (nShapeType)
 		{
@@ -131,13 +131,13 @@ bool IgnitionFile::ShapeInput()
 				pFarsite->AllocPerimeter1(NewFire, 11); // FQFQFQ why it is 11?
 				CenterX = pFarsite->ConvertUtmToEastingOffset(pSHP->padfX[j]);
 				CenterY = pFarsite->ConvertUtmToNorthingOffset(pSHP->padfY[j]);
-				printf("FQFQFQFQ: Are we in in Points??? %ld %f %f \n", j,CenterX,pSHP->padfX[j]);
+				//printf("FQFQFQFQ: Are we in in Points??? %ld %f %f \n", j,CenterX,pSHP->padfX[j]);
 				for (k = 0; k <= 9; k++)// why it is 9
 				{
 					angle = (double (k) * (PI / 5.0) + PI / 2.0);
 					xpt = CenterX + (cos(angle) * startsize);
 					ypt = CenterY + (sin(angle) * startsize);
-					printf("FQFQFQFQ: Are we in in Points %f %f \n", xpt, ypt);
+					//printf("FQFQFQFQ: Are we in in Points %f %f \n", xpt, ypt);
 					pFarsite->SetPerimeter1(pFarsite->GetNewFires(), k, xpt, ypt);
 					pFarsite->SetFireChx(pFarsite->GetNewFires(), k, 0.0, 0.0);
 					pFarsite->SetReact(pFarsite->GetNewFires(), k, 0.0);
@@ -152,7 +152,7 @@ bool IgnitionFile::ShapeInput()
 		case SHPT_ARCZ:
 		case SHPT_ARCM:
 			for (m = 0; m < pSHP->nParts; m++)
-			{   printf("FQFQFQFQ : ) (: Are we in the  SHPT_ARC??? \n");
+			{   //printf("FQFQFQFQ : ) (: Are we in the  SHPT_ARC??? \n");
 				NewFire = pFarsite->GetNewFires();
 				start = pSHP->panPartStart[m];
 				if (m < pSHP->nParts - 1)
@@ -216,7 +216,7 @@ bool IgnitionFile::ShapeInput()
 		case SHPT_POLYGONZ:
 		case SHPT_POLYGONM:
 		case SHPT_MULTIPATCH:
-			printf("FQFQFQFQ: Are we in the  SHPT_MULTIPATCH??? \n");
+			//printf("FQFQFQFQ: Are we in the  SHPT_MULTIPATCH??? \n");
 			for (m = 0; m < pSHP->nParts; m++)
 			{
 				NewFire = pFarsite->GetNewFires();

@@ -67,7 +67,9 @@ def imshow_scatter(path, color="orange", alpha=1, s=20):
     Prints the points in the path
     """
     x,y = np.array(path).T
-    plt.scatter(y,x, color=color, alpha=alpha, s=s)
+    print(f"path",path)
+    #print(f"x,y",x,y)
+    plt.scatter(x,y, color=color, alpha=alpha, s=s)
 
 def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     """
@@ -76,9 +78,9 @@ def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     if r < 2 and c < 2 or i == 1:
         plt.figure(figsize=figsize)
     plt.subplot(r,c,i)
-    #ax = plt.imshow(area_map,interpolation='none',cmap=cmap)
     ax = plt.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower')
-    plt.axis('off');
+    #ax = plt.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower')
+    #plt.axis('off');
     return ax
 
 def plot(cp, alpha=0.8, color="lightblue"):
@@ -87,7 +89,7 @@ def plot(cp, alpha=0.8, color="lightblue"):
     """ 
     cp = np.array(cp)
     x,y = cp.T
-    plt.plot(y,x,alpha=alpha,color=color)
+    plt.plot(x,y,alpha=alpha,color=color)
 
 def get_random_coords(area_map,n=2,obs=-1):
     """
