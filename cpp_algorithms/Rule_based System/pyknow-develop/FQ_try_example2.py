@@ -25,7 +25,6 @@ class TaskGenerator(KnowledgeEngine):
     def CheckTime(self,t,f,ct):
         if ct<t:
             self.modify(f,_0=t)
-            #print(f"FQ, current time is {t}")
      ########## For reduce redundancy
     @Rule(AS.f<<DetectFire(id=MATCH.id,yes=True) & Grid(id=MATCH.id, state='B'),salience=1)
     def Remove_Dup(self,f,id):
@@ -35,15 +34,11 @@ class TaskGenerator(KnowledgeEngine):
     def Remove_Dup(self,f,id):
         self.retract(f)
         print(f"Got a duplicate detection at grid {id}")
-    
-    
-    
     # Add task Fire detection
     @Rule (AS.f<<Grid(state='UK',id=MATCH.i,time=MATCH.t))
     def FD(self,f,i,t):
         tasks[i]['FD']=t
         print(f"-->Add FD to grid {i}")
-    #ChangeState
     @Rule (AS.f1<<DetectFire(id=MATCH.id, yes=False,time=MATCH.t) & AS.f<<(Grid(state='UK', id=MATCH.id)))
     def ShiftUKtoN(self,f,f1,id,t):
         self.retract(f1)
@@ -78,19 +73,16 @@ class TaskGenerator(KnowledgeEngine):
     def all_students_passed(self,ct,f):
         print(f"=====Get into Phase 2=====  at {ct}")
         self.modify(f,_0=ct)
-        
     @Rule (Phase2(~L(-1))& AS.f<<Grid(state='N',id=MATCH.id,time=MATCH.t) & Phase2(MATCH.ct))
     def FT(self,f,id,t,ct):
         print(f"-->Add FT at grid {id}")
         tasks[id]['FT']=max(t,ct)
-        
     # Add task Intensity Monitor
     @Rule (Phase2(~L(-1))& AS.f<<Grid(state='B',id=MATCH.id,time=MATCH.t)& Phase2(MATCH.ct))
     def IM(self,f,id,t,ct):
         tasks[id]['IM']=max(t,ct)
         print(f"-->Add IM at grid {id}")
     
-
 Timer=0
 tasks=defaultdict(dict)
 t=TaskGenerator()

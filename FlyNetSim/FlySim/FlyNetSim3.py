@@ -39,7 +39,7 @@ if __name__ == "__main__":
                         type=int, default=1)
     parser.add_argument("-p", "--path", help="Path of the network simulator (NS-3)",
                         #type=str, default="/home/sbaidya/flynetsim-curr-git/UavNetSim/NetSim/ns-3.27")
-                        type=str, default="/home/fangqiliu/eclipse-workspace_Python/FlyNetSim/NetSim/ns-allinone-3.27/ns-3.27")
+                        type=str, default="/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/FlyNetSim/NetSim/ns-allinone-3.27/ns-3.27")
     parser.add_argument("-c", "--control", help="Type of Control (Default: 0): 0 - Individual, 1 - Group",
                         type=int, choices=[0, 1], default=0)
     parser.add_argument("-l", "--layout", help="Layout for multiple UAVs (Default: 0): 0 - Linear, 1 - Grid",

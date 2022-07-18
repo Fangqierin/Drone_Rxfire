@@ -48,6 +48,8 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
     #Res=30
     mn=np.array(BunsiteBound[:2])
     sh=(np.array(BunsiteBound[2:])-mn)# FQ change the boundary
+    sh[0]=math.ceil(sh[0])
+    sh[1]=math.ceil(sh[1])
     sh=np.int64(sh/Res)
     p = np.full(sh,NF) #FQ change that
     empty=np.full(sh,NF) #for record perimeter
@@ -73,11 +75,49 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
         p[r,c] = P 
         empty[r, c]=0
     x,y=np.where(empty==0)
-    #imshow(empty)
+    # imshow(empty)
+    # plt.show()
     # imshow(p)
     # plt.show()
     #print(f"FQ change to  {len(x)}")
     return p,[x,y]
+
+def get_raster_task(gpdf_final, scale=2000, BunsiteBound=0, NF=0, F=1, P=1, Res=1):
+    """
+    Returns rasterised version for the projection
+    """
+    #Res=30
+    mn=np.array(BunsiteBound[:2])
+    sh=(np.array(BunsiteBound[2:])-mn)# FQ change the boundary
+    sh[0]=math.ceil(sh[0])
+    sh[1]=math.ceil(sh[1])
+    sh=np.int64(sh/Res)
+    p = np.full(sh,NF) #FQ change that
+    empty=np.full(sh,NF) #for record perimeter
+    #prim=[[]for i in range(2)]
+    for i in range(len(gpdf_final)):
+        shp=gpdf_final.loc[i, 'geometry']
+        ext = np.array(shp.exterior.coords)
+        mix = (ext - mn)
+        mx=(np.array(BunsiteBound[2:])-mn).max()  #FQ changed that
+        mix1=np.ceil(mix/Res)#*3
+        mix1 = np.int64(mix1)
+        r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
+        p[r,c] = F
+        r,c=mix1.T # for the fire perimeter 
+        empty[r,c]=P
+        mix2=np.floor(mix/Res)#*30
+        mix2=np.int64(mix2)
+        r,c = polygon(*mix2.T,sh)
+        p[r,c] = F
+        r,c = mix2.T
+        empty[r, c]=P
+    x,y=np.where(empty==P)
+    # imshow(empty)
+    # imshow(p)
+    # plt.show()
+    #print(f"FQ change to  {len(x)}")
+    return p,empty
 def Firefront(maps):
     cu_map=maps[0]
     fu_map=maps[1]
@@ -102,15 +142,12 @@ def logEFA(EFAdict,Primdict, filename, shape, Res):
         for j in list(Primdict.get(key)[1]):
             f.write(f"{j},")
         f.write(f"\n")
-        #print(f"{key} {list(row[0])} {list(row[1])}")
     f.close() 
 def GetEFA(filename):
     lines = []
     with open(filename) as f:
         lines = f.readlines()  
-    #print(len(lines)) 
-    # for line in lines: 
-    #     print(f"FQ {line}")
+
 def PutIginition(filename,dir):
     tofile=f"{dir}_0_Perimeters"
     c1=f"cp {filename}.shp {tofile}.shp"
@@ -130,8 +167,6 @@ def UpadteEFA(Pmap, area_map,time,EFA, NF=-1, F=1, P=2): #    Get the estimated 
         tmp=area_map-Pmap     # Get first arrival time. 
         #imshow(area_map)
         EFA[tmp>0]=time
-        #imshow(EFA)
-        #plt.show()
         x,y=np.where(EFA==time)
     return EFA, x,y
   
@@ -146,6 +181,7 @@ def GetEFFNext(init,end, BunsiteBound, dir, foldername, Res=10):
     while time<=end:
         file=f"{dir}/{foldername}/output/{foldername}_{time}_Perimeters.shp"
         data=gpd.read_file(file)
+        #print(f"see time {time}")
         area_map_,prim= get_raster(data, scale, BunsiteBound, NF=-1, F=1, P=2, Res=Res)
         EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA)
         EFAdict[time]=[x,y]
@@ -156,43 +192,58 @@ def GetEFFNext(init,end, BunsiteBound, dir, foldername, Res=10):
     #logEFA(EFAdict, Primdict,"EFAdict.csv",shape, 10)
     return EFA, EFAdict, Primdict
 
+def GenTasks(init,end, BunsiteBound, dir, foldername, Missions, Res=10):#This is a temporal one! 
+    scale = get_scale(BunsiteBound, meter=1)
+    Taskdict={}
+    timestamp=3
+    time=init
+    Pmap=[0]
+    data=[]
+    for time in [init, end ]:
+        file=f"{dir}/{foldername}/output/{foldername}_{time}_Perimeters.shp"
+        data.append(gpd.read_file(file))
+    area_map1,prim1= get_raster_task(data[0], scale, BunsiteBound, NF=0, F=1, P=1, Res=Res)
+    area_map2,prim2= get_raster_task(data[1], scale, BunsiteBound, NF=0, F=1, P=1, Res=Res)
+    Taskdict['FI']=[init, area_map1,Missions['FI'][0],Missions['FI'][1]]
+    #Taskdict['FL']=[init, prim1,Missions['FL'][0],Missions['FL'][1]]
+    FTA=area_map2-area_map1+prim2
+    FTA[FTA>0]=1
+    #plt.show()
+    Taskdict['FT']=[init, FTA,Missions['FT'][0],Missions['FT'][1]]
+    BMA=np.full(area_map2.shape,0)
+    BMA[area_map2==0]=1
+    BMA[prim2==1]=0
+    Taskdict['BM']=[init, BMA, Missions['BM'][0],Missions['BM'][1]]
+    return Taskdict, area_map2.shape
+
 class Sensor:
     def _init_(self, Type='ALL', Pixel=1080, AFoV=math.pi*(60/180)):
         pass
 if __name__ == "__main__":
-    Tasks=defaultdict(dict)  #  task: period, priority, 
-    Tasks['f']=[5, 1]
-    Tasks['a']=[10, 3]
-    Tasks['BS']=[5, 1]
-    Tasks['FT']=[1, 3]
-    Tasks['FD']=[2, 3]
-    Tasks['FI']=[3, 1]
-    Tasks['FL']=[2, 2]
+    Missions=defaultdict(dict)  #  Missions: period, priority, 
+    Missions['BM']=[ 10, 1]  #Other area 
+    Missions['FI']=[ 5, 1]  #track the fire 
+    Missions['FT']=[ 3, 3]  # track the fire perimeter and the risky area (arrival within 10 min)
+    Missions['FL']=[ 3, 2]  # FL is tracking the fire perimeter.
+    Missions['FD']=[ 2, 3]
     ################ Get tasks.
     dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/'
     foldername='FQ_burn'
     BunsiteBound=(701235.0,4308525.0,704355.0,4311675.0)
     BunsiteBound=(702374.0,4309425.0,703700.0,4310900.0)
-    Bursite=(702474.4,4309711.3,703511.1,4310784.9 )
+    Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
+    
+    
+    
+    
     # igfile='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/Rxfire/Burn_1/input/FQburn'
     # PutIginition(igfile,dir)
     init=120
     end=150
     Res=10
-    EFA,EFAdict,Primdict =GetEFFNext(init,end,BunsiteBound,dir,foldername, Res=Res)
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #EFA,EFAdict,Primdict =GetEFFNext(init,end,BunsiteBound,dir,foldername, Res=Res)
+    Task_mission=GenTasks(init,end,Bursite,dir,foldername, Missions ,Res=Res)
+    #print(Task_mission)
 
 
 

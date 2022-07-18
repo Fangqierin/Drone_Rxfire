@@ -1,7 +1,7 @@
 import numpy as np
 from common_helpers import is_valid
 import matplotlib.pyplot as plt
-
+import matplotlib
 
 def imshow_scatter(path, color="orange", alpha=1, s=20):
     """
@@ -19,10 +19,69 @@ def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     if r < 2 and c < 2 or i == 1:
         plt.figure(figsize=figsize)
     plt.subplot(r,c,i)
-    ax = plt.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower')
-    #ax = plt.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower')
+    my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
+    my_cmap.set_bad(color='w', alpha=0)
+    lx,ly=area_map.shape
+    fig, ax = plt.subplots(1, 1, tight_layout=True)
+    for x in range(lx):
+        ax.axvline(x, lw=0.5, color='k')#, zorder=7)
+    for y in range(ly):
+        ax.axhline(y, lw=0.5, color='k')#, zorder=7)
+    #ax.imshow(area_map.T,interpolation='none',cmap=my_cmap,origin='lower')
+    ax.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower',extent=[0, lx, 0, ly],zorder=0)
+    plt.xlim(0, lx-1) 
+    plt.ylim(0,ly-1)
     #plt.axis('off');
     return ax
+
+def cluster_imshow(area_map,sc=1,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
+    """
+    Display with no interpolation.
+    """
+    sc=10
+    if r < 2 and c < 2 or i == 1:
+        plt.figure(figsize=figsize)
+    plt.subplot(r,c,i)
+    my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
+    my_cmap.set_bad(color='w', alpha=0)
+    lx,ly=area_map.shape
+    fig, ax = plt.subplots(1, 1, tight_layout=True)
+    # for x in range(lx):
+    #     ax.axvline(x, lw=0.5, color='k')#, zorder=7)
+    # for y in range(ly):
+    #     ax.axhline(y, lw=0.5, color='k')#, zorder=7)
+    for x in range(int(np.ceil(lx/sc))):
+        ax.axvline(x*sc, lw=3, color='k')#, zorder=7)
+    for y in range(int(np.ceil(ly/sc))):
+        ax.axhline(y*sc, lw=3, color='k')#, zorder=7)
+    #ax.imshow(area_map.T,interpolation='none',cmap=my_cmap,origin='lower')
+    ax.imshow(area_map.T,cmap=cmap,interpolation='none',extent=[0,lx,0,ly],origin='lower',zorder=0)
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.xlim(0, 40) 
+    plt.ylim(20,50)
+    plt.xlabel(r'$X\  ( 10 m)$', fontsize=15)
+    plt.ylabel(r'$Y\ ( 10 m)$ ', fontsize=15)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    #ax.set_xticks(list(range(0,lx,10)), labelsize=12)
+    # print(list(range(0,lx,5)))
+    # print(list((range(0,lx*10,50))))
+    #x_label_list=list(range(0,lx*10,100))
+    #print(len(list(range(0,lx,10))),list(range(0,lx,10)),len(x_label_list),x_label_list)
+    #ax.set_xticklabels(x_label_list)
+    #ax.set_yticks(list(range(0,ly,20)), "Times New Roman" )
+    #y_label_list=list(range(0,ly,5))
+    #ax.set_yticklabels(y_label_list)
+
+    #plt.axis('off');
+    return ax
+
+
+
+
+
+
+
 
 
 def bcd_preprocess(area_map):

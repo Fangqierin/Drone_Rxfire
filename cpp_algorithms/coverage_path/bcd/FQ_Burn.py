@@ -10,11 +10,12 @@ from bcd_helper import imshow, imshow_scatter
 import matplotlib.pyplot as plt
 import geopandas as gpd
 from skimage.draw import polygon
-from shapely.geometry import Point, LineString, Polygon
+from shapely.geometry import Point, LineString, Polygon, MultiLineString
 from shapely.ops import cascaded_union
 from descartes import PolygonPatch
 from networkx.algorithms.distance_measures import diameter
 from shapely.wkt import loads
+from scipy.linalg._flapack import ilaver
 #from common_helpers import get_all_area_maps, get_random_coords, get_area_map
 
 def visit(matrix, x, y, memory,obstacle):
@@ -237,13 +238,13 @@ def get_vague_raster(gpdf_final, scale=2000, BunsiteBound=0,CRS = f"EPSG:4326",N
             r,c = polygon(*mix1.T,sh)
             p[r,c] = i
             r,c = mix1.T
-            p[r,c] = i
+            #p[r,c] = i
             mix2=np.floor(mix/diameter)#*30
             r,c = polygon(*mix2.T,sh)
             p[r,c] = i
             mix2=np.int64(mix2)
             r,c = mix2.T
-            p[r,c] = i 
+            #p[r,c] = i 
         if len(missions)==1:
             return p, []
         else:
@@ -269,6 +270,27 @@ def get_vague_raster(gpdf_final, scale=2000, BunsiteBound=0,CRS = f"EPSG:4326",N
         p[r,c] = i
         perimeter.append(mix2)
     return p, perimeter
+
+
+def SeePolygon(data):
+    polygons=[]
+    for index, row in data.iterrows():
+        poly = row['geometry']
+        polygons.append(poly)
+    u=cascaded_union([polygons[0],polygons[1],polygons[2]])
+    u2=cascaded_union([polygons[3],polygons[6]])
+    x,y=u2.exterior.coords.xy
+    newdata = gpd.GeoDataFrame()
+    newdata['geometry'] = None
+    newdata.loc[0, 'geometry'] = u2.boundary[0]
+    newdata.loc[1, 'geometry'] = polygons[4].boundary
+    newdata.loc[2, 'geometry'] = u.boundary
+    foldername='FQ_burn'
+    newdata.to_file(f"{dir}/{foldername}/input/seelin.shp")
+    da2=gpd.read_file(f"{dir}/{foldername}/input/seelin.shp")
+    # da2.plot()
+    # plt.show()
+
 def GetBarrier(data):
     polygons=[]
     for index, row in data.iterrows():
@@ -294,15 +316,16 @@ def DroneCPP(data,BunsiteBound, Mission, AllM, diameter, start_point, direction=
             end_point = coverage_path[-1]
             x,y = np.array(coverage_path).T
             #Display by step 
-            # for i in range(int(len(x)/40)):
-            #       imshow(area_map_old, figsize=(8, 8), cmap="cividis")   
-            #       imshow_scatter([start_point],color="lightgreen")
-            #       imshow_scatter([end_point],color="red")
-            #       # imshow_scatter(critical, alpha=0.4, color="red",s=20)
-            #       # imshow_scatter(cri_end, alpha=0.4, color="black",s=50)
-            #       imshow_scatter(coverage_path, alpha=0.4, color="black",s=5)
-            #       plt.plot(x[0:i*40+2],y[0:i*40+2])
-            #       plt.show()
+            for i in range(int(len(x)/40)):
+                  #imshow(area_map_old, figsize=(8, 8), cmap="cividis")  
+                  imshow(area_map, figsize=(8, 8), cmap="cividis")  
+                  #imshow_scatter([start_point],color="lightgreen")
+                  #imshow_scatter([end_point],color="red")
+                  # imshow_scatter(critical, alpha=0.4, color="red",s=20)
+                  # imshow_scatter(cri_end, alpha=0.4, color="black",s=50)
+                  imshow_scatter(coverage_path, alpha=0.4, color="black",s=5)
+                  plt.plot(x[0:i*40+2],y[0:i*40+2])
+                  plt.show()
             #imshow(area_map_old, figsize=(8, 8), cmap="cividis")   
             imshow(area_map, figsize=(8, 8), cmap="cividis")  # if you want drone's perspective
             #imshow_scatter(critical*30, alpha=0.4, color="red",s=20)
@@ -319,10 +342,18 @@ if __name__ == "__main__":
     dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/'
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}{file}")
+    # data.plot.area()
+    # plt.show()
+    #print(f"what see data {data}")
+    #GetBarrier(data)
+    SeePolygon(data)
+    
     # ############################################### Drone do coverage
     BunsiteBound=(701235.0,4308525.0,704355.0,4311675.0)
+    BunsiteBound=(702374.0,4309425.0,703700.0,4310900.0)
+    Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
     AllM=list(range(len(data)))+[-1,-2]
-    Mission=[-1]
-    diameter=50
-    DroneCPP(data,BunsiteBound, Mission, AllM, diameter, start_point, direction='UP')
+    Mission=[-1,0,2,5]
+    diameter=20
+    #DroneCPP(data,Bursite, Mission, AllM, diameter, start_point, direction='UP')
     ######################################### 
