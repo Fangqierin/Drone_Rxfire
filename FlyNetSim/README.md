@@ -1,6 +1,8 @@
 
-# FQ to fix the ns3's problem about 'zmq_sendmsg', command: fangqiliu@ubuntu:~/eclipse-workspace_Python/FlyNetSim/NetSim/ns-allinone-3.27/ns-3.27$ LINKFLAGS_EXTRA="-Wl,--copy-dt-needed-entries" ./waf configure
-
+# FQ: to fix the ns3's problem about 'zmq_sendmsg':
+```
+fangqiliu@ubuntu:~/eclipse-workspace_Python/FlyNetSim/NetSim/ns-allinone-3.27/ns-3.27$ LINKFLAGS_EXTRA="-Wl,--copy-dt-needed-entries" ./waf configure
+```
 
 
 
