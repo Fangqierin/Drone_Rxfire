@@ -1,3 +1,9 @@
+
+#FQ to fix the ns3 problem (zmq_sendmsg), type: fangqiliu@ubuntu:~/eclipse-workspace_Python/FlyNetSim/NetSim/ns-allinone-3.27/ns-3.27$ LINKFLAGS_EXTRA="-Wl,--copy-dt-needed-entries" ./waf configure
+
+
+
+
 # FlyNetSim (Integrated UAV-Network Simulator)
 FlyNetSim is a UAV Network Simulator created by combining ns-3 network simulator and Ardupilot based UAV simulator Software-in-the-loop (SITL) with light weight Pub/Sub based middleware. The details about the design of the simulator and some preliminary results for some use case scenarios are presented in our [paper](https://arxiv.org/pdf/1808.04967.pdf). If you find this code useful in your research, please consider citing the paper: [Baidya, S., Shaikh, Z., Levorato, M. "FlyNetSim: An Open Source Synchronized UAV Network Simulator based on ns-3 and Ardupilot". In Proceedings of the 21st ACM International Conference on Modeling, Analysis and Simulation of Wireless and Mobile Systems (ACM MSWiM).](https://dl.acm.org/doi/pdf/10.1145/3242102.3242118)
 
