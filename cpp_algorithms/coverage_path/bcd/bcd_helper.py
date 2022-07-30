@@ -16,8 +16,8 @@ def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     """
     Display with no interpolation.
     """
-    if r < 2 and c < 2 or i == 1:
-        plt.figure(figsize=figsize)
+    # if r < 2 and c < 2 or i == 1:
+    #     plt.figure(figsize=figsize)
     plt.subplot(r,c,i)
     my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
     my_cmap.set_bad(color='w', alpha=0)
@@ -72,7 +72,6 @@ def cluster_imshow(area_map,sc=1,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     #ax.set_yticks(list(range(0,ly,20)), "Times New Roman" )
     #y_label_list=list(range(0,ly,5))
     #ax.set_yticklabels(y_label_list)
-
     #plt.axis('off');
     return ax
 

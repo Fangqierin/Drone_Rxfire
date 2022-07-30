@@ -17,7 +17,7 @@ class TaskGenerator(KnowledgeEngine):
     @DefFacts()
     def startup(self):
         for i in range(3):
-            yield (Grid(id=i,state='UK',time=0))
+            yield (Grid(id=i,state='UK',EFA=0))
         yield (Time(Timer))
         yield(Phase2(-1))
     ########## For maintain a timer 
@@ -73,10 +73,12 @@ class TaskGenerator(KnowledgeEngine):
         tasks[id]['IM']=max(t,ct)
 Timer=0
 tasks=defaultdict(dict)
+Try=2
 TG=TaskGenerator()
+
+#TG=TaskGenerator(Timer,[])
 TG.reset()
 TG.run()
-
 #print(TG.facts)
 print(f"TASKS: {tasks}")
 TG.declare(DetectFire(id=1,yes=True, time=1))

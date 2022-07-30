@@ -368,7 +368,7 @@ class FlightPlanner:
         self.initialTask()
         self.ClusterTask()
         st=time.time()
-        EndTime=1800  # Unit is second
+        EndTime=1200  # Unit is second
         sr=DecomposeSize/Res
         while self.time<=EndTime:
             dlist=list(self.Mission_DL.items())  # Check the dl! 
@@ -491,7 +491,7 @@ if __name__ == "__main__":
     sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']]
     Drones=LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgrp, Res,loiter)
     ##################################################### Task Allocation 
-    Drones,Bidders=Auction(AreaPara, Drones, Res,Missions,Task_mission,1)
+    Drones,Bidders=Auction(AreaPara, Drones, Res,Missions,1)
     p=TrackDraw(Drones, BSshp, AreaPara)
     imshow(p)
     plt.show()

@@ -52,7 +52,9 @@ def Decomposition(DecomposeSize, Res,Task_mission):  # Return the dictionary of 
     tmp=list(Task_mission.keys())[0]
     perTable=np.full((len(Task_mission[tmp][1]),len(Task_mission[tmp][1][0])), 255)
     Task_mission=sorted(Task_mission.items(), key=lambda x:x[1][2])
+    #print(f"Check {Task_mission}")
     #Here is tricky, I sort it by its period, so it grid will not overlapped
+    #Every grid, we only consider the minimum period, right! 
     cc=0
     for mm in Task_mission:
         period=mm[1][2]
@@ -82,8 +84,8 @@ def TrackDraw(Drones,BSshp,AreaPara):
             x=[k[0] for k in grids]
             y=[k[1] for k in grids]
             p[x,y]=i        
-    #imshow(p)
-    #plt.show()
+    imshow(p)
+    plt.show()
     return p
     #plt.show()  
 def HisLocDrone(Area, Bidders, GC):
@@ -159,7 +161,7 @@ def Bidding(Grids, Bidders, AreaPara):
         for r in rm:
             Grids.remove(r)
     return Bidders
-def Auction(AreaPara, Drones, Res,Missions,Task_mission, seed):
+def Auction(AreaPara, Drones, Res,Missions, seed):
     Bidders=[]
     for d in Drones:
         Bidders.append(Bidder(Drone=d))
@@ -177,6 +179,7 @@ def Auction(AreaPara, Drones, Res,Missions,Task_mission, seed):
     # Drones=Bidding(AGrids,Drones,Area, Fire, EFA,Tasks)
     for i in range(len(Bidders)):
         Drones[i].area=Bidders[i].area
+        print(f"check what is area {Drones[i].area}")
     return Drones, Bidders
 
 if __name__ == "__main__":
@@ -187,16 +190,17 @@ if __name__ == "__main__":
     Missions['FL']=[ 3, 2]  # FL is tracking the fire perimeter.
     Missions['FD']=[ 2, 3]
     ################ Get tasks.
-    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/'
+    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
     foldername='FQ_burn'
     # BunsiteBound=(701235.0,4308525.0,704355.0,4311675.0)
     # BunsiteBound=(702374.0,4309425.0,703700.0,4310900.0)
     Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
-    init=120; end=150; Res=10
+    init=0; end=10; Res=10
     Task_mission,BSshp=GenTasks(init,end,Bursite,dir,foldername,Missions, Res=Res)
     ########################## Do decomposition~ 
-    DecomposeSize=200
+    DecomposeSize=50
     AreaPara=Decomposition(DecomposeSize,Res,Task_mission) # Need put tasks there!!!
+    print(f"check what is AreaPara {AreaPara}")
     ########################## Get drones
     sensorfile='Data/sensor_info.csv'
     PPMfile='Data/PPM_table.csv'
@@ -206,7 +210,7 @@ if __name__ == "__main__":
     sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']]
     Drones=LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgrp, Res,loiter)
     ##################################################### Task Allocation 
-    Drones,Bidders=Auction(AreaPara, Drones, Res,Missions,Task_mission,1)
+    Drones,Bidders=Auction(AreaPara, Drones, Res,Missions,1)
     print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Drones))]}")
     TrackDraw(Drones, BSshp, AreaPara)
 

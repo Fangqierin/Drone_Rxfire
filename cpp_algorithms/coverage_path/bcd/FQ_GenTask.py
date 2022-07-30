@@ -19,6 +19,9 @@ from collections import defaultdict
 from skimage.draw import polygon
 import os
 import random
+import json 
+import fiona
+import pandas as pd
 #from FQ_TaskAllocation import Decomposition, Auction, TrackDraw, Drone, Voronoi
 
 def get_hv_wh(BunsiteBound):
@@ -45,42 +48,59 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
     """
     Returns rasterised version for the projection
     """
-    #Res=30
-    mn=np.array(BunsiteBound[:2])
-    sh=(np.array(BunsiteBound[2:])-mn)# FQ change the boundary
-    sh[0]=math.ceil(sh[0])
-    sh[1]=math.ceil(sh[1])
-    sh=np.int64(sh/Res)
+    polys=[gpdf_final.loc[i, 'geometry'].exterior.coords for i in range(len(gpdf_final))]
+    minx=min([min(np.array(i).T[0]) for i in polys])
+    maxx=max([max(np.array(i).T[0]) for i in polys])
+    miny=min([min(np.array(i).T[1]) for i in polys])
+    maxy=max([max(np.array(i).T[1]) for i in polys])
+    boundary=[min(BunsiteBound[0],minx),min(BunsiteBound[1],miny),max(BunsiteBound[2],maxx),max(BunsiteBound[3],maxy)]
+    #print(f"see pre boundary {np.array(boundary)}")
+    #bound=np.array(boundary)//Res
+    mn=np.array(boundary[:2])
+    sh=(np.array(boundary[2:])//Res-mn//Res)# FQ change the boundary
+    # sh[0]=math.ceil(sh[0])
+    # sh[1]=math.ceil(sh[1])
+    sh=np.int64(sh)
     p = np.full(sh,NF) #FQ change that
     empty=np.full(sh,NF) #for record perimeter
-    #prim=[[]for i in range(2)]
+    #################I forgot why I want to get ceiling and floor?????# 
+    #But at least, I finished the EFA, and simulation!....... 
     for i in range(len(gpdf_final)):
         shp=gpdf_final.loc[i, 'geometry']
         ext = np.array(shp.exterior.coords)
-        mix = (ext - mn)
-        mx=(np.array(BunsiteBound[2:])-mn).max()  #FQ changed that
-        mix1=np.ceil(mix/Res)#*3
-        mix1 = np.int64(mix1)
+        x,y=ext.T
+        mix = (ext//Res - mn//Res)
+        mix1 = np.int64(mix)
         r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
         p[r,c] = F
         r,c=mix1.T # for the fire perimeter 
-        #print(r,c)
         empty[r,c]=0
         p[r,c]=P
-        mix2=np.floor(mix/Res)#*30
-        mix2=np.int64(mix2)
-        r,c = polygon(*mix2.T,sh)
-        p[r,c] = F
-        r,c = mix2.T
-        p[r,c] = P 
-        empty[r, c]=0
+        # mix1=np.ceil(mix/Res)#*3
+        # mix1 = np.int64(mix1)
+        # r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
+        # p[r,c] = F
+        # # imshow(p)
+        # # plt.show()
+        # r,c=mix1.T # for the fire perimeter 
+        # #print(r,c)
+        # empty[r,c]=0
+        # p[r,c]=P
+        # mix2=np.floor(mix/Res)#*30
+        # mix2=np.int64(mix2)
+        # r,c = polygon(*mix2.T,sh)
+        # p[r,c] = F
+        # r,c = mix2.T
+        # p[r,c] = P 
+        # empty[r, c]=0
     x,y=np.where(empty==0)
     # imshow(empty)
     # plt.show()
     # imshow(p)
     # plt.show()
     #print(f"FQ change to  {len(x)}")
-    return p,[x,y]
+    
+    return p,[x,y],boundary
 
 def get_raster_task(gpdf_final, scale=2000, BunsiteBound=0, NF=0, F=1, P=1, Res=1):
     """
@@ -100,18 +120,24 @@ def get_raster_task(gpdf_final, scale=2000, BunsiteBound=0, NF=0, F=1, P=1, Res=
         ext = np.array(shp.exterior.coords)
         mix = (ext - mn)
         mx=(np.array(BunsiteBound[2:])-mn).max()  #FQ changed that
-        mix1=np.ceil(mix/Res)#*3
+        mix1=mix//Res#*3
         mix1 = np.int64(mix1)
         r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
         p[r,c] = F
         r,c=mix1.T # for the fire perimeter 
         empty[r,c]=P
-        mix2=np.floor(mix/Res)#*30
-        mix2=np.int64(mix2)
-        r,c = polygon(*mix2.T,sh)
-        p[r,c] = F
-        r,c = mix2.T
-        empty[r, c]=P
+        # mix1=np.ceil(mix/Res)#*3
+        # mix1 = np.int64(mix1)
+        # r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
+        # p[r,c] = F
+        # r,c=mix1.T # for the fire perimeter 
+        # empty[r,c]=P
+        # mix2=np.floor(mix/Res)#*30
+        # mix2=np.int64(mix2)
+        # r,c = polygon(*mix2.T,sh)
+        # p[r,c] = F
+        # r,c = mix2.T
+        # empty[r, c]=P
     x,y=np.where(empty==P)
     # imshow(empty)
     # imshow(p)
@@ -143,10 +169,7 @@ def logEFA(EFAdict,Primdict, filename, shape, Res):
             f.write(f"{j},")
         f.write(f"\n")
     f.close() 
-def GetEFA(filename):
-    lines = []
-    with open(filename) as f:
-        lines = f.readlines()  
+
 
 def PutIginition(filename,dir):
     tofile=f"{dir}_0_Perimeters"
@@ -156,17 +179,90 @@ def PutIginition(filename,dir):
     os.system(c2)
     print(f"Run {c1}")
 
-def UpadteEFA(Pmap, area_map,time,EFA, NF=-1, F=1, P=2): #    Get the estimated fire arrival time.
+def UpadteEFA(Pmap, area_map,time,EFA, prim_bound,bound, NF=-1, F=1, P=2, Res=10): #    Get the estimated fire arrival time.
     if len(Pmap)==1:
         img=area_map
         EFA = np.full(img.shape, -1,dtype=np.uint8)
-        EFA[img == F] = time
+        EFA[img == F] = 0
         EFA[img == P] = time
-        x,y= np.where(img==0)
+        # imshow(EFA)
+        # plt.show()
+        x,y= np.where(EFA==time)
     else:
-        tmp=area_map-Pmap     # Get first arrival time. 
+        #################################################
+        print(f"check at beginning {Pmap.shape} {area_map.shape} {prim_bound} {bound} ")
+        prim_bound=np.int64(np.array(prim_bound)//Res)
+        bound=np.int64(np.array(bound)//Res)
+        print(f"check at beginning {Pmap.shape} {area_map.shape} {prim_bound} {bound} ")
+        if list(prim_bound)!=list(bound):
+            #print(f" Not equal prim_bound {prim_bound} bound {bound}")
+            #imshow(Pmap)
+            # plt.figure(1)
+            # plt.subplot(211)
+            # plt.imshow(Pmap)
+            # plt.subplot(212)
+            # plt.imshow(area_map)
+            # plt.show()
+            new_bound=[min(prim_bound[0],bound[0]),min(prim_bound[1],bound[1]), max(prim_bound[2],bound[2]),max(prim_bound[3],bound[3])]  
+            if prim_bound[0]>new_bound[0]:    # previous minx is smaller.
+                print(f"check prim_bound minx {prim_bound[0]} {Pmap.shape}")
+                tmprow=[np.array([-1]*Pmap.shape[1])]
+                
+                for i in range(prim_bound[0]-new_bound[0]):
+                    Pmap=np.insert(Pmap,0,tmprow, axis=0)
+                    print(f"check prim_bound minx {Pmap.shape} {area_map.shape} ")
+                    EFA=np.insert(EFA,0,tmprow, axis=0)  
+                print(f"check final miny {Pmap.shape} {area_map.shape}")
+                
+            if prim_bound[1]>new_bound[1]: 
+                print(f"check prim_bound miny {Pmap.shape} {area_map.shape}")
+                tmpcolumn=[np.array([-1]*Pmap.shape[0])]
+                for i in range(prim_bound[1]-new_bound[1]):
+                    Pmap=np.insert(Pmap,0,tmpcolumn, axis=1)
+                    EFA=np.insert(EFA,0,tmpcolumn, axis=1)
+                print(f"check final miny {Pmap.shape} {area_map.shape}")
+            if prim_bound[2]<new_bound[2]: 
+                tmprow=[np.array([-1]*Pmap.shape[1])]
+                print(f"check prim_bound maxx {Pmap.shape} {area_map.shape}")
+                for i in range(new_bound[2]-prim_bound[2]):
+                    Pmap=np.insert(Pmap,len(Pmap),tmprow, axis=0)
+                    EFA=np.insert(EFA,len(EFA),tmprow, axis=0)
+            if prim_bound[3]<new_bound[3]: 
+                print(f"check prim_bound maxy {Pmap.shape} {area_map.shape}")
+                tmpcolumn=[np.array([-1]*Pmap.shape[0])]
+                for i in range(new_bound[2]-prim_bound[2]):
+                    Pmap=np.insert(Pmap,len(Pmap[0]),tmpcolumn, axis=1)
+                    EFA=np.insert(EFA,len(EFA[0]),tmpcolumn, axis=1)
+            # imshow(Pmap)
+            # plt.show()
+            # plt.figure(1)
+            # plt.subplot(211)
+            # plt.imshow(Pmap)
+            # plt.subplot(212)
+            # plt.imshow(area_map)
+            # plt.show()
+        print(f"shape area_map {area_map.shape} {Pmap.shape}")
+        #tmp=area_map-Pmap     # Get first arrival time. 
         #imshow(area_map)
+        tmp1=np.full(Pmap.shape,0)
+        tmp1[area_map>0]=1
+        tmp2=np.full(Pmap.shape,0)
+        tmp2[Pmap>0]=1
+        tmp=tmp1-tmp2
+        tmp[EFA!=255]=0   # Here I want to grid already burned, 
+            
+        # imshow(Pmap)
+        # imshow(tmp)
+        #     imshow(area_map)
+        #     plt.show()
+        #imshow(area_map)
+        #print(f"chck time {time} ")
+        #Check=np.full(EFA.shape,-1)
         EFA[tmp>0]=time
+        # Check[tmp>0]=time
+        # imshow(tmp)
+        # imshow(EFA)
+        # plt.show()
         x,y=np.where(EFA==time)
     return EFA, x,y
   
@@ -178,16 +274,66 @@ def GetEFFNext(init,end, BunsiteBound, dir, foldername, Res=10):
     Primdict=defaultdict(list)
     Pmap=[0]
     EFA=[]  # EFA is matrix shows the expected fire arrival time
+    prim_bound=BunsiteBound
     while time<=end:
         file=f"{dir}/{foldername}/output/{foldername}_{time}_Perimeters.shp"
         data=gpd.read_file(file)
         #print(f"see time {time}")
-        area_map_,prim= get_raster(data, scale, BunsiteBound, NF=-1, F=1, P=2, Res=Res)
-        EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA)
+        area_map_,prim,bound= get_raster(data, scale, prim_bound, NF=-1, F=1, P=2, Res=Res)
+        EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA,prim_bound,bound)
+        prim_bound=bound
         EFAdict[time]=[x,y]
         Primdict[time]=prim
         Pmap=area_map_ 
         time=time+timestamp
+    #shape=area_map_.shape
+    #logEFA(EFAdict, Primdict,"EFAdict.csv",shape, 10)
+    return EFA, EFAdict, Primdict
+
+def GetEFA(init,simdur, BunsiteBound, dir, foldername,step=3, Res=10):
+    scale = get_scale(BunsiteBound, meter=1)
+    EFAdict=defaultdict(list)
+    time=1
+    Primdict=defaultdict(list)
+    Pmap=[0]
+    EFA=[]  # EFA is matrix shows the expected fire arrival time
+    prim_bound=0
+    while time<=simdur:
+        file=f"{dir}/{foldername}/output/{init}_{time}_Perimeters.shp"
+        #data=gpd.read_file(file)
+        collection = list(fiona.open(file,'r'))
+        df1 = pd.DataFrame(collection)
+        # for i in range(len(df1)):
+        #
+        #     print(df1.loc[i, 'geometry'])
+        #print(f"see df1 {df1}")
+        def isvalid(geom):
+            if len(geom['coordinates'][0])>2:
+                return 1
+            else:
+                return 0
+        df1['isvalid'] = df1['geometry'].apply(lambda x: isvalid(x))
+        #print(f"see df1 {df1}")
+        df1 = df1[df1['isvalid'] == 1]
+        collection = json.loads(df1.to_json(orient='records'))
+        #print(f"see collection {collection}")
+        data = gpd.GeoDataFrame.from_features(collection)
+        # data.plot()
+        # plt.show()
+        area_map_,prim,bound= get_raster(data, scale, BunsiteBound,NF=-1, F=1, P=2, Res=Res)
+        # imshow(area_map_)
+        # plt.show()
+        EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA,prim_bound, bound, Res=Res)
+        # imshow(EFA)
+        # plt.show()
+        prim_bound=bound
+        # imshow(area_map_)
+        # plt.show()
+        #print(f"see time {time} {x},{y}")
+        EFAdict[time]=[x,y]
+        Primdict[time]=prim
+        Pmap=area_map_ 
+        time=time+step
     #shape=area_map_.shape
     #logEFA(EFAdict, Primdict,"EFAdict.csv",shape, 10)
     return EFA, EFAdict, Primdict
@@ -200,25 +346,28 @@ def GenTasks(init,end, BunsiteBound, dir, foldername, Missions, Res=10):#This is
     Pmap=[0]
     data=[]
     for time in [init, end ]:
-        file=f"{dir}/{foldername}/output/{foldername}_{time}_Perimeters.shp"
+        file=f"{dir}/{foldername}/output/{time}_1_Perimeters.shp"
         data.append(gpd.read_file(file))
     area_map1,prim1= get_raster_task(data[0], scale, BunsiteBound, NF=0, F=1, P=1, Res=Res)
     area_map2,prim2= get_raster_task(data[1], scale, BunsiteBound, NF=0, F=1, P=1, Res=Res)
     Taskdict['FI']=[init, area_map1,Missions['FI'][0],Missions['FI'][1]]
-    #Taskdict['FL']=[init, prim1,Missions['FL'][0],Missions['FL'][1]]
+    #imshow(area_map1)
+    Taskdict['FL']=[init, prim1,Missions['FL'][0],Missions['FL'][1]]
     FTA=area_map2-area_map1+prim2
     FTA[FTA>0]=1
-    #plt.show()
     Taskdict['FT']=[init, FTA,Missions['FT'][0],Missions['FT'][1]]
     BMA=np.full(area_map2.shape,0)
     BMA[area_map2==0]=1
     BMA[prim2==1]=0
     Taskdict['BM']=[init, BMA, Missions['BM'][0],Missions['BM'][1]]
-    return Taskdict, area_map2.shape
+    return Taskdict, area_map2.shape 
+
 
 class Sensor:
     def _init_(self, Type='ALL', Pixel=1080, AFoV=math.pi*(60/180)):
         pass
+    
+
 if __name__ == "__main__":
     Missions=defaultdict(dict)  #  Missions: period, priority, 
     Missions['BM']=[ 10, 1]  #Other area 
@@ -227,22 +376,24 @@ if __name__ == "__main__":
     Missions['FL']=[ 3, 2]  # FL is tracking the fire perimeter.
     Missions['FD']=[ 2, 3]
     ################ Get tasks.
-    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/'
+    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
     foldername='FQ_burn'
     BunsiteBound=(701235.0,4308525.0,704355.0,4311675.0)
     BunsiteBound=(702374.0,4309425.0,703700.0,4310900.0)
     Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
-    
-    
-    
-    
     # igfile='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/Rxfire/Burn_1/input/FQburn'
     # PutIginition(igfile,dir)
     init=120
     end=150
     Res=10
-    #EFA,EFAdict,Primdict =GetEFFNext(init,end,BunsiteBound,dir,foldername, Res=Res)
-    Task_mission=GenTasks(init,end,Bursite,dir,foldername, Missions ,Res=Res)
+    EFA,EFAdict,Primdict =GetEFA(init,end,Bursite,dir,foldername, Res=Res)
+    #Here we need use EFA to input them into the task generator. 
+    # imshow(EFA)
+    # plt.show()
+    print(f"EFA: {EFA}")
+    print(f"EFAdict: {EFAdict}")
+    print(f"Primdict: {Primdict}")
+    #Task_mission=GenTasks(init,end,Bursite,dir,foldername, Missions ,Res=Res)
     #print(Task_mission)
 
 
