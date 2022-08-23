@@ -9,6 +9,9 @@ from collections import defaultdict
 import subprocess
 from FQ_Task_Generator import  TaskManager 
 from FQ_GenTask import GetEFA
+from FQ_TaskAllocation import Auction, TrackDraw
+#from FQ_Task_Generator import  TaskManager 
+
 from FQ_Firesim import DyFarsitefile, ClearBarrier, CreateDyRxfire
 #from cpp_algorithms.common_helpers import imshow, imshow_scatter
 from bcd_helper import imshow, imshow_scatter
@@ -19,6 +22,8 @@ import fiona
 import json
 import shapely
 import numpy as np
+from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM, LoadDrones
+
 #TG=TaskGenerator()
 #p=subprocess.Popen(f"pwd", )
 
@@ -50,7 +55,7 @@ import numpy as np
 # print(f"TASKS: {tasks}")
 # print(TG.facts)
 
-def GetFirSim(bardata, BunsiteBound, foldername, MockName,dir, time=10, simdur=60,step=1, Res=10): # the location of the fire line, the length of the fireline and the number of the fires. 
+def GetFirSim(bardata, BunsiteBound, foldername, MockName,dir, Bursite, time=10, simdur=60,step=1, Res=10): # the location of the fire line, the length of the fireline and the number of the fires. 
     os.system(f"mkdir {dir}/{foldername}")
     os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")
     bardata.to_file(f"{dir}/{foldername}/input/seelin.shp")
@@ -108,63 +113,29 @@ def DrawTask(tasks, EFAM):
             TaskMap[x,y]=codict[m]
     imshow(TaskMap)
     plt.show()
-    
-        #print(f"x, y{x} {y}")
-        
-        
-def DeclareGrid( TG, EFAM,tasks, Missions, init=1 ):
-    rows,columns=EFAM.shape
-    for x in range(rows):
-        for y in range(columns):
-            if EFAM[x,y]==1:
-                st='B'
-            else:
-                st='N'
-            TG.declare(Grid(id=(x,y),state=st, EFA=EFAM[x,y],time=0))
-    #TG.declare(Phase2((1)))
-    TG.run()
-    print(tasks)
-    DrawTask(tasks,EFAM) 
 
-    
     
 '''
 See the task generation generated 'Taskdict' which is only used in Decomposition function, 
 We can define a new taskdict, and update that in Decomposition method! 
 ##########################
-
-def Decomposition(DecomposeSize, Res,Task_mission):  # Return the dictionary of grids and area
+'''
+def Decomposition(DecomposeSize, Res,Tasks):  # Return the dictionary of grids and area
+    #print(f"get task {tasks}")
     DecomposeSize=int((DecomposeSize/Res)*Res)
     sc=DecomposeSize/Res
-    AreaPara=defaultdict(dict)
-    p=np.full((len(Task_mission['BM'][1]),len(Task_mission['BM'][1][0])), -1)
+    AreaPara=defaultdict(list)
     cc=0
-    #examples: Taskdict['FT']=[init, FTA,Missions['FT'][0],Missions['FT'][1]]
-    tmp=list(Task_mission.keys())[0]
-    perTable=np.full((len(Task_mission[tmp][1]),len(Task_mission[tmp][1][0])), 255)
-    Task_mission=sorted(Task_mission.items(), key=lambda x:x[1][2])
-    #Here is tricky, I sort it by its period, so it grid will not overlapped
-    cc=0
-    for mm in Task_mission:
-        period=mm[1][2]
-        cov=mm[1][1]
-        Grid_mission=defaultdict(list)
-        Area=defaultdict(list)
-        x,y =np.where(cov==1)
-        for i in range(len(x)):
-            if perTable[x[i],y[i]]>period:
-                ######### We will prioritize the short period! 
-                perTable[x[i],y[i]]=period # Get the maximum period!
-                xc=int(x[i]/sc); yc=int(y[i]/sc)
-                Area[(xc,yc)].append([x[i],y[i],mm[1][0]])
-                p[x[i],y[i]]=cc#xc+yc+cc*2
-        AreaPara[mm[0]]=Area
-        cc=cc+1
-    #cluster_imshow(p,sc=sc)
-    #plt.show()
+    for grid, mm in Tasks.items():
+        for m in list(mm.keys()):
+            x,y=grid
+            xc=int(x//sc); yc=int(y//sc)
+            if len(list(mm.keys()))==1: 
+                AreaPara[(xc,yc),m].append((x,y,mm[m]))
+            else:
+                AreaPara[(xc,yc),m, '1'].append((x,y,mm[m]))
     return AreaPara
-'''
-    
+
 if __name__ == "__main__":
     Missions=defaultdict(dict)  #  Missions: period, priority, 
     Missions['BM']=[ 10, 1]  #Other area 
@@ -177,22 +148,66 @@ if __name__ == "__main__":
     foldername='FQ_sim'
     #Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
     Bursite=(702460.0,4309700.0,702860.0,4310200.0 )
+    DecomposeSize=50
     Res=10
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
     #CreateDyRxfire(Bardata, Bursite,'FQ_burn',dir, [2])
-    #print(f"see {Bardata}")
-    # Before, we need to write the ignition file into the 
-    EFA,EFAdict,Primdict =GetFirSim(Bardata, Bursite,  foldername, 'FQ_burn', dir, Res=Res,time=40)                  
-    imshow(EFA)
-    plt.show()
-    #print(f"EFA: {EFA}")
-    #print(f"EFAdict: {EFAdict}")
+    EFA,EFAdict,Primdict =GetFirSim(Bardata, Bursite,  foldername, 'FQ_burn', dir, Bursite, Res=Res,time=40)                  
+    # imshow(EFA)
+    # plt.show()
     TM=TaskManager(Missions)
-    tasks=TM.DeclareGrid(EFA,init=1)
-    DrawTask(tasks,EFA) 
-    #print(f"Primdict: {Primdict}")
+    tasks=TM.DeclareGridEFA(EFA,init=1)
+    #DrawTask(tasks,EFA) 
+    ########################################
+    sensorfile='Data/sensor_info.csv'
+    PPMfile='Data/PPM_table.csv'
+    DroneNum=5
+    speeds=[5,5,5,5,3,3]
+    loiter=[1,2,1,1,1]
+    ranges=[200,100,100,300,100]
+    GCloc=(0,500)
+    sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']]
+    Drones=LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgrp, Res,loiter,ranges)
+    ####################### Generate flight plan! 
+    AreaPara=Decomposition(DecomposeSize,Res,tasks) # Need put tasks there!!!
+    # for k in list(AreaPara.keys()):
+    #     print(k)
+    Drones,Bidders=Auction(AreaPara, Drones, Res,Missions,3, EFA,GCloc)
+    #print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Drones))]}")
+
+    TrackDraw(Drones, EFA)
+######################################
+    ################ Here, 
+    #I allow a grid have multiple tasks, next, I need to modify auction! 
+    #If another tasks, check if it can be overload, if not, add more workload.
+
+    #print(f"get {AreaPara}")
+    # TaskMap=np.full(EFA.shape, -1)
+    # cc=0
+    # print(len(AreaPara))
+    # for key, cor in AreaPara.items():
+    #     x=[i[0] for i in cor]
+    #     y=[i[1] for i in cor]
+    #     print(f"see key {key} {x} {y}")
+    #     TaskMap[x,y]=cc
+    #     cc=cc+10
+    # imshow(TaskMap)
+    # plt.show()
+    ####### We need the simulation the real observation! 
+    #everytime uploading data, we can get the task update! 
+    
+    
+    
+
+
+
+
+
+
+
+
 
 
 

@@ -10,7 +10,7 @@ import math
 from collections import defaultdict
 import os
 import random
-from FQ_GenTask import GetEFFNext, UpadteEFA, logEFA,GenTasks
+from FQ_GenTask import GetEFFNext, UpadteEFA, logEFA
 from geopandas._vectorized import length
 
 
@@ -155,11 +155,11 @@ def ReadSen_PPM(sensorfile,PPMfile):
             tmp[float(ppmlist[j])]=float(rwlist[j])
         MisPPM[ob['mission']][ob['sensor']]=tmp
     return Sensors,MisPPM
-def LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgroup, Res, Loiter):
+def LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgroup, Res, Loiter,Ranges):
     Sensors,MisPPM=ReadSen_PPM(sensorfile,PPMfile)
     Drones=[]
     for i in range(DroneNum):
-        drone=Drone(id=i,speed=speeds[i],loiter=Loiter[i])
+        drone=Drone(id=i,speed=speeds[i],loiter=Loiter[i],range=Ranges[i])
         sens=[Sensors[s] for s in sensgroup[i]]
         drone.AddSensors(sens)
         drone.GetFOV(MisPPM,Res)

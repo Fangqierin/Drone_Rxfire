@@ -359,7 +359,6 @@ class FlightPlanner:
                     #print(f"see this time {tt} ") 
                     return True
         return False
-       
     def Cluster_Scheduling(self,DecomposeSize, Res): 
         #self.DrawWPCs()
         self.waypointSeq.append(self.wp)
@@ -408,14 +407,10 @@ class FlightPlanner:
                         reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
                         Reward=Reward+reward
                         P=P+Penalty
-                        #print(f"Current Time: {self.time}")
-                        #self.DrawWPsequence()
                     if NoUpDL and self.time<=EndTime:
                         #print(f"Grid {near_g} is finished  Or NoWPC {NoWPCs}   ")
                         CurGrids.remove(near_g)
-                        #print(f"Get out of this Grid {near_g}")
                     else:
-                        #print(f" Update {NoUpDL} Or timeout {self.time<=EndTime}")
                         break
                 count=count+1
                 print(f"Get out of one deadline {count}, Or Update {NoUpDL} Or timeout {self.time<=EndTime}")
@@ -442,7 +437,6 @@ class FlightPlanner:
         else:
             nwpc=wps[0]
         return nwpc
-
 
     def Scheduling(self): 
         #self.DrawWPCs()
@@ -476,7 +470,6 @@ if __name__ == "__main__":
     foldername='FQ_burn'
     Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
     BursiteA=(702460.0,4309700.0,702860.0,4310200.0 )
-    
     init=120; end=150; Res=10
     Task_mission,BSshp=GenTasks(init,end,BursiteA,dir,foldername,Missions, Res=Res)
     ########################## Do decomposition~ 

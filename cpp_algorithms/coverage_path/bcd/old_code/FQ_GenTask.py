@@ -57,7 +57,7 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
     #print(f"see pre boundary {np.array(boundary)}")
     #bound=np.array(boundary)//Res
     mn=np.array(boundary[:2])
-    sh=(np.array(boundary[2:])//Res-mn//Res)+np.array([1,1])# FQ change the boundary #I changed the boundary for perimeter!!!1
+    sh=(np.array(boundary[2:])//Res-mn//Res)# FQ change the boundary
     # sh[0]=math.ceil(sh[0])
     # sh[1]=math.ceil(sh[1])
     sh=np.int64(sh)
@@ -74,15 +74,8 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
         r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
         p[r,c] = F
         r,c=mix1.T # for the fire perimeter 
-        #print(f"why {r} {c}")
-        try:
-            empty[r,c]=0
-        except:
-            print(f"enter")
-            print(f"empty {empty.shape}")
-            plt.plot(r,c )
-            plt.show()
-        #p[r,c]=P    #------------------------------------> Here, I found if uncomment this, we will get more fire????
+        empty[r,c]=0
+        p[r,c]=P
         # mix1=np.ceil(mix/Res)#*3
         # mix1 = np.int64(mix1)
         # r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
@@ -101,15 +94,56 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
         # p[r,c] = P 
         # empty[r, c]=0
     x,y=np.where(empty==0)
-    # print(f"see p")
+    # imshow(empty)
+    # plt.show()
     # imshow(p)
-    #plt.show()
-    
+    # plt.show()
     #print(f"FQ change to  {len(x)}")
     
     return p,[x,y],boundary
 
-
+def get_raster_task(gpdf_final, scale=2000, BunsiteBound=0, NF=0, F=1, P=1, Res=1):
+    """
+    Returns rasterised version for the projection
+    """
+    #Res=30
+    mn=np.array(BunsiteBound[:2])
+    sh=(np.array(BunsiteBound[2:])-mn)# FQ change the boundary
+    sh[0]=math.ceil(sh[0])
+    sh[1]=math.ceil(sh[1])
+    sh=np.int64(sh/Res)
+    p = np.full(sh,NF) #FQ change that
+    empty=np.full(sh,NF) #for record perimeter
+    #prim=[[]for i in range(2)]
+    for i in range(len(gpdf_final)):
+        shp=gpdf_final.loc[i, 'geometry']
+        ext = np.array(shp.exterior.coords)
+        mix = (ext - mn)
+        mx=(np.array(BunsiteBound[2:])-mn).max()  #FQ changed that
+        mix1=mix//Res#*3
+        mix1 = np.int64(mix1)
+        r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
+        p[r,c] = F
+        r,c=mix1.T # for the fire perimeter 
+        empty[r,c]=P
+        # mix1=np.ceil(mix/Res)#*3
+        # mix1 = np.int64(mix1)
+        # r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
+        # p[r,c] = F
+        # r,c=mix1.T # for the fire perimeter 
+        # empty[r,c]=P
+        # mix2=np.floor(mix/Res)#*30
+        # mix2=np.int64(mix2)
+        # r,c = polygon(*mix2.T,sh)
+        # p[r,c] = F
+        # r,c = mix2.T
+        # empty[r, c]=P
+    x,y=np.where(empty==P)
+    # imshow(empty)
+    # imshow(p)
+    # plt.show()
+    #print(f"FQ change to  {len(x)}")
+    return p,empty
 def Firefront(maps):
     cu_map=maps[0]
     fu_map=maps[1]
@@ -151,7 +185,7 @@ def UpadteEFA(Pmap, area_map,time,EFA, prim_bound,bound, NF=-1, F=1, P=2, Res=10
         EFA = np.full(img.shape, -1,dtype=np.uint8)
         
         EFA[img == P] = time
-        EFA[img == F] = time
+        #EFA[img == F] = -2
         # imshow(EFA)
         # plt.show()
         x,y= np.where(EFA==time)
@@ -164,31 +198,30 @@ def UpadteEFA(Pmap, area_map,time,EFA, prim_bound,bound, NF=-1, F=1, P=2, Res=10
         if list(prim_bound)!=list(bound):
             new_bound=[min(prim_bound[0],bound[0]),min(prim_bound[1],bound[1]), max(prim_bound[2],bound[2]),max(prim_bound[3],bound[3])]  
             if prim_bound[0]>new_bound[0]:    # previous minx is smaller.
-                #print(f"check prim_bound minx {prim_bound[0]} {Pmap.shape}")
+                print(f"check prim_bound minx {prim_bound[0]} {Pmap.shape}")
                 tmprow=[np.array([-1]*Pmap.shape[1])]
                 for i in range(prim_bound[0]-new_bound[0]):
                     Pmap=np.insert(Pmap,0,tmprow, axis=0)
-                    #print(f"check prim_bound minx {Pmap.shape} {area_map.shape} ")
+                    print(f"check prim_bound minx {Pmap.shape} {area_map.shape} ")
                     EFA=np.insert(EFA,0,tmprow, axis=0)  
-                #print(f"check final miny {Pmap.shape} {area_map.shape}")
+                print(f"check final miny {Pmap.shape} {area_map.shape}")
             if prim_bound[1]>new_bound[1]: 
-                #print(f"check prim_bound miny {Pmap.shape} {area_map.shape}")
+                print(f"check prim_bound miny {Pmap.shape} {area_map.shape}")
                 tmpcolumn=[np.array([-1]*Pmap.shape[0])]
                 for i in range(prim_bound[1]-new_bound[1]):
                     Pmap=np.insert(Pmap,0,tmpcolumn, axis=1)
                     EFA=np.insert(EFA,0,tmpcolumn, axis=1)
-                #print(f"check final miny {Pmap.shape} {area_map.shape}")
+                print(f"check final miny {Pmap.shape} {area_map.shape}")
             if prim_bound[2]<new_bound[2]: 
                 tmprow=[np.array([-1]*Pmap.shape[1])]
-                #print(f"check prim_bound maxx {Pmap.shape} {area_map.shape}")
+                print(f"check prim_bound maxx {Pmap.shape} {area_map.shape}")
                 for i in range(new_bound[2]-prim_bound[2]):
                     Pmap=np.insert(Pmap,len(Pmap),tmprow, axis=0)
                     EFA=np.insert(EFA,len(EFA),tmprow, axis=0)
             if prim_bound[3]<new_bound[3]: 
-                #print(f"check prim_bound maxy {Pmap.shape} {area_map.shape}")
+                print(f"check prim_bound maxy {Pmap.shape} {area_map.shape}")
                 tmpcolumn=[np.array([-1]*Pmap.shape[0])]
-                #print(new_bound[3]-prim_bound[3])
-                for i in range(new_bound[3]-prim_bound[3]):
+                for i in range(new_bound[2]-prim_bound[2]):
                     Pmap=np.insert(Pmap,len(Pmap[0]),tmpcolumn, axis=1)
                     EFA=np.insert(EFA,len(EFA[0]),tmpcolumn, axis=1)
         #print(f"shape area_map {area_map.shape} {Pmap.shape}")
@@ -220,8 +253,6 @@ def GetEFFNext(init,end, BunsiteBound, dir, foldername, Res=10):
     while time<=end:
         file=f"{dir}/{foldername}/output/{foldername}_{time}_Perimeters.shp"
         data=gpd.read_file(file)
-        # data.plot()
-        # plt.show()
         #print(f"see time {time}")
         area_map_,prim,bound= get_raster(data, scale, prim_bound, NF=-1, F=1, P=2, Res=Res)
         EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA,prim_bound,bound)
@@ -258,20 +289,42 @@ def GetEFA(init,simdur, BunsiteBound, dir, foldername,step=3, Res=10):
         df1 = df1[df1['isvalid'] == 1]
         collection = json.loads(df1.to_json(orient='records'))
         data = gpd.GeoDataFrame.from_features(collection)
-        # data.plot()
-        # plt.show()
         area_map_,prim,bound= get_raster(data, scale, BunsiteBound,NF=-1, F=1, P=2, Res=Res)
         EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA,prim_bound, bound, Res=Res)
-        if time==init:
-            IniPerimeter=prim   #-----> Check, if we need the perimeter later????
+        
         prim_bound=bound
         EFAdict[time]=[x,y]
         Primdict[time]=prim
         Pmap=area_map_ 
-        time=time+step 
+        time=time+step
     #shape=area_map_.shape
     #logEFA(EFAdict, Primdict,"EFAdict.csv",shape, 10)
-    return EFA, EFAdict, bound #, IniPerimeter
+    return EFA, EFAdict, Primdict
+
+def GenTasks(init,end, BunsiteBound, dir, foldername, Missions, Res=10):#This is a temporal one! 
+    scale = get_scale(BunsiteBound, meter=1)
+    Taskdict={}
+    timestamp=3
+    time=init
+    Pmap=[0]
+    data=[]
+    for time in [init, end ]:
+        file=f"{dir}/{foldername}/output/{time}_1_Perimeters.shp"
+        data.append(gpd.read_file(file))
+    area_map1,prim1= get_raster_task(data[0], scale, BunsiteBound, NF=0, F=1, P=1, Res=Res)
+    area_map2,prim2= get_raster_task(data[1], scale, BunsiteBound, NF=0, F=1, P=1, Res=Res)
+    Taskdict['FI']=[init, area_map1,Missions['FI'][0],Missions['FI'][1]]
+    #imshow(area_map1)
+    Taskdict['FL']=[init, prim1,Missions['FL'][0],Missions['FL'][1]]
+    FTA=area_map2-area_map1+prim2
+    FTA[FTA>0]=1
+    Taskdict['FT']=[init, FTA,Missions['FT'][0],Missions['FT'][1]]
+    BMA=np.full(area_map2.shape,0)
+    BMA[area_map2==0]=1
+    BMA[prim2==1]=0
+    Taskdict['BM']=[init, BMA, Missions['BM'][0],Missions['BM'][1]]
+    return Taskdict, area_map2.shape 
+
 
 class Sensor:
     def _init_(self, Type='ALL', Pixel=1080, AFoV=math.pi*(60/180)):

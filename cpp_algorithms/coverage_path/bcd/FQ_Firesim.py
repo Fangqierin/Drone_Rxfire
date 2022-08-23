@@ -111,7 +111,6 @@ def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_r
     fin.close()
 
 def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! because we add some fire!!!! 
-    #try:
     collection = list(fiona.open(f"{dir}/{foldername}/output/{prefix}_{time}_Perimeters.shp",'r'))
     df1 = pd.DataFrame(collection)
     def isvalid(geom):
@@ -119,21 +118,11 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
                 return 1
             else:
                 return 0
-    # def isvalid(geom):
-    #     try:
-    #         shape(geom)
-    #         return 1
-    #     except:
-    #         return 0
     df1['isvalid'] = df1['geometry'].apply(lambda x: isvalid(x))
     df1 = df1[df1['isvalid'] == 1]
     collection = json.loads(df1.to_json(orient='records'))
     #Convert to geodataframe
     data = gpd.GeoDataFrame.from_features(collection)
-    #data=gpd.read_file(f"{dir}{foldername}/output/{prefix}_{time}_Perimeters.shp")
-    # except: 
-    #     print(f"finding {dir}{foldername}/output/{prefix}_{time}_Perimeters.shp")
-    #     sleep(0.3)
     try:
         print(f"{[data.loc[i, 'geometry'] for i in range(len(data))]}")
         geoms=[data.loc[i, 'geometry'] for i in range(len(data))]+[poly]
@@ -147,8 +136,6 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
         gdr = gpd.GeoDataFrame({'feature': features, 'geometry': data2}) #, crs='EPSG:4326)
     except:
         gdr = gpd.GeoDataFrame({'feature': [0], 'geometry': data2}) #, crs='EPSG:4326)
-    #print(f"see features {features}")
-    #gdr = gpd.GeoDataFrame({'feature': features, 'geometry': data2}) #, crs='EPSG:4326)
     gdr.to_file(f"{dir}/{foldername}/input/{foldername}.shp")    #------> This is the objective!!!!!! 
     ###################### Remove previous data!!! 
     f = []
@@ -162,7 +149,6 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
             if st==prefix and st+tt>prefix+time:
                 try:
                     out=os.system(f"rm {dir}/{foldername}/output/{file}")
-                    #print(f"prefix {prefix} time {time}  removed: {dir}/{foldername}/output/{file}")
                 except:
                     print(f"remove failed")
         else:
@@ -176,9 +162,9 @@ def CreateDyRxfire(data, BunsiteBound, foldername,dir,UID): # the location of th
     os.system(f"mkdir {dir}/{foldername}")
     os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")
     try:
+        os.system(f"rm -r  {dir}/{foldername}/output")
         os.system(f"mkdir {dir}/{foldername}/output")
     except:
-        os.system(f"rm  {dir}/{foldername}/output")
         os.system(f"mkdir {dir}/{foldername}/output")
     data.to_file(f"{dir}/{foldername}/input/seelin.shp")
     gap=20

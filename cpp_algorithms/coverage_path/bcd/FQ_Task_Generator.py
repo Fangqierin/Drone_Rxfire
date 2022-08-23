@@ -4,7 +4,7 @@ import zmq
 import time
 from pyknow import *
 from collections import defaultdict
-#import sched
+import numpy as np
 class DetectFire(Fact):
     pass
 class Grid(Fact):
@@ -17,61 +17,61 @@ class Theta(Fact):
     pass
 class Mission(Fact):
     pass
+class UpdateEFA(Fact):
+    pass
 class TaskManager():
-    def __init__(self, Missions):
+    def __init__(self, Missions,theta=3,plantime=20):
         self.TG=TaskGenerator()
         self.TG.reset()
-        # print(Missions)
-        # for key, st in Missions.items():
-        #     self.TG.declare(Mission(name=key,period=st[0]))
-        #yield (Mission(BM=10, FI=5, FT=3, FD=5, step=3))
-        #yield(Theta(v=9, plan=20))
-        #yield (Time(Timer)
+        self.theta=theta
+        self.latime=0
+        self.plantime=plantime
+        self.TG.declare(Theta(v=theta, plan=plantime))
         self.Missions=Missions
         self.Mission_dict=defaultdict 
     def reset(self):
         self.TG.rest()
         tasks=defaultdict(dict)
-    
     def RefineTask(self):
         pass
-    
-    def DeclareGrid(self, EFAM, init=1):
+    def DeclareGridEFA(self, EFAM, init=0):
         rows,columns=EFAM.shape
+        self.latime=init
+        self.EFA=EFAM
         for x in range(rows):
             for y in range(columns):
-                if EFAM[x,y]<=1:
+                if EFAM[x,y]==0:
                     st='B'
                 else:
                     st='N'
-                self.TG.declare(Grid(id=(x,y),state=st, EFA=EFAM[x,y],time=0))
-        #TG.declare(Phase2((1)))
+                self.TG.declare(Grid(id=(x,y),state=st, EFA=EFAM[x,y],time=init))
         self.TG.run()
         self.cur_tasks=tasks
-        print(f"see tasks {tasks}")
         return tasks
-        #print(tasks)  
-    def UpdateEFA(self, EFAM, init=10):
-        rows,columns=EFAM.shape
-        for x in range(rows):
-            for y in range(columns):
-                if EFAM[x,y]<=1:
-                    st='B'
-                else:
-                    st='N'
-                self.TG.declare(Grid(id=(x,y),state=st, EFA=EFAM[x,y],time=0))
-        #TG.declare(Phase2((1)))
+    def ReportFire(self,Grid_fire):
+        Update=False
+        cutime=max(Grid_fire.values()) 
+        for grid,time in Grid_fire.items():
+            x,y=grid
+            self.TG.declare(DetectFire(id=(x,y),yes=True,time=time))
+            if cutime <self.EFA[x,y]-self.theta:  
+                Update=True
+##########################################################################################     
+        if not Update:
+            self.TG.run()
+        return tasks, Update, self.latime, cutime
+    def EventUpdateFT(self, nEFA,time):
+        # nEFA[x,y]>0 and  nEFA[x,y]<255])
+        nEFA[nEFA>self.plantime]=0
+        x,y=np.where(nEFA>0)
+        for i in range(len(x)):
+            if nEFA[x[i],y[i]]+time <self.EFA[x[i],y[i]]:
+                self.TG.declare(UpdateEFA(id=(x[i],y[i]), NEFA=nEFA[x[i],y[i]], ct=time))  
         self.TG.run()
-        self.cur_tasks=tasks
-        print(f"see tasks {tasks}")
-        
-        
+        return tasks
 class TaskGenerator(KnowledgeEngine):
     @DefFacts()
     def startup(self):
-        # for i in range(3):
-        #     yield (Grid(id=i,state='UK',EFA=0))
-        yield (Mission(BM=10, FI=5, FT=3, FD=5, step=3))
         yield(Theta(v=9, plan=20))
         yield (Time(Timer))
         yield(Phase2(-1))
@@ -109,6 +109,7 @@ class TaskGenerator(KnowledgeEngine):
         self.modify(f,state='B',time=t)
         tasks[id].pop('FD', None)
         tasks[id].pop('FT', None)
+        tasks[id].pop('BM',None)
     ############ Add task Fire detection
     @Rule (AS.f<<Grid(state='UK',id=MATCH.i,time=MATCH.t))
     def FD(self,f,i,t):
@@ -118,7 +119,36 @@ class TaskGenerator(KnowledgeEngine):
     def all_Grid_passed(self,ct,f):
         print(f"=====Get into Phase 2=====  at {ct}")
         self.modify(f,_0=ct)
-    ######### Add task for fire tracking
+    @Rule (Phase2(~L(-1))&Theta(v=MATCH.v, plan=MATCH.plan) & AS.f<<Grid(state='N',id=MATCH.id, time=MATCH.t, EFA=MATCH.EFA) & Phase2(MATCH.ct))
+    def FT(self,f,id,t,EFA,ct,v, plan):
+        if max(t,ct)>=EFA-v:
+            tasks[id]['FT']=(max(t,ct),-1)
+        elif EFA==255 or EFA-v>=ct+plan:
+            tasks[id]['BM']=(max(t,ct), -1)
+        else: 
+            tasks[id]['BM']=(max(t,ct), EFA-v)
+            tasks[id]['FT']=(EFA-v, -1)
+    ######### Add task for Intensity Monitor
+    @Rule (Phase2(~L(-1))& AS.f<<Grid(state='B',id=MATCH.id,time=MATCH.t)& Phase2(MATCH.ct))
+    def FI(self,f,id,t,ct):
+        tasks[id]['FI']=(max(t,ct),-1)
+    ##############################################
+    @Rule (Phase2(~L(-1))& Theta(v=MATCH.v, plan=MATCH.plan) & AS.f<<Grid(state='N',id=MATCH.id, EFA=MATCH.EFA, time=MATCH.time)& AS.f1<< UpdateEFA(id=MATCH.id, NEFA=MATCH.NEFA, ct=MATCH.ct))
+    def UpdateFT(self,f, f1,v, id, EFA, time,NEFA, ct):
+        NEFA=NEFA+ct
+        self.retract(f1)
+        self.modify(f,EFA=NEFA, time=ct)
+        if NEFA<EFA:
+            tasks[id]['FT']=(max(ct,NEFA-v),-1)
+        try:
+            if ct>=NEFA-v:
+                tasks[id].pop('BM')
+            else:
+                x,y=tasks[id]['BM']
+                tasks[id]['BM']=(x,max(ct,NEFA-v))
+        except:
+            pass
+    ############################################################
     # @Rule (Phase2(~L(-1))& Mission(step=MATCH.step, BM=MATCH.BM, FT=MATCH.FT)&Theta(v=MATCH.v, plan=MATCH.plan) & AS.f<<Grid(state='N',id=MATCH.id, time=MATCH.t, EFA=MATCH.EFA) & Phase2(MATCH.ct))
     # def FT(self,f,id,t,EFA,ct,v, plan,step, BM, FT ):
     #     if max(t,ct)>=EFA-v:
@@ -136,33 +166,10 @@ class TaskGenerator(KnowledgeEngine):
     #         #print(f"EFA {EFA} {EFA-v} {plan} ")
     #         print(f"add task {tasks[id]}")
     #     #print(f"Generate task FT at grid {id}")
-    @Rule (Phase2(~L(-1))&Theta(v=MATCH.v, plan=MATCH.plan) & AS.f<<Grid(state='N',id=MATCH.id, time=MATCH.t, EFA=MATCH.EFA) & Phase2(MATCH.ct))
-    def FT(self,f,id,t,EFA,ct,v, plan):
-        if max(t,ct)>=EFA-v:
-            tasks[id]['FT']=(max(t,ct),-1)
-        elif EFA==255 or EFA-v>=ct+plan:
-            tasks[id]['BM']=(max(t,ct), -1)
-        else: 
-            tasks[id]['BM']=(max(t,ct), EFA-v)
-            tasks[id]['FT']=(EFA-v, -1)
-            print(f"add task {tasks[id]}")
-    ######### Add task for Intensity Monitor
-    @Rule (Phase2(~L(-1))& AS.f<<Grid(state='B',id=MATCH.id,time=MATCH.t)& Phase2(MATCH.ct))
-    def IM(self,f,id,t,ct):
-        tasks[id]['FI']=(max(t,ct),-1)
 Timer=0
 tasks=defaultdict(dict)
-Try=2
-# TG=TaskGenerator()
-# #TG=TaskGenerator(Timer,[])
-# TG.reset()
-# TG.run()
-# #print(TG.facts)
-# print(f"TASKS: {tasks}")
-# TG.declare(DetectFire(id=1,yes=True, time=1))
-# TG.declare(DetectFire(id=2,yes=False,time=3))
-# print("===2 run===")
-# TG.run()
+#Try=2
+
 '''
 #print(TG.facts)
 print(f"TASKS: {tasks}")

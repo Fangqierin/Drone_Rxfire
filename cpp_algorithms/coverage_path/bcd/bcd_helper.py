@@ -18,7 +18,7 @@ def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     """
     # if r < 2 and c < 2 or i == 1:
     #     plt.figure(figsize=figsize)
-    plt.subplot(r,c,i)
+    #plt.subplot(r,c,i)
     my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
     my_cmap.set_bad(color='w', alpha=0)
     lx,ly=area_map.shape
@@ -29,8 +29,8 @@ def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
         ax.axhline(y, lw=0.5, color='k')#, zorder=7)
     #ax.imshow(area_map.T,interpolation='none',cmap=my_cmap,origin='lower')
     ax.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower',extent=[0, lx, 0, ly],zorder=0)
-    plt.xlim(0, lx-1) 
-    plt.ylim(0,ly-1)
+    # plt.xlim(0, lx-1) 
+    # plt.ylim(0,ly-1)
     #plt.axis('off');
     return ax
 
