@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # imshow(EFA)
     # plt.show()
     TM=TaskManager(Missions)
-    tasks=TM.DeclareGridEFA(EFA,init=1)
+    tasks=TM.DeclareGridEFA(EFA,init=0)
     #DrawTask(tasks,EFA) 
     ########################################
     sensorfile='Data/sensor_info.csv'

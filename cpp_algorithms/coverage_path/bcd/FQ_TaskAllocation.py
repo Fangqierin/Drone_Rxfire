@@ -243,6 +243,7 @@ class Bidder:
         self.DisMax=None
         self.UploadU=0
         self.MaxUpload=0
+        self.MissionSet=set()
     def GetDistance(self,g1,g2):
         return math.sqrt((g1[-1][0]-g2[-1][0])**2+(g1[-1][1]-g2[-1][1])**2)
     #math.sqrt((x[0]-GCloc[0])**2+(x[1]-GCloc[1])**2)
@@ -370,6 +371,7 @@ class Bidder:
         #print(f"why flytime {self.TraverseTime(grid)*self.Res} {(self.speed*period)} ")
         self.assignGrid.append(grid[1])
         self.area.append(grid)
+        self.MissionSet.add(grid[0])
         self.UploadU=self.GetUploadTime(None)
         self.MaxUpload=self.MaxUploadTime(None)
 def Bidding(Grids, Bidders, EFAM):
@@ -387,8 +389,8 @@ def Bidding(Grids, Bidders, EFAM):
         #print(f"see winner {winners} ")
         rm=[]
         #print(f"bid {bid}")
-        print(f"win {winners}")
-        print(f"bid {bid}")
+        # print(f"win {winners}")
+        # print(f"bid {bid}")
 
         for j in winners:   # once have multiple winner or one winner????? 
             nums=[k for k in range(len(costs[j])) if costs[j][k]==price and Grids[k] not in rm]
@@ -405,12 +407,12 @@ def Bidding(Grids, Bidders, EFAM):
                 rm.append(Grids[nums[0]])
         for r in rm:
             Grids.remove(r)
-        print(f"see Drones flytime {[Bidders[i].flytime for i in range(len(Bidders))]}")
-        print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Bidders))]}")
-        print(f"see Drones upload {[Bidders[i].UploadU for i in range(len(Bidders))]}")
-        print(f"see Drones maxupload {[Bidders[i].MaxUpload for i in range(len(Bidders))]}")
-        print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].MaxUpload for i in range(len(Bidders))]}")
-        print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].UploadU for i in range(len(Bidders))]}")
+        # print(f"see Drones flytime {[Bidders[i].flytime for i in range(len(Bidders))]}")
+        # print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Bidders))]}")
+        # print(f"see Drones upload {[Bidders[i].UploadU for i in range(len(Bidders))]}")
+        # print(f"see Drones maxupload {[Bidders[i].MaxUpload for i in range(len(Bidders))]}")
+        # print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].MaxUpload for i in range(len(Bidders))]}")
+        # print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].UploadU for i in range(len(Bidders))]}")
 
         #print(f"winner {winners} {len(Grids)}")
         #TrackDraw(Bidders,EFAM)
@@ -436,10 +438,10 @@ def Auction(AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
         cx=(max(x)+min(x))//2
         cy=(max(y)+min(y))//2
         Grids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
-        if mm=='BM':
-            AGrids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
-        else:
-            FGrids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
+        # if mm=='BM':
+        #     AGrids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
+        # else:
+        #     FGrids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
     #loc=HisLocDrone(Bidders,seed, GCloc, Grids, seed)
     loc=ExtrmLocDrone(Bidders,seed, GCloc, Grids, seed, Res)
     for i in range(len(Bidders)):
@@ -447,12 +449,13 @@ def Auction(AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
     Bidders=Bidding(Grids,Bidders, EFAM)
     #########Fire first, then others
     #Bidders=Bidding(FGrids,Bidders, EFAM)
-    TrackDraw(Bidders,EFAM)
+    #TrackDraw(Bidders,EFAM)
     #Bidders=Bidding(AGrids,Bidders, EFAM)
     for i in range(len(Bidders)):
         Drones[i].area=Bidders[i].area
+        Drones[i].MissionSet=Bidders[i].MissionSet
         #print(f"check what is area {Drones[i].area}")
-    return Drones, Bidders
+    return Drones, Bidders, Grids
 if __name__ == "__main__":
     Missions=defaultdict(dict)  #  Missions: id, period, priority, 
     Missions['BM']=[ 10, 1]  #Other area 

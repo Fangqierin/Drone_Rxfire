@@ -27,8 +27,9 @@ class TaskManager():
         self.latime=0
         self.plantime=plantime
         self.TG.declare(Theta(v=theta, plan=plantime))
-        self.Missions=Missions
-        self.Mission_dict=defaultdict 
+        #self.Missions=Missions
+        self.TG.declare(Mission(BM=Missions['BM'][0]))
+        #self.Mission_dict=defaultdict 
     def reset(self):
         self.TG.rest()
         tasks=defaultdict(dict)
@@ -119,22 +120,24 @@ class TaskGenerator(KnowledgeEngine):
     def all_Grid_passed(self,ct,f):
         print(f"=====Get into Phase 2=====  at {ct}")
         self.modify(f,_0=ct)
-    @Rule (Phase2(~L(-1))&Theta(v=MATCH.v, plan=MATCH.plan) & AS.f<<Grid(state='N',id=MATCH.id, time=MATCH.t, EFA=MATCH.EFA) & Phase2(MATCH.ct))
-    def FT(self,f,id,t,EFA,ct,v, plan):
+    @Rule (Phase2(~L(-1))&Theta(v=MATCH.v, plan=MATCH.plan) & AS.f<<Grid(state='N',id=MATCH.id, time=MATCH.t, EFA=MATCH.EFA) & Phase2(MATCH.ct)& Mission (BM=MATCH.BM))
+    def FT(self,f,id,t,EFA,ct,v, plan,BM):
         if max(t,ct)>=EFA-v:
             tasks[id]['FT']=(max(t,ct),-1)
         elif EFA==255 or EFA-v>=ct+plan:
             tasks[id]['BM']=(max(t,ct), -1)
         else: 
-            tasks[id]['BM']=(max(t,ct), EFA-v)
+            if EFA-v-max(t,ct)>=BM:
+                ent=(EFA-v-max(t,ct))//BM*BM+max(t,ct)
+                tasks[id]['BM']=(max(t,ct), ent)
             tasks[id]['FT']=(EFA-v, -1)
     ######### Add task for Intensity Monitor
     @Rule (Phase2(~L(-1))& AS.f<<Grid(state='B',id=MATCH.id,time=MATCH.t)& Phase2(MATCH.ct))
     def FI(self,f,id,t,ct):
         tasks[id]['FI']=(max(t,ct),-1)
     ##############################################
-    @Rule (Phase2(~L(-1))& Theta(v=MATCH.v, plan=MATCH.plan) & AS.f<<Grid(state='N',id=MATCH.id, EFA=MATCH.EFA, time=MATCH.time)& AS.f1<< UpdateEFA(id=MATCH.id, NEFA=MATCH.NEFA, ct=MATCH.ct))
-    def UpdateFT(self,f, f1,v, id, EFA, time,NEFA, ct):
+    @Rule (Phase2(~L(-1))& Theta(v=MATCH.v, plan=MATCH.plan) & AS.f<<Grid(state='N',id=MATCH.id, EFA=MATCH.EFA, time=MATCH.time)& AS.f1<< UpdateEFA(id=MATCH.id, NEFA=MATCH.NEFA, ct=MATCH.ct) & Mission (BM=MATCH.BM))
+    def UpdateFT(self,f, f1,v, id, EFA, time,NEFA, ct,BM):
         NEFA=NEFA+ct
         self.retract(f1)
         self.modify(f,EFA=NEFA, time=ct)
@@ -145,7 +148,9 @@ class TaskGenerator(KnowledgeEngine):
                 tasks[id].pop('BM')
             else:
                 x,y=tasks[id]['BM']
-                tasks[id]['BM']=(x,max(ct,NEFA-v))
+                if max(ct,NEFA-v)-x>=BM:
+                    ent=(max(ct,NEFA-v)-x)//BM*BM+x
+                    tasks[id]['BM']=(x,ent)
         except:
             pass
     ############################################################

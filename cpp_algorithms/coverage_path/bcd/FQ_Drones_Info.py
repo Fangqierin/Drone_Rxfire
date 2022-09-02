@@ -36,6 +36,13 @@ class Sensor:
         if h<min_H:
             return False,0
         return h,FOV
+    def H_to_FOV(self,h):
+        length=2*h*math.tan(self.FOV_V*math.pi/360)
+        width=2*h*math.tan(self.FOV_H*math.pi/360)
+        FOV=min(length,width)
+        return FOV
+    
+    
 
 class Drone:
     def __init__(self, sensors=[], id=0,range=500, speed=3, loiter=1): # sensor can be: sensor=['RGB', 'THM', 'All']
@@ -50,6 +57,7 @@ class Drone:
         self.area=[]
         self.iniloc=[]
         self.WPCinfo={}
+        self.MissionSet=set()
     def AddSensors(self,sensors):
         self.sensors=self.sensors+sensors
         #self.sensors.append(sensor)
@@ -60,8 +68,9 @@ class Drone:
     def AddRules(self,maxH,minH):
         self.maxH=maxH
         self.minH=minH
-    def CombineHeight(self,HSset): # here we consider 2 kind of sensors
+    def CombineHeight(self,HSset,Res): # here we consider 2 kind of sensors
         delete=[]
+        add=[]
         for i in range(len(HSset)):
             for h in HSset[i]:
                 for j in list(set(range(len(HSset)))-set([i])):
@@ -71,21 +80,37 @@ class Drone:
                         mh=min(hh )
                         tmp0=HSset[i].get(h)
                         tmp1=HSset[j].get(mh)
-                        if tmp1[0]>=tmp0[0] and tmp1[1]>=tmp0[1]:
-                            delete.append([i,h])
+                        if tmp1[0]>tmp0[0] and tmp1[1]>tmp0[1]: ############## higher and higher value! 
+                            fov1=tmp1[2].H_to_FOV(h)
+                            fov1=np.floor(fov1/Res)*Res
+                            if tmp0[0]<fov1 and fov1<tmp1[0]:
+                                if len(hl)>0:
+                                    mh=max(hl)
+                                    tmp2=HSset[j].get(mh)
+                                    if tmp2[0]<fov1 and tmp2[1]>tmp0[1]:
+                                        delete.append([i,h])
+                                        add.append((h,[fov1, tmp1[1], tmp1[2]]))
+                                        print(f"see {h} tmp0 {tmp0} to {[fov1, tmp1[1], tmp1[2]]}")
+                                if len(hl)==0:
+                                    delete.append([i,h])
+                                    add.append((h,[fov1, tmp1[1], tmp1[2]]))
+        #but We do not know when at this height, this one cover larger area????
+                            ## compute it for everyone???? Then if coverage same, and value same, delete!!1
                             #print(f"see hh {i} {tmp0} {tmp1}")
-                    if [i,h] not in delete and len(hl)>0:
-                        mh=max(hl)
-                        tmp0=HSset[i].get(h)
-                        tmp1=HSset[j].get(mh)
-                        if tmp1[0]>=tmp0[0] and tmp1[1]>=tmp0[1]:
-                            delete.append([i,h])
+                    # if [i,h] not in delete and len(hl)>0:
+                    #     mh=max(hl)
+                    #     tmp0=HSset[i].get(h)
+                    #     tmp1=HSset[j].get(mh)
+                    #     if tmp1[0]>=tmp0[0] and tmp1[1]>=tmp0[1]:
+                    #         delete.append([i,h])
         for d in delete:
             del HSset[d[0]][d[1]]
         FHSset={}
         for i in range(len(HSset)):
             for k in HSset[i]:
                 FHSset[k]=HSset[i][k]
+        for h, item in add:
+            FHSset[h]=item
         return FHSset
     def GetFOV(self,MisPPM,Res):# Now only consider single drone covers the whole area
         WPCinfo=defaultdict(dict)
@@ -100,22 +125,29 @@ class Drone:
                         h,fov1=s.PPM_to_H(ppm,self.maxH,self.minH)
                         fov=np.floor(fov1/Res)*Res
                         if h!=False:
-                            H_FRdict[h]=[fov, tmp[ppm],s.type] # FOV, Reward, type
+                            H_FRdict[h]=[fov, tmp[ppm],s] # FOV, Reward, type
                 if len(H_FRdict)>0:
-                    HSset.append(H_FRdict)
+                    HSset.append(H_FRdict)      
             if len(HSset)>1:
-                H_FRdict=self.CombineHeight(HSset)
+                #print(f"see HSet {HSset}")
+                H_FRdict=self.CombineHeight(HSset, Res)
             elif len(HSset)==1:
                 H_FRdict=HSset[0]
             #print(f"check {H_FRdict}")
             WPCinfo[m]=H_FRdict
         self.WPCinfo=WPCinfo
+        print(f"see check wpcinfo {self.WPCinfo}")
         return WPCinfo
-    def GenWPCandidate(self,EFA,Res,Task_mission,WPCinfo): ## it is incorrect!!!! 
+    def GenWPCandidate(self,EFA,Res,missions): ## it is incorrect!!!! 
         WPCdict=defaultdict(dict)
         Wdict=defaultdict(dict) # key is the mission
+        WPCset=[]
         for m in missions:
-            H_FRdict=WPCinfo[m]
+            H_FRdict=self.WPCinfo[m]
+            print(f"see mission {m} ")
+            for h, itm in H_FRdict.items():
+                print(f"height: {h} {[itm[0], itm[1], itm[2].type]}")
+                
             for h in H_FRdict: #traverse the height
                 fov=H_FRdict[h][0]
                 sh=np.array(EFA.shape)*Res/fov    ##############
@@ -128,14 +160,12 @@ class Drone:
                     for j in range(sh[1]):
                         WPC[i][j]=[fov*i+fov/2, fov*j+fov/2]############ Later we also need to consider the partial coverage
                         COV[i][j]=[[(fov/Res)*i, (fov/Res)*(j)], [(fov/Res)*(i+1), (fov/Res)*(j+1)]]
-                        #WPCset.append([fov*i+fov/2, fov*j+fov/2])  
-                #print(len(WPCset))
+                        WPCset.append([fov*i+fov/2, fov*j+fov/2])  
                 Wdict[h]=[WPC,COV]
+                # plt.scatter([WPCset[i][0] for i in range(len(WPCset))], [WPCset[i][1] for i in range(len(WPCset))])
+                # plt.show()
             WPCdict[m]=Wdict
         return WPCdict
-        # plt.scatter([WPCset[i][0] for i in range(len(WPCset))], [WPCset[i][1] for i in range(len(WPCset))])
-        # plt.show()
-        #return WPC, WPCset
 def ReadSen_PPM(sensorfile,PPMfile):
     df=pd.read_csv(sensorfile,delimiter=r"\s+")
     Sensors={}
@@ -184,10 +214,13 @@ if __name__ == "__main__":
     sensorfile='Data/sensor_info.csv'
     PPMfile='Data/PPM_table.csv'
     Sensors,MisPPM=ReadSen_PPM(sensorfile,PPMfile)
+    
     # drone=Drone(id=0)
     # drone.AddSensors([Sensors['DJI_Air2S']])
+    # drone.GenWPCandidate(EFA,Res,WPCinfo)
     # drone1=Drone(id=1)
     # drone1.AddSensors([Sensors['ZENMUSE_XT2_t'],Sensors['ZENMUSE_XT2_r']])
+    # drone.GenWPCandidate(EFA,Res,WPCinfo)
     # drone1.GetFOV(MisPPM, Res)
     DroneNum=3
     speeds=[5,5,5,5,5,5]

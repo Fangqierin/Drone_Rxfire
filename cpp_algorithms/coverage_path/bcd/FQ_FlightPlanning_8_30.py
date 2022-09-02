@@ -497,8 +497,6 @@ class FlightPlanner:
     def Cluster_Scheduling(self,DecomposeSize, Res): 
         #self.DrawWPCs()
         self.waypointSeq.append(self.wp)
-        ########Define a NOWPCGrid 
-        NOWPCGrid=defaultdict(dict)
         Reward=0; P=0
         #print(f" length", len(self.WPCHeight))   # WPCs' key is the height: waypoints; Cover_map's key is waypoint: areas
         self.initialTask()
@@ -531,43 +529,61 @@ class FlightPlanner:
                     near_g=CurGrids[adex] 
                     NoWPCs=False
                     print(f"see time {self.time}")
-                    CurDL=self.Mission_DL.get(near_g[:-1])
-                    while len(self.Grid_toCov[near_g])>0 and (NoUpDL and self.time<=EndTime):
+                    while len(self.Grid_toCov[near_g])>0 and (NoUpDL and self.time<=EndTime) and not(NoWPCs):
+                        ########## Do coverage, select waypoint! 
                         areas=self.Grid_toCov[near_g]
+                        #nwpc=self.WCPCosArea(areas,near_g)   ###########Need to change
+                        #nwpc=self.NeigWPC(areas,near_g) 
                         nwpc, NoWPCs=self.BestCovNeigWPC(areas,near_g) # Here near_g is 
                         if NoWPCs:
-                            try:
-                                minDL=min([self.Mission_DL[m] for m in list(self.Mission_SR.keys()) if len(self.Mission_SR[m])>0])
-                            except:
-                                minDL=CurDL
-                            if minDL==CurDL:
-                                print(f"see here no wpc and tag it as no wpc")
-                                Gridset[count].remove(near_g)
-                            #print(f"No WPCs")
+                            print(f"No WPCs")
+                            #
+                            #if count==0:
+                            CurGrids.remove(near_g)
+                            CurGrids=[g for g in CurGrids if len(self.Grid_toCov[g])>0 ]
+                            ccnum=count 
+                            #while 
+                            
+                            Diss=[self.Distance(self.wp, (g[-1][0]*sr,g[-1][1]*sr,0)) for g in CurGrids]
+                            adex=Diss.index(min(Diss)) 
+                            near_g=CurGrids[adex] 
+                            #CurGrids=[g for g in CurGrids if self.Distance((g[-1][0]*sr,g[-1][1]*sr,0),self.GCloc)< self.Distance((near_g[-1][0]*sr,near_g[-1][1]*sr,0) ,self.GCloc)]
+                            # if len(CurGrids)==0:
+                            #     print(f"No grids in Current WPCs Mission") 
+                            #     # self.waypointSeq.append(nwpc)
+                            #     # #self.DrawWPsequence()
+                            #     # reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
+                            #     # Reward=Reward+reward
+                            #     # P=P+Penalty
+                            # else:
+                            #     print(f"try another grid {CurGrids}" )
                             break
-                        self.waypointSeq.append(nwpc)
-                        reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
-                        self.DrawWPsequence()
-                        Reward=Reward+reward
-                        P=P+Penalty
-                    if NoUpDL and self.time<=EndTime: # traversed all or NOWPCs
+                        else:
+                            self.waypointSeq.append(nwpc)
+                            #self.DrawWPsequence()
+                            reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
+                            Reward=Reward+reward
+                            P=P+Penalty
+                    if NoUpDL and self.time<=EndTime:# and not NoWPCs:
+                        print(f"Grid {near_g} is finished    ")
                         CurGrids.remove(near_g)
                         CurGrids=[g for g in CurGrids if len(self.Grid_toCov[g])>0 ]
-                    if not NoUpDL:
-                        print(f"Get out of one deadline {count}, Or Update {NoUpDL} Or timeout {self.time<=EndTime}")
                 count=count+1
-                if count==len(Gridset):#and NoUpDL:
-                    print(f"No grid to choose, upload data")
+                if not NoUpDL:
+                    print(f"Get out of one deadline {count}, Or Update {NoUpDL} Or timeout {self.time<=EndTime}")
+                while count==len(Gridset) and NoUpDL:
+                    print(f"It seems all tasks are finished")
+                    #print(f" Nope, still has tasks  ")
+                    # for key, itm in self.Grid_toCov.items():
+                    #     print(key, itm)
                     nwpc=self.ShortUpload.get(self.wp)[1]
                     self.waypointSeq.append(nwpc)
-                    self.DrawWPsequence()
+                    #self.DrawWPsequence()
+                    #self.TrackState() # See drone 
                     reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
                     Reward=Reward+reward
                     P=P+Penalty
-                    if NoUpDL: 
-                        count=0
             if NoWPCs:
-                print(f"seems stop")
                 self.waypointSeq.append(nwpc)
                 #self.TrackState() # See drone 
                 reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
@@ -647,7 +663,7 @@ if __name__ == "__main__":
     DroneNum=5
     speeds=[5,5,5,5,3,3]
     loiter=[1,2,1,1,1]
-    ranges=[300,200,500,300,100]
+    ranges=[200,100,100,300,100]
     GCloc=(0,500)
     sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']]
     Drones=LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgrp, Res,loiter,ranges)
@@ -661,7 +677,7 @@ if __name__ == "__main__":
     #TrackDraw(Drones, EFA)
     #################################
     init=1; end=40
-    for drone in Drones[:4]:
+    for drone in Drones[:2]:
         planner=FlightPlanner(drone,init=init, planTime=10, iniloc=(0,50,0), GCloc=(0,50,0),Missions=Missions,Res=Res, DecomposeSize=DecomposeSize) # Here, GCloc and iniloc divided by Res!
         planner.GenWaypoint()
         WPsequence=planner.Cluster_Scheduling(200,10)

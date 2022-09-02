@@ -122,7 +122,7 @@ class FlightPlanner:
             tak=grid[0]
             for a in areas:
                 self.Area_Task[a[0], a[1]].append((tak,a[2]))
-                self.Area_grid[a[0], a[1]]=(grid[1])   #################### FQFQ update
+                self.Area_grid[a[0], a[1]]=(0,0)#grid[1])   #################### FQFQ update
                 #print(grid)
             xal=[x[0] for x in areas]
             yal=[x[1] for x in areas]
@@ -248,7 +248,7 @@ class FlightPlanner:
         dltime=dl+(k+1)*(period*60)
         if rt<=dltime and et<=dltime:
             return True
-        print(f" {a} didn't release {time} {rt} {et}")
+        #print(f" {a} didn't release {time} {rt} {et}")
         return False
         
     def ClusterStateTrans(self,wpc):  
@@ -524,6 +524,7 @@ class FlightPlanner:
                 # Fulfill the tasks in the grid with earliest deadlines 
                 CurGrids=Gridset[count]
                 CurGrids=[g for g in CurGrids if len(self.Grid_toCov[g])>0 ]
+               
                 while len(CurGrids)>0 and NoUpDL and self.time<=EndTime:
                     ##### Find the grid closest to self.wp
                     Diss=[self.Distance(self.wp, (g[-1][0]*sr,g[-1][1]*sr,0)) for g in CurGrids]
@@ -532,8 +533,11 @@ class FlightPlanner:
                     NoWPCs=False
                     print(f"see time {self.time}")
                     CurDL=self.Mission_DL.get(near_g[:-1])
+                    print(f" Enter  {near_g}  ")
                     while len(self.Grid_toCov[near_g])>0 and (NoUpDL and self.time<=EndTime):
+                         
                         areas=self.Grid_toCov[near_g]
+                        print(f"  area {areas} ")
                         nwpc, NoWPCs=self.BestCovNeigWPC(areas,near_g) # Here near_g is 
                         if NoWPCs:
                             try:
@@ -567,7 +571,7 @@ class FlightPlanner:
                     if NoUpDL: 
                         count=0
             if NoWPCs:
-                print(f"seems stop")
+                print(f"stop here")
                 self.waypointSeq.append(nwpc)
                 #self.TrackState() # See drone 
                 reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
