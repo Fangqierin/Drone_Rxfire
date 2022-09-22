@@ -1,0 +1,23 @@
+no_cluster: coverage-based heuristic 
+boundary: Set_cover + distance based 
+top_and_down: All_WPC+ distance-based
+
+
+CreateDyRxfire(Bardata, Bursite,'FQ_burn',dir, [2])
+#Functions for creating scenarios (one-time run) 
+
+EFA,EFAdict,Primdict =GetFirSim(Bardata, Bursite,  foldername, 'FQ_burn', dir, Bursite, Res=Res,time=40)                  
+# Get fire simulation, time is the initial one. 
+
+
+EFA,EFAdict,Primdict = GetEFA(time,simdur,Bursite,dir,foldername, step=step,Res=Res)
+# Get Fire EFA
+
+Here we create FQ_Com_SimSetup for generated simulation scenarios 
+
+And FQ_Com_Packed for Comparing all algorithms. 
+
+Farsite input:  
+
+### required values RAWS: year, month, day, hour/time, temp(temperature), humid(humidity), ppt(hourly precipitation), wspeed(wind speed), wdir(wind direction), cldcover(cloud cover)
+### required values information WIND: wind is either 20ft in mph or (6.096 m I think) in km/hr. The windows version allows wind direction to be -1 for uphill and -2 for downhill winds but is usually 0 to 359. Interestingly this format seems the same as the .atm winds only file which is the gridded wind output from WindNinja, but the function that reads this input appears to only want values and not filenames. So it is still a domain average wind of that format, not gridded wind. There is a separate function called gridded wind diurnal that allows this, but I don't think the farsite internals are set to handle this function. Both of these gridded wind functions are flammap initialization only so they are currently not in use (farsite initialization does not use them!). Interestingly all these inputs that are farsite only that I am putting in here are actually the same function call used by flammap as well. We just added a new farsite .atm stuff that does do the gridded winds the right way.

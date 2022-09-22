@@ -10,7 +10,7 @@ import math
 from collections import defaultdict
 import os
 import random
-from FQ_GenTask import GetEFFNext, UpadteEFA, logEFA
+from FQ_GenTask import  UpadteEFA, logEFA
 from geopandas._vectorized import length
 
 
@@ -58,6 +58,7 @@ class Drone:
         self.iniloc=[]
         self.WPCinfo={}
         self.MissionSet=set()
+        self.Tak_Area=defaultdict(set)
     def AddSensors(self,sensors):
         self.sensors=self.sensors+sensors
         #self.sensors.append(sensor)

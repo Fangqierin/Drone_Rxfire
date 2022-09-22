@@ -1,4 +1,3 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -53,6 +52,7 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
     maxx=max([max(np.array(i).T[0]) for i in polys])
     miny=min([min(np.array(i).T[1]) for i in polys])
     maxy=max([max(np.array(i).T[1]) for i in polys])
+    #print(f"why prim bound {BunsiteBound} ")
     boundary=[min(BunsiteBound[0],minx),min(BunsiteBound[1],miny),max(BunsiteBound[2],maxx),max(BunsiteBound[3],maxy)]
     #print(f"see pre boundary {np.array(boundary)}")
     #bound=np.array(boundary)//Res
@@ -65,14 +65,25 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
     empty=np.full(sh,NF) #for record perimeter
     #################I forgot why I want to get ceiling and floor?????# 
     #But at least, I finished the EFA, and simulation!....... 
+    #print(f"why?")
+    # gpdf_final.plot()
+    # plt.show()
     for i in range(len(gpdf_final)):
         shp=gpdf_final.loc[i, 'geometry']
         ext = np.array(shp.exterior.coords)
         x,y=ext.T
+        #print(f"see xy {x} {y}")
         mix = (ext//Res - mn//Res)
         mix1 = np.int64(mix)
+        #print(f"mix1 {mix1}")
+        x,y=mix1.T
+        p[x,y] = F
         r,c = polygon(*mix1.T,sh)   #fq? should reverse that? 
         p[r,c] = F
+        #print(f"why {r} {c}")
+        #print(f"see pdd")
+        # imshow(p)
+        # plt.show()
         r,c=mix1.T # for the fire perimeter 
         #print(f"why {r} {c}")
         try:
@@ -103,7 +114,7 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0, NF=-1, F=1, P=2, Res=1):
     x,y=np.where(empty==0)
     # print(f"see p")
     # imshow(p)
-    #plt.show()
+    # plt.show()
     
     #print(f"FQ change to  {len(x)}")
     
@@ -143,15 +154,17 @@ def PutIginition(filename,dir):
     c2=f"cp {filename}.shx {tofile}.shx"
     os.system(c1)
     os.system(c2)
-    print(f"Run {c1}")
+    #print(f"Run {c1}")
 
 def UpadteEFA(Pmap, area_map,time,EFA, prim_bound,bound, NF=-1, F=1, P=2, Res=10): #    Get the estimated fire arrival time.
     if len(Pmap)==1:
         img=area_map
+        # imshow(area_map)
+        # plt.show()
         EFA = np.full(img.shape, -1,dtype=np.uint8)
-        
-        EFA[img == P] = time
+        EFA[img == P] = 1
         EFA[img == F] = time
+        # print(f"see time {time}")
         # imshow(EFA)
         # plt.show()
         x,y= np.where(EFA==time)
@@ -208,31 +221,7 @@ def UpadteEFA(Pmap, area_map,time,EFA, prim_bound,bound, NF=-1, F=1, P=2, Res=10
         x,y=np.where(EFA==time)
     return EFA, x,y
   
-def GetEFFNext(init,end, BunsiteBound, dir, foldername, Res=10):
-    scale = get_scale(BunsiteBound, meter=1)
-    EFAdict=defaultdict(list)
-    timestamp=3
-    time=init
-    Primdict=defaultdict(list)
-    Pmap=[0]
-    EFA=[]  # EFA is matrix shows the expected fire arrival time
-    prim_bound=BunsiteBound
-    while time<=end:
-        file=f"{dir}/{foldername}/output/{foldername}_{time}_Perimeters.shp"
-        data=gpd.read_file(file)
-        # data.plot()
-        # plt.show()
-        #print(f"see time {time}")
-        area_map_,prim,bound= get_raster(data, scale, prim_bound, NF=-1, F=1, P=2, Res=Res)
-        EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA,prim_bound,bound)
-        prim_bound=bound
-        EFAdict[time]=[x,y]
-        Primdict[time]=prim
-        Pmap=area_map_ 
-        time=time+timestamp
-    #shape=area_map_.shape
-    #logEFA(EFAdict, Primdict,"EFAdict.csv",shape, 10)
-    return EFA, EFAdict, Primdict
+
 
 def GetEFA(init,simdur, BunsiteBound, dir, foldername,step=3, Res=10):
     def isvalid(geom):
@@ -246,7 +235,7 @@ def GetEFA(init,simdur, BunsiteBound, dir, foldername,step=3, Res=10):
     Primdict=defaultdict(list)
     Pmap=[0]
     EFA=[]  # EFA is matrix shows the expected fire arrival time
-    prim_bound=0
+    prim_bound=BunsiteBound
     while time<=simdur:
         if time==0:
             file=f"{dir}/{foldername}/input/{foldername}.shp"
@@ -260,7 +249,7 @@ def GetEFA(init,simdur, BunsiteBound, dir, foldername,step=3, Res=10):
         data = gpd.GeoDataFrame.from_features(collection)
         # data.plot()
         # plt.show()
-        area_map_,prim,bound= get_raster(data, scale, BunsiteBound,NF=-1, F=1, P=2, Res=Res)
+        area_map_,prim,bound= get_raster(data, scale, prim_bound,NF=-1, F=1, P=2, Res=Res)
         EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA,prim_bound, bound, Res=Res)
         if time==init:
             IniPerimeter=prim   #-----> Check, if we need the perimeter later????
@@ -293,8 +282,8 @@ if __name__ == "__main__":
     Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
     # igfile='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/Rxfire/Burn_1/input/FQburn'
     # PutIginition(igfile,dir)
-    init=120
-    end=150
+    init=1
+    end=20
     Res=10
     EFA,EFAdict,Primdict =GetEFA(init,end,Bursite,dir,foldername, Res=Res)
     #Here we need use EFA to input them into the task generator. 
@@ -306,7 +295,31 @@ if __name__ == "__main__":
     #Task_mission=GenTasks(init,end,Bursite,dir,foldername, Missions ,Res=Res)
     #print(Task_mission)
 
-
+# def GetEFFNext(init,end, BunsiteBound, dir, foldername, Res=10):
+#     scale = get_scale(BunsiteBound, meter=1)
+#     EFAdict=defaultdict(list)
+#     timestamp=3
+#     time=init
+#     Primdict=defaultdict(list)
+#     Pmap=[0]
+#     EFA=[]  # EFA is matrix shows the expected fire arrival time
+#     prim_bound=BunsiteBound
+#     while time<=end:
+#         file=f"{dir}/{foldername}/output/{foldername}_{time}_Perimeters.shp"
+#         data=gpd.read_file(file)
+#         # data.plot()
+#         # plt.show()
+#         #print(f"see time {time}")
+#         area_map_,prim,bound= get_raster(data, scale, prim_bound, NF=-1, F=1, P=2, Res=Res)
+#         EFA,x,y=UpadteEFA(Pmap, area_map_,time,EFA,prim_bound,bound)
+#         prim_bound=bound
+#         EFAdict[time]=[x,y]
+#         Primdict[time]=prim
+#         Pmap=area_map_ 
+#         time=time+timestamp
+#     #shape=area_map_.shape
+#     #logEFA(EFAdict, Primdict,"EFAdict.csv",shape, 10)
+#     return EFA, EFAdict, Primdict
 
 
 

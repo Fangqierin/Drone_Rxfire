@@ -29,7 +29,6 @@ import json
 import fiona
 from shapely.geometry import shape 
 import pandas as pd
-import time
 
 ####################################### Rxfire
 def CreateRectangle(x_dl,y_dl, weight,height):# gag 10 m
@@ -59,7 +58,7 @@ def ClearBarrier(data):
     # da2.plot()
     # plt.show()  
     
-def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_res=5): # The simulation time 100 =1:00) duration<24 hours!
+def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(0,40), dis_res=5, pre_res=5): # The simulation time 100 =1:00) duration<24 hours!
     fin = open(f"{dir}/{foldername}/input/Burn.input", "w")
     with open(f"{dir}/Template_burn/input/Burn.input", "r") as ftmp:
         filedata = ftmp.readlines()
@@ -111,6 +110,7 @@ def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_r
     fin.close()
 
 def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! because we add some fire!!!! 
+    #try:
     collection = list(fiona.open(f"{dir}/{foldername}/output/{prefix}_{time}_Perimeters.shp",'r'))
     df1 = pd.DataFrame(collection)
     def isvalid(geom):
@@ -118,11 +118,21 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
                 return 1
             else:
                 return 0
+    # def isvalid(geom):
+    #     try:
+    #         shape(geom)
+    #         return 1
+    #     except:
+    #         return 0
     df1['isvalid'] = df1['geometry'].apply(lambda x: isvalid(x))
     df1 = df1[df1['isvalid'] == 1]
     collection = json.loads(df1.to_json(orient='records'))
     #Convert to geodataframe
     data = gpd.GeoDataFrame.from_features(collection)
+    #data=gpd.read_file(f"{dir}{foldername}/output/{prefix}_{time}_Perimeters.shp")
+    # except: 
+    #     print(f"finding {dir}{foldername}/output/{prefix}_{time}_Perimeters.shp")
+    #     sleep(0.3)
     try:
         print(f"{[data.loc[i, 'geometry'] for i in range(len(data))]}")
         geoms=[data.loc[i, 'geometry'] for i in range(len(data))]+[poly]
@@ -136,6 +146,8 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
         gdr = gpd.GeoDataFrame({'feature': features, 'geometry': data2}) #, crs='EPSG:4326)
     except:
         gdr = gpd.GeoDataFrame({'feature': [0], 'geometry': data2}) #, crs='EPSG:4326)
+    #print(f"see features {features}")
+    #gdr = gpd.GeoDataFrame({'feature': features, 'geometry': data2}) #, crs='EPSG:4326)
     gdr.to_file(f"{dir}/{foldername}/input/{foldername}.shp")    #------> This is the objective!!!!!! 
     ###################### Remove previous data!!! 
     f = []
@@ -149,6 +161,7 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
             if st==prefix and st+tt>prefix+time:
                 try:
                     out=os.system(f"rm {dir}/{foldername}/output/{file}")
+                    #print(f"prefix {prefix} time {time}  removed: {dir}/{foldername}/output/{file}")
                 except:
                     print(f"remove failed")
         else:
@@ -158,19 +171,15 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
                 print(f"remove failed")
     #################################################################
 
-def CreateDyRxfire(data, foldername,dir,UID): # the location of the fireline, the length of the fireline and the number of the fires. 
+def CreateDyRxfire(data, BunsiteBound, foldername,dir,UID): # the location of the fireline, the length of the fireline and the number of the fires. 
     os.system(f"mkdir {dir}/{foldername}")
     os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")
-    try:
-        os.system(f"rm -r  {dir}/{foldername}/output")
-        os.system(f"mkdir {dir}/{foldername}/output")
-    except:
-        os.system(f"mkdir {dir}/{foldername}/output")
+    os.system(f"mkdir {dir}/{foldername}/output")
     data.to_file(f"{dir}/{foldername}/input/seelin.shp")
     gap=20
-    offset=50
+    offset=40
     width=1
-    SimTime=60
+    SimTime=3*60
     if len(UID)==1:
         # Get Boundary: 
         newdata = gpd.GeoDataFrame()
@@ -239,20 +248,19 @@ def DyFarsitefile(foldername, dir,time,simdur,step=1):
     f.close()
     print(f"Command: {dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt")
     try:
-        out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt  >/dev/null 2>&1")
+        out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt >/dev/null 2>&1")
         #print(f"see out", out.read())
         print(f"Generate the fire simulation successfully! Simulation from {time} duration  {simdur} ")
     except:
         print(f"Got error when simulating the fire spread")
   
 def TestRunningtime(foldername, dir):
-    Dis_Res=[1,2,3,4,5,10,20]
+    Dis_Res=[1,3,5,10,20]
     Pre_Res=[1,3,5,10,20]
     Simtime=[1,2,3,4,5,6]
     Timestep=[1,2,3,4,5,6,10]
     Pars={'Dis':Dis_Res,'Pre':Pre_Res,'Sim':Simtime,'Tim':Timestep}
-    logfile=open(f"{dir}/{foldername}_runningtime2.txt", "w")
-    for key, values in Pars.items():
+    for key, values in Pars.iterrows():
         for v in values:
             if key=='Dis':
                 WriteInput(foldername,dir,dis_res=v)
@@ -265,32 +273,23 @@ def TestRunningtime(foldername, dir):
                     tmp[1]=v%60
                 else:
                     tmp[1]=v
-                WriteInput(foldername,dir,dura=tmp)
+                WriteInput(foldername,dir,dur=tmp)
             elif key=='Tim':
-                WriteInput(foldername,dir,step=v)
-            outputfile=f"{foldername}_{key}_{v}"
-            try:
-                os.system(f"mkdir {dir}/{outputfile}")
-            except:
-                os.system(f"rm -r {dir}/{outputfile}")
-                os.system(f"mkdir {dir}/{outputfile}")
+                WriteInput(foldername,dir,ste=v)
             f = open(f"{dir}/{foldername}/{foldername}_TEST.txt", "w")
             f.write(f"{dir}/{foldername}/input/Burn.lcp ")# write landscape
             f.write(f"{dir}/{foldername}/input/Burn.input ") # write input file
             f.write(f"{dir}/{foldername}/input/{foldername}.shp ")# write ignition fire
             #f.write(f"{dir}/{foldername}/input/FQbarrier.shp ")
             f.write(f"{dir}/{foldername}/input/seelin.shp ")   # We can change the barrier!!! 
-            f.write(f"{dir}/{outputfile}/runttime 0")   # Output
-            f.close()  
-            #try:
-            cut=time.time()
-            out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt >/dev/null 2>&1")
-            runtime=time.time()-cut
-            logfile.write(f"{key} {v} {runtime}\n") 
-            print(f"Generate the fire simulation successfully! key {key} value {v} ")
-            #except:
-                #print(f"Got error when simulating the fire spread")
-    logfile.close()
+            f.write(f"{dir}/{foldername}/output/{time} 0")   # Output
+            f.close()
+            try:
+                out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt >/dev/null 2>&1")
+                print(f"Generate the fire simulation successfully! Simulation from {time} duration  {simdur} ")
+            except:
+                print(f"Got error when simulating the fire spread")
+                
                 
                          
 def Farsitefile(foldername, dir):   
@@ -339,14 +338,20 @@ if __name__ == "__main__":
     #WriteInput('FQ_burn', dir)  # Just read somthing. 
     #CreateRxfire(data, BunsiteBound,'FQ_burn',dir, [2]) # Create the ignition file 
     #Farsitefile('FQ_burn',dir)
-    CreateDyRxfire(data, BunsiteBound,'FQ_burn',dir, [2])
-    #TestRunningtime('FQ_burn',GetFirSimdir)
     
+    CreateDyRxfire(data, BunsiteBound,'FQ_burn',dir, [2])
+    #WriteInput('FQ_burn', dir)  # Just read somthing. 
+    #DyFarsitefile('FQ_burn',dir)
+    #PutIginition(igfile,dir)
+    
+
+
+
 ########################################### Old code, for something else. 
 def CreateRxfire(data, BunsiteBound, foldername,dir,UID): # the location of the fireline, the length of the fireline and the number of the fires. 
     gap=10
     offset=20
-    width=3
+    width=1
     if len(UID)==1:
         # Get Boundary: 
         newdata = gpd.GeoDataFrame()

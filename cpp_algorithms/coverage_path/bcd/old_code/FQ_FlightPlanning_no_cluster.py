@@ -7,9 +7,7 @@ from collections import defaultdict
 import random
 import time
 import geopandas as gpd
-#from FQ_TaskAllocation import  Auction, TrackDraw
-from FQ_TaskAllocation_WPC import  Auction, TrackDraw
-
+from FQ_TaskAllocation import  Auction, TrackDraw
 from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM,LoadDrones
 from FQ_Task_Generator import  TaskManager 
 from FQ_Firesim import DyFarsitefile, ClearBarrier, CreateDyRxfire
@@ -110,7 +108,13 @@ class FlightPlanner:
                     y2= y0-(np.sqrt(tmp))//self.Res 
                     upwpc.add((x,int(y1),z))
                     upwpc.add((x,int(y2),z))
+                    #print(f"get {x,int(y1),z} {x,int(y2),z} {self.Distance(upw, self.GCloc)} {self.Distance(upw2, self.GCloc)}")
         UW=list(upwpc)
+        #fig = plt.figure()
+        # ax = fig.add_subplot(projection='3d')
+        # ax.scatter([i[0] for i in UW],[i[1] for i in UW],[i[2] for i in UW] )
+        # plt.show()
+        #UsedUW=set() # record which UW is selected 
         ##########################################################
         for grid in self.tasks:#Get the minimum and maximum x
             areas=grid[3]
@@ -119,6 +123,8 @@ class FlightPlanner:
                 self.Area_Task[a[0], a[1]].append((tak,a[2]))
                 self.Area_grid[a[0], a[1]]=(0,0)#grid[1])   #################### FQFQ update
                 #self.Area_grid[a[0], a[1]]=(grid[1])   #################### FQFQ update
+
+                #print(grid)
             xal=[x[0] for x in areas]
             yal=[x[1] for x in areas]
             tmph=Tak_H_FOV[tak]
@@ -163,6 +169,11 @@ class FlightPlanner:
                         ########################
                         y=y+fov
                     x=x+fov
+        # for ww in UsedUW:
+        #     ww=ww[:-1]
+        #     print(f"see cov  {ww}", self.Area_grid.get(ww))
+        #     if self.Area_grid.get(ww)!=None:
+        #        print(f"see cov ", self.Area_grid.get(ww))
         st=time.time()
         self.WPCs=list(set(self.WPCs))
         for i in range(len(self.WPCs)):
@@ -575,6 +586,9 @@ class FlightPlanner:
                     adex=Diss.index(min(Diss)) 
                     near_g=CurGrids[adex] 
                     NoWPCs=False
+                    #print(f"see time {self.time}")
+                    #CurDL=self.Mission_DL.get(near_g[:-1])
+                    #print(f" Enter  {near_g}  ") 
                     if IFLOG:
                         logfile.write(f"Drone {self.drone.id} Enter task {near_g} at {self.time}\n")
                     while len(self.Grid_toCov[near_g])>0 and (NoUpDL and self.time<=EndTime):
@@ -719,19 +733,12 @@ if __name__ == "__main__":
     #     d.GenWPCandidate(EFA,Res,Missions)
     ###################### Generate flight plan! 
     AreaPara=Decomposition(DecomposeSize,Res,tasks) # Need put tasks there!!!
-    Drones,Bidders=Auction(AreaPara, Drones, Res,Missions,3, EFA,GCloc)
-    #print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Drones))]}")
-    # print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].UploadU for i in range(len(Bidders))]}")
-    # print(f"see Drones flytime {[Bidders[i].flytime for i in range(len(Bidders))]}")
-    print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Bidders))]}")
-    print(f"see Drones upload {[Bidders[i].UploadU for i in range(len(Bidders))]}")
-    print(f"see Drones maxupload {[Bidders[i].MaxUpload for i in range(len(Bidders))]}")
-    print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].MaxUpload for i in range(len(Bidders))]}")
-    print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].UploadU for i in range(len(Bidders))]}")
+    Drones,Bidders,Grids=Auction(AreaPara, Drones, Res,Missions,3, EFA,GCloc)
+    print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Drones))]}")
     TrackDraw(Drones, EFA)
     #################################
     init=1; end=40
-    for drone in Drones[:5]:
+    for drone in Drones[4:5]:
         planner=FlightPlanner(drone,init=init, planTime=10, iniloc=(0,50,0), GCloc=(0,50,0),Missions=Missions,Res=Res, DecomposeSize=DecomposeSize) # Here, GCloc and iniloc divided by Res!
         planner.GenWaypoint()
         WPsequence=planner.Cluster_Scheduling(200,10)

@@ -224,7 +224,7 @@ def RanLocDrone(Bidders, sed, GCloc, Grids):
     loc=[option[i] for i in tmp]
     return loc
 class Bidder:
-    def __init__(self, Drone, GCloc, Res,Grids): # sensor can be: sensor=['RGB', 'THM', 'All']
+    def __init__(self, Drone, GCloc, Res): # sensor can be: sensor=['RGB', 'THM', 'All']
         self.id=Drone.id
         self.range=Drone.range
         self.sensortype=Drone.sensortype
@@ -244,41 +244,30 @@ class Bidder:
         self.UploadU=0
         self.MaxUpload=0
         self.MissionSet=set()
-        self.Tak_WPC=defaultdict(set)
-        self.Tak_Area=defaultdict(set)
-        #self.PretreatWPC(Drone, Grids)
-        
-        
-    def PretreatWPC(self,Drone, Grids):
-        Tak_H_COV={}
-        for mm, hcov in Drone.WPCinfo.items():
-            tmph=[(h, hcov[h][0]) for h in hcov] 
-            if len(tmph)>0:
-                maxcov=max([c[1] for c in tmph])
-                h=min([h[0] for h in tmph if h[1]==maxcov])
-                Tak_H_COV[mm]=(maxcov, h)
-            else:
-                Tak_H_COV[mm]=(-1, -1)
-        for g in Grids:
-            m=g[0]
-            FOV,H=Tak_H_COV[m]
-            if FOV!=-1:
-                areas=g[3]
-                WPCset=set()
-                for a in areas:
-                    x,y,_=np.array(a)*self.Res
-                    WPCset.add(((np.ceil(x/FOV)*FOV+FOV/2),(np.ceil(y/FOV)*FOV+FOV/2),H))
-                # print(f"add WPC {WPCset}")
-                self.Grid_WPC[g[0], g[1], g[-1]]=list(WPCset)
-            else:
-                self.Grid_WPC[g[0], g[1], g[-1]]=[] 
     def GetDistance(self,g1,g2):
         return math.sqrt((g1[-1][0]-g2[-1][0])**2+(g1[-1][1]-g2[-1][1])**2)
     #math.sqrt((x[0]-GCloc[0])**2+(x[1]-GCloc[1])**2)
-
+    def GetCost(self, grid):
+        #print(f"see grid {grid}")
+        if len(self.FoVinfo.get(grid[0]))==0:
+            return 10000000000000
+        FOV=max(list(self.FoVinfo.get(grid[0]).keys()))
+        ##return self.Gettravetime(grid)
+        period=grid[-2]*60
+        travel=self.Gettravetime(grid)
+        if len(self.area)==0:
+             return travel  ################ FQ, should we add initial location????????????????
+        if travel>1 and len(self.area)>0:
+            #print(f"why {grid[2]} {FOV} {period} {self.speed}")
+        #Here we need add travel time! 
+            return 0.1+self.coverarea+(grid[2]/(self.speed*FOV*period))
+        if travel==0 and len(self.area)>0:
+            return 0
+        # if len(self.area)==0:
+        #     return self.coverarea+(grid[2]/(self.speed*self.FoV*period))+travel
+        #print(f"see {self.coverarea} {self.coverarea+(grid[2]/(self.speed*FOV*period))}")
+        return self.coverarea+(grid[2]/(self.speed*FOV*period))#+travel/self.speed
     def GetCost_New(self, grid):
-        #print(f"see grid 3 {grid[:3]} {list(self.iniArea)}")
-
         if len(self.FoVinfo.get(grid[0]))==0:
             return 10000000000000
         FOV=max(list(self.FoVinfo.get(grid[0]).keys()))
@@ -288,29 +277,16 @@ class Bidder:
         ######### Compute Back travel time! 
         traverse=self.TraverseTime(grid) # minimal distance to assigned grids. 
         travelU=self.flytime+(traverse*self.Res)/(self.speed*period)
-        travelU=(traverse*self.Res)/(self.speed*period)
         #UploadU=self.GetUploadTime(grid)
         UploadU=self.MaxUploadTime(grid)
         if travel==0:
-            #print(f"see grid 3 {grid[:3]} {list(self.iniArea)}")
-            if grid[:2]==list(self.iniArea)[:2]:
-                return 0
             #return 0+self.coverarea+travelU+(grid[2]/(self.speed*FOV*period))+UploadU
             #return 0+self.coverarea+travelU#+self.GetUploadTime(None)#+UploadU#+(grid[2]/(self.speed*FOV*period))
-            #return 0+self.coverarea+self.GetUploadTime(grid)#+UploadU#+(grid[2]/(self.speed*FOV*period))
-            return self.coverarea+self.GetUploadTime(None)+travelU#UploadU#+(grid[2]/(self.speed*FOV*period))
-            #return 0+self.coverarea+travelU+self.MaxUploadTime(None)#+(grid[2]/(self.speed*FOV*period))
+            #return 0+self.coverarea+travelU#+self.GetUploadTime(None)#+UploadU#+(grid[2]/(self.speed*FOV*period))
+            return 0+self.coverarea+travelU+self.MaxUploadTime(None)#+(grid[2]/(self.speed*FOV*period))
         # if travel>1:
         #     return self.coverarea+(grid[2]/(self.speed*FOV*period))+travelU#+
-        l,w=grid[2]
-        covt=(math.ceil(l/FOV)*w)/(self.speed*period)
-        #return self.coverarea+travelU+covt+self.MaxUploadTime(None)#self.GetUploadTime(None)#+(grid[2]/(self.speed*FOV*period))#+UploadU#+travel/self.speed
-        return self.coverarea+travelU+self.GetUploadTime(None)#+(grid[2]/(self.speed*FOV*period))#+UploadU#+travel/self.speed
-
-
-    def Get_WPCCsot(self, grid):
-        
-        pass
+        return self.coverarea+travelU+(grid[2]/(self.speed*FOV*period))+self.MaxUploadTime(None)#self.GetUploadTime(None)#+(grid[2]/(self.speed*FOV*period))#+UploadU#+travel/self.speed
     def GetTravetime(self,grid):   # Cell distance
         if len(self.assignGrid)==0:
             return math.sqrt((grid[1][0]-self.iniArea[1][0])**2+(grid[1][1]-self.iniArea[1][1])**2)
@@ -323,11 +299,11 @@ class Bidder:
         return add
     def TraverseTime(self,grid): # Cell Center distance
         #Grids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
+        if len(self.assignGrid)==0:
+            return self.GetDistance(grid, self.iniArea)#+ math.sqrt((grid[-1][0]-self.GCloc[0])**2+(grid[1][1]-self.GCloc[1])**2)
         travel=self.GetTravetime(grid)
         if travel==0:
             return 0
-        if len(self.assignGrid)==0: 
-            return self.GetDistance(grid, self.iniArea)#+ math.sqrt((grid[-1][0]-self.GCloc[0])**2+(grid[1][1]-self.GCloc[1])**2)
         add=min([self.GetDistance(grid, k) for k in self.area])
         #print(f"why distance {add} {[self.GetDistance(grid, k) for k in self.area]}")
         return add
@@ -350,7 +326,7 @@ class Bidder:
                 #UploadU=UploadU+(2*max(0,min(mind,diss)-self.range))/(self.speed*p)
             else:
                 UploadU=UploadU+(max(0,maxd-self.range))/(self.speed*p)
-                #UploadU=UploadU+(2*max(0,mind-self.range))/(self.speed*p)
+                #UploadU=UploadU+ (2*max(0,mind-self.range))/(self.speed*p)
         if mission not in list(self.DisMission.keys()):
             UploadU=UploadU+ (max(0,diss-self.range))/(self.speed*period)
         return UploadU
@@ -371,6 +347,7 @@ class Bidder:
         else:
             period=period; maxd=diss; mind=diss
         UploadU=(max(0,maxd-self.range)+max(0,mind-self.range))/(self.speed*period)
+        #print(f"see Upload", UploadU)
         return UploadU
     
     def AddGrid(self, grid):
@@ -387,26 +364,20 @@ class Bidder:
             self.DisMission[m,period]=(max(maxd,diss), min(mind,diss))
         else:
             self.DisMission[m,period]=(diss, diss)
-        FOV=max(list(self.FoVinfo.get(grid[0]).keys()))
-        l,w=grid[2]
-        covt=(math.ceil(l/FOV)*w)/(self.speed*period)
-        self.coverarea=self.coverarea+covt # add area
-        self.flytime=self.flytime+ self.TraverseTime(grid)*self.Res/(self.speed*period)
-        print(f"add grid {grid} iniloc {self.iniArea}")
-        print(f"why flytime {self.TraverseTime(grid)*self.Res} {(self.speed*period)} ")
-        self.assignGrid.append(grid[1])
         
-        #self.Tak_WPC[m].update(self.Gird_WPC[(g[0],g[1].g[-1])]) #Update its WPCs 
+        FOV=max(list(self.FoVinfo.get(grid[0]).keys()))
+        self.coverarea=self.coverarea+(grid[2]/(self.speed*FOV*period))  # add area
+        self.flytime=self.flytime+ self.TraverseTime(grid)*self.Res/(self.speed*period)
+        #print(f"why flytime {self.TraverseTime(grid)*self.Res} {(self.speed*period)} ")
+        self.assignGrid.append(grid[1])
         self.area.append(grid)
         self.MissionSet.add(grid[0])
         self.UploadU=self.GetUploadTime(None)
         self.MaxUpload=self.MaxUploadTime(None)
-   
-   
-    
-                    
 def Bidding(Grids, Bidders, EFAM):
-    
+    # print(f"see Grids")
+    # for g in Grids:
+    #     print(g[-1])
     while len(Grids)>0: 
         bid=[];costs=[]
         for i in range(len(Bidders)):
@@ -415,27 +386,46 @@ def Bidding(Grids, Bidders, EFAM):
         bid=[min(k) for k in costs]
         price=min(bid)
         winners=[k for k in range(len(bid)) if bid[k]==price]
+        #print(f"see winner {winners} ")
         rm=[]
+        #print(f"bid {bid}")
+        # print(f"win {winners}")
+        # print(f"bid {bid}")
+
         for j in winners:   # once have multiple winner or one winner????? 
             nums=[k for k in range(len(costs[j])) if costs[j][k]==price and Grids[k] not in rm]
             if len(nums)>1:
+                #print(f"win {winners}")
+                #print(f"see grid {[Grids[i] for i in nums]}")
                 srnum=sorted([(i, Bidders[j].TraverseSum(Grids[i])) for i in nums], key=lambda x: x[1])
                 nums=[s[0] for s in srnum]
+                #print(f"see ", srnum)
+                #print(f"seeesss {nums}")
+                #TrackDraw(Bidders,EFAM)
             if len(nums)>0:
                 Bidders[j].AddGrid(Grids[nums[0]])
                 rm.append(Grids[nums[0]])
         for r in rm:
             Grids.remove(r)
-        print(f"see Drones flytime {[Bidders[i].flytime for i in range(len(Bidders))]}")
-        print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Bidders))]}")
-        print(f"see Drones upload {[Bidders[i].UploadU for i in range(len(Bidders))]}")
-        print(f"see Drones maxupload {[Bidders[i].MaxUpload for i in range(len(Bidders))]}")
-        print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].MaxUpload for i in range(len(Bidders))]}")
-        print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].UploadU for i in range(len(Bidders))]}")        #print(f"winner {winners} {len(Grids)}")
+        # print(f"see Drones flytime {[Bidders[i].flytime for i in range(len(Bidders))]}")
+        # print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Bidders))]}")
+        # print(f"see Drones upload {[Bidders[i].UploadU for i in range(len(Bidders))]}")
+        # print(f"see Drones maxupload {[Bidders[i].MaxUpload for i in range(len(Bidders))]}")
+        # print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].MaxUpload for i in range(len(Bidders))]}")
+        # print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].UploadU for i in range(len(Bidders))]}")
+
+        #print(f"winner {winners} {len(Grids)}")
         #TrackDraw(Bidders,EFAM)
     return Bidders
 def Auction(AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
+    # print(f"check AreaPara")
+    # for key, grids in AreaPara.items():
+    #     print(key, grids)
     GCloc=np.array(GCloc)//Res
+    print(f"see GCloc {GCloc}")
+    Bidders=[]
+    for d in Drones:
+        Bidders.append(Bidder(d,GCloc, Res))
     Grids=[] # Get all grids
     FGrids=[]
     AGrids=[]
@@ -447,38 +437,25 @@ def Auction(AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
         y=[i[1] for i in grids]
         cx=(max(x)+min(x))//2
         cy=(max(y)+min(y))//2
-        length=(max(x)-min(x)+1)*Res
-        width=(max(y)-min(y)+1)*Res
-        #Grids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
-        Grids.append([mm, cell,(length, width),grids,period,(cx,cy)])
-        #print(f"See Grids {mm} {cell} {grids} ")
-        # if mm=='BM':
-        #     AGrids.append([mm, cell, (length, width),grids,period,(cx,cy)])
-        # else:
-        #     FGrids.append([mm, cell, (length, width),grids,period,(cx,cy)])
-    #loc=HisLocDrone(Bidders,seed, GCloc, Grids, seed)
-    Bidders=[]
-    for d in Drones:
-        #print(f"see wpcinfo {d.WPCinfo}")
-        Bidders.append(Bidder(d,GCloc, Res,Grids))
         
+        Grids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
+        # if mm=='BM':
+        #     AGrids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
+        # else:
+        #     FGrids.append([mm, cell, len(grids)*(Res**2),grids,period,(cx,cy)])
+    #loc=HisLocDrone(Bidders,seed, GCloc, Grids, seed)
     loc=ExtrmLocDrone(Bidders,seed, GCloc, Grids, seed, Res)
     for i in range(len(Bidders)):
         Bidders[i].iniArea=loc[i]
     Bidders=Bidding(Grids,Bidders, EFAM)
     #########Fire first, then others
-    # Bidders=Bidding(FGrids,Bidders, EFAM)
-    # TrackDraw(Bidders,EFAM)
-    # Bidders=Bidding(AGrids,Bidders, EFAM)
+    #Bidders=Bidding(FGrids,Bidders, EFAM)
+    #TrackDraw(Bidders,EFAM)
+    #Bidders=Bidding(AGrids,Bidders, EFAM)
     for i in range(len(Bidders)):
-        Bidders[i].CombineGrid()
         Drones[i].area=Bidders[i].area
         Drones[i].MissionSet=Bidders[i].MissionSet
         #print(f"check what is area {Drones[i].area}")
-    ###################################################Combined tasks 
-    
-    
-    
     return Drones, Bidders
 if __name__ == "__main__":
     Missions=defaultdict(dict)  #  Missions: id, period, priority, 
@@ -513,6 +490,28 @@ if __name__ == "__main__":
     Drones,Bidders=Auction(AreaPara, Drones, Res,Missions,1,GCloc)
     #print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Drones))]}")
     TrackDraw(Drones, BSshp, AreaPara)
+
+
+
+# def Auction1(AreaPara, Drones, Res,Missions, seed):
+#     Bidders=[]
+#     for d in Drones:
+#         Bidders.append(Bidder(Drone=d))
+#     Grids=[] # Get all grids
+#     for mm in AreaPara:
+#         period=Missions.get(mm)[0]
+#         for key in AreaPara[mm]:   #There is no overlapped area (from decomposition) 
+#             Grids.append([mm, key, len(AreaPara[mm][key])*(Res**2),AreaPara[mm][key],period])
+#     loc=RanLocDrone(AreaPara, Bidders,seed)
+#     for i in range(len(Bidders)):
+#         Bidders[i].iniArea=loc[i]
+#     Bidders=Bidding(Grids,Bidders)
+#     #########Fire first, then others
+#     # Drones=Bidding(FGrids,Drones,Area, Fire, EFA,Tasks)
+#     # Drones=Bidding(AGrids,Drones,Area, Fire, EFA,Tasks)
+#     for i in range(len(Bidders)):
+#         Drones[i].area=Bidders[i].area
+#     return Drones, Bidders
 
 
 

@@ -2,6 +2,11 @@ import numpy as np
 from common_helpers import is_valid
 import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.colors as mcolors
+import matplotlib.patches as mpatches
+
+
+
 
 def imshow_scatter(path, color="orange", alpha=1, s=20):
     """
@@ -28,11 +33,91 @@ def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     for y in range(ly):
         ax.axhline(y, lw=0.5, color='k')#, zorder=7)
     #ax.imshow(area_map.T,interpolation='none',cmap=my_cmap,origin='lower')
-    ax.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower',extent=[0, lx, 0, ly],zorder=0)
+    neg=ax.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower',extent=[0, lx, 0, ly],zorder=0)
     # plt.xlim(0, lx-1) 
     # plt.ylim(0,ly-1)
     #plt.axis('off');
+    fig.colorbar(neg)
+
     return ax
+
+
+def imshow_EFA(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
+    """
+    Display with no interpolation.
+    """
+    # if r < 2 and c < 2 or i == 1:
+    #     plt.figure(figsize=figsize)
+    #plt.subplot(r,c,i)
+    plt.rcParams["font.family"] = "Times New Roman"
+
+    my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
+    my_cmap.set_bad(color='w', alpha=0)
+    lx,ly=area_map.shape
+    fig, ax = plt.subplots(1, 1, tight_layout=True)
+    for x in range(lx):
+        ax.axvline(x, lw=0.5, color='k')#, zorder=7)
+    for y in range(ly):
+        ax.axhline(y, lw=0.5, color='k')#, zorder=7)
+    #ax.imshow(area_map.T,interpolation='none',cmap=my_cmap,origin='lower')
+    norm = mcolors.DivergingNorm(vmin=0, vmax = 60, vcenter=20)
+
+    map=ax.imshow(area_map.T,interpolation='none',cmap='hot',origin='lower',extent=[0, lx, 0, ly],zorder=0,norm=norm)
+    # plt.xlim(0, lx-1) 
+    #interpolation = 'bilinear
+    # plt.ylim(0,ly-1)
+    #plt.axis('off');
+    plt.title('Fire Arrival Time (minute)')
+    cbar=fig.colorbar(map,extend='max')
+    #view_colormap('cubehelix')
+
+
+    #fig.set_clim(0,60)
+
+    return ax
+
+
+
+
+
+
+def imshow_Task(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
+    """
+    Display with no interpolation.
+    """
+    # if r < 2 and c < 2 or i == 1:
+    #     plt.figure(figsize=figsize)
+    #plt.subplot(r,c,i)
+    plt.rcParams["font.family"] = "Times New Roman"
+
+    my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
+    my_cmap.set_bad(color='w', alpha=0)
+    lx,ly=area_map.shape
+    fig, ax = plt.subplots(1, 1, tight_layout=True)
+    for x in range(lx):
+        ax.axvline(x, lw=0.5, color='k')#, zorder=7)
+    for y in range(ly):
+        ax.axhline(y, lw=0.5, color='k')#, zorder=7)
+    #ax.imshow(area_map.T,interpolation='none',cmap=my_cmap,origin='lower')
+    values = np.unique(area_map.ravel())
+
+    im=ax.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower',extent=[0, lx, 0, ly],zorder=0)
+    # plt.xlim(0, lx-1) 
+    # plt.ylim(0,ly-1)
+    #plt.axis('off');
+    colors = [ im.cmap(im.norm(value)) for value in values]
+    lab=['BM', 'FT', 'FI','BM&FT']
+    patches = [ mpatches.Patch(color=colors[i], label=lab[i] ) for i in range(len(values)) ]
+    #plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0 )
+    plt.legend(handles=patches, loc=4, borderaxespad=0 )
+
+    plt.title('Mission of Tasks in 20 Minutes')
+    #fig.colorbar(neg)
+
+    return ax
+
+
+
 
 def cluster_imshow(area_map,sc=1,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     """

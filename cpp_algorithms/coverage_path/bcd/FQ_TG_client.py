@@ -9,12 +9,12 @@ from collections import defaultdict
 import subprocess
 from FQ_Task_Generator import  TaskManager 
 from FQ_GenTask import GetEFA
-from FQ_TaskAllocation import Auction, TrackDraw
+from FQ_TaskAllocation_WPC import Auction, TrackDraw
 #from FQ_Task_Generator import  TaskManager 
 
 from FQ_Firesim import DyFarsitefile, ClearBarrier, CreateDyRxfire
 #from cpp_algorithms.common_helpers import imshow, imshow_scatter
-from bcd_helper import imshow, imshow_scatter
+from bcd_helper import imshow, imshow_scatter,imshow_Task
 import matplotlib.pyplot as plt
 import re
 import pandas as pd
@@ -55,7 +55,7 @@ from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM, LoadDrones
 # print(f"TASKS: {tasks}")
 # print(TG.facts)
 
-def GetFirSim(bardata, BunsiteBound, foldername, MockName,dir, Bursite, time=10, simdur=60,step=1, Res=10): # the location of the fire line, the length of the fireline and the number of the fires. 
+def GetFirSim(bardata, foldername, MockName,dir, Bursite, time=10, simdur=60,step=1, Res=10): # the location of the fire line, the length of the fireline and the number of the fires. 
     os.system(f"mkdir {dir}/{foldername}")
     os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")
     bardata.to_file(f"{dir}/{foldername}/input/seelin.shp")
@@ -111,7 +111,7 @@ def DrawTask(tasks, EFAM):
         else:
             m=list(mm.keys())[0]
             TaskMap[x,y]=codict[m]
-    imshow(TaskMap)
+    imshow_Task(TaskMap)
     plt.show()
 
     
@@ -153,8 +153,8 @@ if __name__ == "__main__":
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
-    #CreateDyRxfire(Bardata, Bursite,'FQ_burn',dir, [2])
-    EFA,EFAdict,Primdict =GetFirSim(Bardata, Bursite,  foldername, 'FQ_burn', dir, Bursite, Res=Res,time=40)                  
+    #CreateDyRxfire(Bardata,'FQ_burn',dir, [2])
+    EFA,EFAdict,Primdict =GetFirSim(Bardata,  foldername, 'FQ_burn', dir, Bursite, Res=Res,time=40)                  
     # imshow(EFA)
     # plt.show()
     TM=TaskManager(Missions)
@@ -166,7 +166,8 @@ if __name__ == "__main__":
     DroneNum=5
     speeds=[5,5,5,5,3,3]
     loiter=[1,2,1,1,1]
-    ranges=[200,100,100,300,100]
+    ranges=[300,200,500,300,300]
+    #ranges=[200,100,100,300,100]
     GCloc=(0,500)
     sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']]
     Drones=LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgrp, Res,loiter,ranges)
@@ -175,7 +176,7 @@ if __name__ == "__main__":
     # for k in list(AreaPara.keys()):
     #     print(k)
     Drones,Bidders=Auction(AreaPara, Drones, Res,Missions,3, EFA,GCloc)
-    #print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Drones))]}")
+    print(f"see Drones cost {[Bidders[i].coverarea for i in range(len(Drones))]}")
 
     TrackDraw(Drones, EFA)
 ######################################
