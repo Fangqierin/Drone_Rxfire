@@ -308,9 +308,7 @@ class Bidder:
         return self.coverarea+travelU+self.GetUploadTime(None)#+(grid[2]/(self.speed*FOV*period))#+UploadU#+travel/self.speed
 
 
-    def Get_WPCCsot(self, grid):
-        
-        pass
+   
     def GetTravetime(self,grid):   # Cell distance
         if len(self.assignGrid)==0:
             return math.sqrt((grid[1][0]-self.iniArea[1][0])**2+(grid[1][1]-self.iniArea[1][1])**2)
@@ -395,7 +393,6 @@ class Bidder:
         print(f"add grid {grid} iniloc {self.iniArea}")
         print(f"why flytime {self.TraverseTime(grid)*self.Res} {(self.speed*period)} ")
         self.assignGrid.append(grid[1])
-        
         #self.Tak_WPC[m].update(self.Gird_WPC[(g[0],g[1].g[-1])]) #Update its WPCs 
         self.area.append(grid)
         self.MissionSet.add(grid[0])

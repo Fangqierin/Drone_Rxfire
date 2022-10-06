@@ -1,7 +1,16 @@
-no_cluster: coverage-based heuristic 
+no_cluster: 
+1) coverage-based heuristic 
+
+#NeigWPC: Choose closest neighboring WPC 
+#BestCovNeigWPC:  use the coverage/distance 
+#BestRewardWPC: reward/distance No Improve! 
+
+#BestDistanceNeigWPC: use set_cover+ distance
+#BestTopDownNeigWPC: use set_cover+distance, for tie, get the WPC of closest x value
+#ImproveRewardWPC: same with BestRewardWPC but do not consider highest WPC
+
 boundary: Set_cover + distance based 
 top_and_down: All_WPC+ distance-based
-
 
 CreateDyRxfire(Bardata, Bursite,'FQ_burn',dir, [2])
 #Functions for creating scenarios (one-time run) 
@@ -9,15 +18,19 @@ CreateDyRxfire(Bardata, Bursite,'FQ_burn',dir, [2])
 EFA,EFAdict,Primdict =GetFirSim(Bardata, Bursite,  foldername, 'FQ_burn', dir, Bursite, Res=Res,time=40)                  
 # Get fire simulation, time is the initial one. 
 
-
 EFA,EFAdict,Primdict = GetEFA(time,simdur,Bursite,dir,foldername, step=step,Res=Res)
 # Get Fire EFA
 
-Here we create FQ_Com_SimSetup for generated simulation scenarios 
+#9/23: We Need to modify the CheckReturn for returning back at the end! 
+1) Add a judgment! When do planning, change the self.endtime. 
 
-And FQ_Com_Packed for Comparing all algorithms. 
+2) I want to consider inter-time among missions. 
+To do this, I added Missions into bidder, and a inter-fly time InterFly[m][m] 
 
-Farsite input:  
+Waypoint Generation: GWP= 1: WPC_SetCover; 2: WPC; 3: Regular
 
-### required values RAWS: year, month, day, hour/time, temp(temperature), humid(humidity), ppt(hourly precipitation), wspeed(wind speed), wdir(wind direction), cldcover(cloud cover)
-### required values information WIND: wind is either 20ft in mph or (6.096 m I think) in km/hr. The windows version allows wind direction to be -1 for uphill and -2 for downhill winds but is usually 0 to 359. Interestingly this format seems the same as the .atm winds only file which is the gridded wind output from WindNinja, but the function that reads this input appears to only want values and not filenames. So it is still a domain average wind of that format, not gridded wind. There is a separate function called gridded wind diurnal that allows this, but I don't think the farsite internals are set to handle this function. Both of these gridded wind functions are flammap initialization only so they are currently not in use (farsite initialization does not use them!). Interestingly all these inputs that are farsite only that I am putting in here are actually the same function call used by flammap as well. We just added a new farsite .atm stuff that does do the gridded winds the right way.
+#######Flight PLAN 
+1: Distance-driven+Return; 2: Reward_Driven+Return; (6, DD+NoReturn; 7: RD+NoReturn) 
+3: DL+DD+Return; 4: DL+RD+Return; (8: DL+DD+NoReturn) (9: DL+RD+NoReturn) 
+5: DL+CO+Improve+Return
+

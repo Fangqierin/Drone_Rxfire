@@ -9,9 +9,8 @@ from collections import defaultdict
 import subprocess
 from FQ_Task_Generator import  TaskManager 
 from FQ_GenTask import GetEFA
-from FQ_TaskAllocation_WPC import Auction, TrackDraw
+from FQ_TaskAllocation_WPC import Auction_WPC, TrackDraw
 #from FQ_Task_Generator import  TaskManager 
-
 from FQ_Firesim import DyFarsitefile, ClearBarrier, CreateDyRxfire
 #from cpp_algorithms.common_helpers import imshow, imshow_scatter
 from bcd_helper import imshow, imshow_scatter,imshow_Task
@@ -26,7 +25,6 @@ from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM, LoadDrones
 
 #TG=TaskGenerator()
 #p=subprocess.Popen(f"pwd", )
-
 # p=subprocess.Popen(f"python3 ./FQ_Task_Generator.py", shell=True)
 #p.wait()
 # print(f"TASKS: {tasks}")
@@ -55,7 +53,7 @@ from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM, LoadDrones
 # print(f"TASKS: {tasks}")
 # print(TG.facts)
 
-def GetFirSim(bardata, foldername, MockName,dir, Bursite, time=10, simdur=60,step=1, Res=10): # the location of the fire line, the length of the fireline and the number of the fires. 
+def GetFirSim(bardata, foldername, MockName,dir, Bursite, time=10, simdur=60,step=1, Res=10,wind=5,direction=270): # the location of the fire line, the length of the fireline and the number of the fires. 
     os.system(f"mkdir {dir}/{foldername}")
     os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")
     bardata.to_file(f"{dir}/{foldername}/input/seelin.shp")
@@ -96,23 +94,23 @@ def GetFirSim(bardata, foldername, MockName,dir, Bursite, time=10, simdur=60,ste
     except:
         os.system(f"rm -r {dir}/{foldername}/output")
         os.system(f"mkdir {dir}/{foldername}/output")
-    DyFarsitefile(foldername, dir,time,simdur) # To run the simulation! 
+    DyFarsitefile(foldername, dir,time,simdur,wind=wind,direction=direction) # To run the simulation! 
     ########Do the next 40 minutes simulation! Then read the file, get EFA.
-    EFA,EFAdict,Primdict = GetEFA(time,simdur,Bursite,dir,foldername, step=step,Res=Res)
-    return EFA, EFAdict, Primdict
+    EFA,EFAdict,bound = GetEFA(time,simdur,Bursite,dir,foldername, step=step,Res=Res)
+    #### Crop the EFA 
+    mx,my,ax,ay=np.array(bound)//Res-np.array(Bursite)//Res
+    #if mx<0: # Remove 
+    if mx<0:
+        EFA=np.delete(EFA,slice(-int(mx)),0) # [:mx] Delete first mx column
+    if ax>0:
+        EFA=np.delete(EFA,slice(-int(ax),None),0) # [-2:] Delete first mx column
+    if my<0:
+        EFA=np.delete(EFA,slice(-int(my)),1) # [:mx] Delete first mx column
+    if ay>0:
+        EFA=np.delete(EFA,slice(-int(ay),None),1) # [-2:] Delete first mx column
+    return EFA, EFAdict, bound
 
-def DrawTask(tasks, EFAM):
-    TaskMap=np.full(EFAM.shape, -1)
-    codict={'BM':0,'FT':1,'FI':2, 'B':3}
-    for key, mm in tasks.items():
-        x,y=key
-        if len(list(mm.keys()))>1:
-            TaskMap[x,y]=codict['B']
-        else:
-            m=list(mm.keys())[0]
-            TaskMap[x,y]=codict[m]
-    imshow_Task(TaskMap)
-    plt.show()
+
 
     
 '''

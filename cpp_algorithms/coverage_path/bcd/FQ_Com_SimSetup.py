@@ -1,17 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from bcd_helper import imshow, imshow_EFA, imshow_Task
+from bcd_helper import imshow, imshow_EFA, DrawTask
 import math
 from collections import defaultdict
 import random
 import time
 import geopandas as gpd
-from FQ_TaskAllocation_WPC import  Auction, TrackDraw
+from FQ_TaskAllocation_WPC import  Auction_WPC, TrackDraw
 from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM,LoadDrones
 from FQ_Task_Generator import  TaskManager 
 from FQ_Firesim import DyFarsitefile, ClearBarrier, CreateDyRxfire
-from FQ_TG_client import GetFirSim, Decomposition, DrawTask
+from FQ_TG_client import GetFirSim, Decomposition
 import copy
     
 if __name__ == "__main__":
@@ -25,21 +25,28 @@ if __name__ == "__main__":
     dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
     foldername='FQ_sim'
     #Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
-    Bursite=(702460.0,4309700.0,702860.0,4310200.0 )
+    Bursite=(702500.0,4309700.0,702900.0,4310200.0 )
     Res=10
     #########We should meet sometimes,################# Do decomposition~ 
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
-    fir_name='FQ_Sim_15_5'
-    #CreateDyRxfire(Bardata,fir_name,dir, [2])
-    EFA,EFAdict,Primdict =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=20)                  
-    imshow_EFA(EFA)
-    TM=TaskManager(Missions)
-    tasks=TM.DeclareGridEFA(EFA,init=0)
-    print(f"check task {tasks}")
-    DrawTask(tasks,EFA) 
-
+    wind=15; time=60
+    for wind in [5,10,15]:
+        for time in [1,20,40,60]:
+            fir_name=f"FQ_Sim_{wind}"
+            foldername=f"FQ_Tmp_{wind}_{time}"
+            #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
+            EFA,EFAdict,Primdict =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=time,wind=wind)                  
+            #im=imshow_EFA(EFA)
+            #plt.show()
+            #plt.savefig(f"EFA_{wind}_{time}.eps", bbox_inches='tight')
+        
+            TM=TaskManager(Missions)
+            tasks=TM.DeclareGridEFA(EFA,init=0)
+            print(f"check task {tasks}")
+            #DrawTask(tasks,EFA) 
+            #plt.savefig(f"Task_{wind}_{time}.eps", bbox_inches='tight')
 
 
 

@@ -59,7 +59,7 @@ def ClearBarrier(data):
     # da2.plot()
     # plt.show()  
     
-def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_res=5): # The simulation time 100 =1:00) duration<24 hours!
+def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_res=5, wind=5,direction=270): # The simulation time 100 =1:00) duration<24 hours!
     fin = open(f"{dir}/{foldername}/input/Burn.input", "w")
     with open(f"{dir}/Template_burn/input/Burn.input", "r") as ftmp:
         filedata = ftmp.readlines()
@@ -106,6 +106,8 @@ def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_r
             fin.write(f"FARSITE_DISTANCE_RES: {float(dis_res)}\n")
         elif re.match(f"FARSITE_PERIMETER_RES: ",line):
             fin.write(f"FARSITE_PERIMETER_RES: {float(pre_res)}\n")
+        elif re.match(f"2013 5 4 0000 58 26 0.00",line):
+            fin.write(f"2013 5 4 0000 58 26 0.00 {wind} {direction} 0\n")
         else:
             fin.write(line)
     fin.close()
@@ -158,7 +160,7 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
                 print(f"remove failed")
     #################################################################
 
-def CreateDyRxfire(data, foldername,dir,UID): # the location of the fireline, the length of the fireline and the number of the fires. 
+def CreateDyRxfire(data, foldername,dir,UID,wind=5,direction=270): # the location of the fireline, the length of the fireline and the number of the fires. 
     os.system(f"mkdir {dir}/{foldername}")
     os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")
     try:
@@ -169,7 +171,7 @@ def CreateDyRxfire(data, foldername,dir,UID): # the location of the fireline, th
     data.to_file(f"{dir}/{foldername}/input/seelin.shp")
     gap=20
     offset=50
-    width=1
+    width=3
     SimTime=60
     if len(UID)==1:
         # Get Boundary: 
@@ -203,13 +205,13 @@ def CreateDyRxfire(data, foldername,dir,UID): # the location of the fireline, th
             x=x+gap
     ####################### Start_Sim, NewData is 
     time=0
-    count=3  # how many fire stripes initially? 
+    count=1  # how many fire stripes initially? 
     cudata=newdata[:count]#newdata.loc[0]
     burngap=10
     simdur=40
     cudata.to_file(f"{dir}/{foldername}/input/{foldername}.shp")
     while time<=SimTime and count<len(newdata):
-        DyFarsitefile(foldername, dir,time,simdur)    #Run with current time with name is time
+        DyFarsitefile(foldername, dir,time,simdur,wind=wind,direction=direction)    #Run with current time with name is time
         ptime=time
         time=time+burngap+random.randint(0, 5)
         poly=newdata.loc[count,'geometry']
@@ -218,7 +220,7 @@ def CreateDyRxfire(data, foldername,dir,UID): # the location of the fireline, th
     if time+simdur<SimTime:
         DyFarsitefile(foldername, dir,time+simdur,SimTime-time-simdur+60)    #Run with current time with name is time
 
-def DyFarsitefile(foldername, dir,time,simdur,step=1):   
+def DyFarsitefile(foldername, dir,time,simdur,step=1,wind=5,direction=270):   
     #write testfile
     tmp=[0,0]
     simdur=simdur+20  #I do not why it always stop earlier! 
@@ -228,7 +230,7 @@ def DyFarsitefile(foldername, dir,time,simdur,step=1):
     else:
         tmp[1]=simdur
     #print(f"Sim time {tmp}")
-    WriteInput(foldername,dir,dura=tmp, step=step)
+    WriteInput(foldername,dir,dura=tmp, step=step,wind=wind,direction=direction)
     f = open(f"{dir}/{foldername}/{foldername}_TEST.txt", "w")
     f.write(f"{dir}/{foldername}/input/Burn.lcp ")# write landscape
     f.write(f"{dir}/{foldername}/input/Burn.input ") # write input file
@@ -291,8 +293,7 @@ def TestRunningtime(foldername, dir):
             #except:
                 #print(f"Got error when simulating the fire spread")
     logfile.close()
-                
-                         
+            
 def Farsitefile(foldername, dir):   
     os.system(f"mkdir {dir}/{foldername}")
     os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")

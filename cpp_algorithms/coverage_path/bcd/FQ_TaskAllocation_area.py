@@ -374,6 +374,7 @@ class Bidder:
         self.MissionSet.add(grid[0])
         self.UploadU=self.GetUploadTime(None)
         self.MaxUpload=self.MaxUploadTime(None)
+        
 def Bidding(Grids, Bidders, EFAM):
     # print(f"see Grids")
     # for g in Grids:

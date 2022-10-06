@@ -56,7 +56,7 @@ class FlightPlanner:
         self.Mission_SR=defaultdict(dict)
         self.Mission_DL={}
         self.DisMatrix=defaultdict(dict)
-        
+        #self.DemposeSize=DecomposeSize
         self.Area_grid={} # for mapping area to grid! {area: (grid, mission)}
         self.Grid_Area=defaultdict(list)# {(mission, offset, grid): [area]} 
         self.Grid_toCov=defaultdict(list) # for a grid, some area need be covered
@@ -73,8 +73,8 @@ class FlightPlanner:
         #AreaPara[mm[0]]=Area
         #Taskdict['BM']=[init, BMA, Missions['BM'][0],Missions['BM'][1]]
         #task is drone.area
-        print(f"check", self.drone.range)
-        print(f"GCloc {self.GCloc}")
+        # print(f"check", self.drone.range)
+        # print(f"GCloc {self.GCloc}")
         Tak_H_FOV={}
         allh=[]
         for tak in list(self.drone.MissionSet):
@@ -179,7 +179,7 @@ class FlightPlanner:
         #     self.ShortUpload[w]=(self.drone.loiter,w) # if is connected, it is itself. 
         print(f"time to compute short upload {time.time()-st}")
     def initialTask(self):     #Here we only consider to handle started task!
-        print(f"see Gird_Task {self.Area_Task}")
+        #print(f"see Gird_Task {self.Area_Task}")
         for a in self.Area_Task:
             for t in self.Area_Task[a]: 
                 # Here t is (task, (rt, et)) 
@@ -470,7 +470,6 @@ class FlightPlanner:
             Covlist=[self.GetDataReward(w) for w in WPCs]
             maxrwd=max([x[2]/x[1] for x in Covlist])
             tmp=[i for i in list(range(len(Covlist))) if Covlist[i][2]/Covlist[i][1]==maxrwd]
-            print(f"Covlist {maxrwd} {[WPCs[i] for i in tmp]}\n")
             if IFLOG:
                 logfile.write(f"Covlist {maxrwd} {[WPCs[i] for i in tmp]}\n")
             x,y,z=max(Covlist, key=lambda x: x[2]/x[1])
@@ -732,9 +731,9 @@ if __name__ == "__main__":
     #################################
     init=1; end=40
     for drone in Drones[:5]:
-        planner=FlightPlanner(drone,init=init, planTime=10, iniloc=(0,50,0), GCloc=(0,50,0),Missions=Missions,Res=Res, DecomposeSize=DecomposeSize) # Here, GCloc and iniloc divided by Res!
+        planner=FlightPlanner(drone,init=init, planTime=10, iniloc=(0,50,0), GCloc=(0,50,0),Missions=Missions,Res=Res) # Here, GCloc and iniloc divided by Res!
         planner.GenWaypoint()
-        WPsequence=planner.Cluster_Scheduling(200,10)
+        WPsequence=planner.Cluster_Scheduling(1200)
         planner.DrawWPsequence()
         #plt.show()
         

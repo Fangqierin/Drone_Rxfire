@@ -41,6 +41,8 @@ def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
 
     return ax
 
+plt.rcParams["font.family"] = "Times New Roman"
+plt.rcParams.update({'font.size': 10})
 
 def imshow_EFA(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     """
@@ -49,8 +51,9 @@ def imshow_EFA(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     # if r < 2 and c < 2 or i == 1:
     #     plt.figure(figsize=figsize)
     #plt.subplot(r,c,i)
+    
     plt.rcParams["font.family"] = "Times New Roman"
-
+    plt.rcParams.update({'font.size': 10})
     my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
     my_cmap.set_bad(color='w', alpha=0)
     lx,ly=area_map.shape
@@ -67,10 +70,14 @@ def imshow_EFA(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     #interpolation = 'bilinear
     # plt.ylim(0,ly-1)
     #plt.axis('off');
-    plt.title('Fire Arrival Time (minute)')
+    #plt.title('Fire Arrival Time (minute)')
     cbar=fig.colorbar(map,extend='max')
+    cbar.set_label(label='Fire Arrival Time (Minute)')
+    
+    plt.xlabel('X (10 Meters)')
+    plt.ylabel('Y (10 Meters)')
     #view_colormap('cubehelix')
-
+    fig.set_size_inches(4, 4)
 
     #fig.set_clim(0,60)
 
@@ -78,7 +85,19 @@ def imshow_EFA(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
 
 
 
-
+def DrawTask(tasks, EFAM):
+    TaskMap=np.full(EFAM.shape, -1)
+    codict={'BM':0,'FT':1,'FI':2, 'B':3}
+    for key, mm in tasks.items():
+        x,y=key
+        if len(list(mm.keys()))>1:
+            TaskMap[x,y]=codict['B']
+        else:
+            m=list(mm.keys())[0]
+            TaskMap[x,y]=codict[m]
+    imshow_Task(TaskMap)
+    
+    #plt.show()
 
 
 def imshow_Task(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
@@ -109,13 +128,14 @@ def imshow_Task(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     lab=['BM', 'FT', 'FI','BM&FT']
     patches = [ mpatches.Patch(color=colors[i], label=lab[i] ) for i in range(len(values)) ]
     #plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0 )
-    plt.legend(handles=patches, loc=4, borderaxespad=0 )
+    plt.legend(handles=patches, loc=1, borderaxespad=0 )
 
-    plt.title('Mission of Tasks in 20 Minutes')
+    #plt.title('Mission of Tasks in 20 Minutes')
     #fig.colorbar(neg)
-
+    fig.set_size_inches(4, 4)
+    plt.xlabel('X (10 Meters)')
+    plt.ylabel('Y (10 Meters)')
     return ax
-
 
 
 

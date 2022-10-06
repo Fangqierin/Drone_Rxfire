@@ -175,7 +175,8 @@ def UpadteEFA(Pmap, area_map,time,EFA, prim_bound,bound, NF=-1, F=1, P=2, Res=10
         bound=np.int64(np.array(bound)//Res)
         #print(f"check at beginning {Pmap.shape} {area_map.shape} {prim_bound} {bound} ")
         if list(prim_bound)!=list(bound):
-            new_bound=[min(prim_bound[0],bound[0]),min(prim_bound[1],bound[1]), max(prim_bound[2],bound[2]),max(prim_bound[3],bound[3])]  
+            new_bound=[min(prim_bound[0],bound[0]),min(prim_bound[1],bound[1]), max(prim_bound[2],bound[2]),max(prim_bound[3],bound[3])] 
+             
             if prim_bound[0]>new_bound[0]:    # previous minx is smaller.
                 #print(f"check prim_bound minx {prim_bound[0]} {Pmap.shape}")
                 tmprow=[np.array([-1]*Pmap.shape[1])]
