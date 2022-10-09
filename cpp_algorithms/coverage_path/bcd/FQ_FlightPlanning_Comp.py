@@ -1471,7 +1471,7 @@ class FlightPlanner:
         if IFLOG:
             self.logfile.write(f"Time {self.drone.id} {time.time()-st}\n")
             self.logfile.write(f"Total {self.drone.id} {Reward} {P} {len(self.waypointSeq)} {self.waypointSeq}\n")
-        return Rewapard, P, time.time()-st
+        return Reward, P, time.time()-st
     
     def DL_Release_FP(self,EndTime, FPnum, Improve): 
         #self.DrawWPCs()
