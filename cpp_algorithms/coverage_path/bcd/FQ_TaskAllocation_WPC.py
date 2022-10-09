@@ -7,17 +7,17 @@ from _collections import defaultdict
 sys.path.append('../../../')
 #from cpp_algorithms.common_helpers import imshow, imshow_scatter
 from bcd_helper import imshow, imshow_scatter, cluster_imshow
-from shapely.geometry import Point, Polygon
+#from shapely.geometry import Point, Polygon
 from pathlib import Path
 # from zipfile import ZipFile
 #from geopy import distance
 #from skimage import measure
 import math
-from skimage.draw import polygon
+#from skimage.draw import polygon
 import shapely
 import shapely.geometry
 from collections import defaultdict
-from skimage.draw import polygon
+#from skimage.draw import polygon
 import os
 import random
 from FQ_GenTask import UpadteEFA, logEFA
