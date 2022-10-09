@@ -57,8 +57,8 @@ if __name__ == "__main__":
     PPMfile='Data/PPM_table.csv'
     DroneNum=6
     speeds=[5,5,5,5,3,5]
-    loiter=[1,2,1,1,1,2]
-    ranges=[300,200,500,300,300,500]
+    loiter=[1,1,1,1,1,1]
+    ranges=[300,300,500,300,300,500]
     GCloc=(0,500)
     GCloc=(0,0)
     inloc=(0,0,0)
@@ -68,24 +68,40 @@ if __name__ == "__main__":
     #Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi
     ## GWP= 1: WPC_SetCover; 2: WPC_Adjust; 3: Regular
     ###PLAN 0, Ours 1: DD+Return; 2: Reward_Driven+Return; 3: DL+DD+Return; 4: DL+RD+Return; ## 5: DL+CO+Return; 6: DL+CO+NoReturn 
-    logfile=f"./Results/log_{wind}_{STtime}"
+    logfile=f"./Results/log9_{wind}_{STtime}"
     log=open(logfile, "w")
-    Simfile=f"./Results/Simple_{wind}_{STtime}"
+    Simfile=f"./Results/Simple9_{wind}_{STtime}"
     Simlog=open(Simfile,"w")
     
-    TANum=1;GWP=1;FPnum=0
-    #Rewardl, Pl, Runtiml=AllComp(log, TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks)
+    # TANum=1;GWP=1;FPnum=0
+    # Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
     #Simlog.write(f"Sum {TANum} {GWP} {FPnum} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {mean(Runtiml)}\n")
-    
-    ##########################
+    #########################
     for TANum in [1,2,3,4]:
         for GWP in [1,2,3]:
-            for FPnum in [0,1,2,3,4]:
-                Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
+            for FPnum in [0,1,2,3,4,5,6]:
+                Rewardl, Pl, Runtiml,LogTask,LogMiss,LogReward=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
                 Simlog.write(f"Sum {TANum} {GWP} {FPnum} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)}\n")
                 for i in range(len(Rewardl)):
-                    Simlog.write(f"Drone {i} {Rewardl[i]} {Pl[i]} {Runtiml[i]}\n")
-    #################################
+                    Simlog.write(f"Drone {TANum} {GWP} {FPnum} {i}; {Rewardl[i]} {Pl[i]} {Runtiml[i]}\n")
+                    #Simlog.write(f"Tasks {i}\n")
+                    for tak, timeNum in LogTask[i].items():
+                        Simlog.write(f"Tasks {TANum} {GWP} {FPnum} {i}; {tak}; {sum(list(timeNum.values()))}; ")
+                        for time, num in timeNum.items():
+                            Simlog.write(f"{int(time)} {num}; ")
+                        Simlog.write(f"\n")
+                    #Simlog.write(f"Miss {i} {TANum} {GWP} {FPnum}\n")
+                    for tak, timeNum in LogMiss[i].items():
+                        Simlog.write(f"Miss {TANum} {GWP} {FPnum} {i}; {TANum} {GWP} {FPnum} {tak}; {sum(list(timeNum.values()))}; ")
+                        for time, num in timeNum.items():
+                            Simlog.write(f"{int(time)} {num}; ")
+                        Simlog.write(f"\n")
+                    Simlog.write(f"Reward {TANum} {GWP} {FPnum} {i}; ")
+                    for time, Rdset in LogReward[i].items():
+                        r,s,p=Rdset
+                        Simlog.write(f"{int(time)} {r} {s} {p}; ")
+                    Simlog.write(f"\n")
+     #################################
     log.close()
     Simlog.close()
 

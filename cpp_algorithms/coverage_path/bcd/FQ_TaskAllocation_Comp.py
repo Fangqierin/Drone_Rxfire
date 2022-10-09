@@ -732,7 +732,7 @@ def Auction_Comp(which, AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
         #TrackDraw(Bidders,EFAM)
         #DrawWPCs(Bidders)
         Bidders=Bidding_Area(AGrids,Bidders, EFAM)
-    if which==0: # Run Voronoi 
+    if which==4: # Run Voronoi 
         for i in range(len(Bidders)):
             Bidders[i].AddGrid_VD(loc[i])
             Bidders[i].iniArea=loc[i] ########### Add it for VD
