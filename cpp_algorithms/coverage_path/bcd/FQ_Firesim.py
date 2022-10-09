@@ -473,12 +473,12 @@ def GetIgnitionRadius(BunsiteBound,num):
 
 def GetInigitionNear(U_x,U_y,BunsiteBound):
     sx, sy, bx, by =  BunsiteBound
-    print(f"check U_x, U_y {U_x} {U_y}")
+    #print(f"check U_x, U_y {U_x} {U_y}")
     U_x=max(sx,U_x)
     U_x=min(U_x,bx)
     U_y=max(sy,U_y)
     U_y=min(U_y,by)   
-    print(f"Why {bx} {U_x}")
+    #print(f"Why {bx} {U_x}")
     p_x=random.randint(10,min(100,(bx-U_x)))
     p_y=random.randint(10,min(100,(by-U_y)))
     return (U_x+p_x),(U_y+p_y)
@@ -486,7 +486,7 @@ def GetInigitionNear(U_x,U_y,BunsiteBound):
 def CreateWildfie(BunsiteBound,num):
     coors=GetIgnitionCenter(BunsiteBound,num)
     rads=GetIgnitionRadius(BunsiteBound,num)
-    print(rads)
+    #print(rads)
     newdata = gpd.GeoDataFrame()
     newdata['geometry'] = None
     for i in range(num):

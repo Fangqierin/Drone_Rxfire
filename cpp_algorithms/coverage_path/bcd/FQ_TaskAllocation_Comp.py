@@ -383,7 +383,7 @@ class Bidder:
             for m1, mt in UpInter.items():
                 for m2, t in mt.items():
                     self.InterFly[m1][m2]=t
-            print(f"see Drone {self.id} interfly  {m1} {m2} {t}")
+            #print(f"see Drone {self.id} interfly  {m1} {m2} {t}")
             
     def AddGrid_Inter(self, grid):
         #period=grid[-2]*60
@@ -579,7 +579,7 @@ def Bidding_WPC(Grids, Bidders, EFAM):
         for r in rm:
             Grids.remove(r)
         #print(f"see Drones flytime {[Bidders[i].flytime for i in range(len(Bidders))]}")
-        print(f"see Drones cost {[sum(list(Bidders[i].Tak_UT.values())) for i in range(len(Bidders))]}")
+        #print(f"see Drones cost {[sum(list(Bidders[i].Tak_UT.values())) for i in range(len(Bidders))]}")
         # print(f"see Drones upload {[Bidders[i].UploadU for i in range(len(Bidders))]}")
         # print(f"see Drones maxupload {[Bidders[i].MaxUpload for i in range(len(Bidders))]}")
         # print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].flytime+Bidders[i].MaxUpload for i in range(len(Bidders))]}")
@@ -619,8 +619,8 @@ def Bidding_Inter(Grids, Bidders, EFAM):
         for r in rm:
             Grids.remove(r)
         #print(f"see Drones flytime {[Bidders[i].flytime for i in range(len(Bidders))]}")
-        print(f"see Drones cost {[sum(list(Bidders[i].Tak_UT.values())) for i in range(len(Bidders))]}")
-        print(f" see inter {[0.5*sum([sum(list(Bidders[i].InterFly[k].values())) for k in list(Bidders[i].InterFly)]) for i in range(len(Bidders))]}")
+        #print(f"see Drones cost {[sum(list(Bidders[i].Tak_UT.values())) for i in range(len(Bidders))]}")
+        #print(f" see inter {[0.5*sum([sum(list(Bidders[i].InterFly[k].values())) for k in list(Bidders[i].InterFly)]) for i in range(len(Bidders))]}")
        
     return Bidders
 
@@ -645,7 +645,7 @@ def Bidding_Area(Grids, Bidders, EFAM):
                 rm.append(Grids[nums[0]])
         for r in rm:
             Grids.remove(r)
-        print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].UploadU for i in range(len(Bidders))]}")        #print(f"winner {winners} {len(Grids)}")
+        #print(f"see Drones cost {[Bidders[i].coverarea+Bidders[i].UploadU for i in range(len(Bidders))]}")        #print(f"winner {winners} {len(Grids)}")
     return Bidders
     
 def Voronoi(Grids, Bidders, EFAM):

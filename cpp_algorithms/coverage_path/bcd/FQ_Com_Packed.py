@@ -33,7 +33,8 @@ if __name__ == "__main__":
     Missions['FI']=[ 5, 1]  #track the fire 
     Missions['FT']=[ 2.5, 3]  # track the fire perimeter and the risky area (arrival within 10 min)
     ################ Get tasks.
-    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
+    #dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
+    dir='../../../farsite'
     logfile=f"logtask.txt"
     IFLOG=True
     if IFLOG:
