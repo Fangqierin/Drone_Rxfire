@@ -241,7 +241,9 @@ def DyFarsitefile(foldername, dir,time,simdur,step=1,wind=5,direction=270):
     f.close()
     print(f"Command: {dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt")
     try:
-        out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt  >/dev/null 2>&1")
+        #out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt  >/dev/null 2>&1")
+        out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt")
+
         #print(f"see out", out.read())
         print(f"Generate the fire simulation successfully! Simulation from {time} duration  {simdur} ")
     except:

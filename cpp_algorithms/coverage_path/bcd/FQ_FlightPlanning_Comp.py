@@ -1463,7 +1463,7 @@ class FlightPlanner:
         if IFLOG:
             self.logfile.write(f"Time {self.drone.id} {time.time()-st}\n")
             self.logfile.write(f"Total {self.drone.id} {Reward} {P} {len(self.waypointSeq)} {self.waypointSeq}\n")
-        return Reward, P, time.time()-st
+        return Rewapard, P, time.time()-st
     
     def DL_Release_FP(self,EndTime, Improve): 
         #self.DrawWPCs()
@@ -1605,7 +1605,8 @@ if __name__ == "__main__":
     #Missions['FL']=[ 3, 2]  # FL is tracking the fire perimeter.
     #Missions['FD']=[ 2, 3]
     ################ Get tasks.
-    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
+    #dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
+    dir='../../../farsite'
     foldername='FQ_sim'
     # logfile=f"logtask.txt"
     # if IFLOG:
