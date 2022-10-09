@@ -2,7 +2,7 @@ from random import choice
 import threading 
 import zmq 
 import time
-from pyknow import *
+#from pyknow import *
 import geopandas as gpd
 import os
 from collections import defaultdict
