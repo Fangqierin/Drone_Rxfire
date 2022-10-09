@@ -1592,7 +1592,7 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
         Penaltylist.append(P)
         Runtimelist.append(Runtim)
         print(f"Reward {Reward} P {P}")
-        planner.DrawWPsequence()
+        #planner.DrawWPsequence()
     print(f"{TANum} {GWP} {FPnum} {sum(Rewardlist)} {sum(Penaltylist)} ")
     return Rewardlist, Penaltylist, Runtimelist
 
