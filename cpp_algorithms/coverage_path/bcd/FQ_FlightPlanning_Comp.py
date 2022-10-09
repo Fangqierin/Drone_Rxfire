@@ -564,6 +564,7 @@ class FlightPlanner:
                     self.Fix_toCov[grid]=copy.copy(CurArea)
                     if IFLOG:
                         self.logfile.write(f"Add {self.drone.id} {self.time} {m} {len(CurArea)}\n")
+                    print(f"Add {self.drone.id} {self.time} {m} {len(CurArea)}\n")
                 weight=1
                 #k=np.floor((self.time-dl)/(period*60))
                 period=self.MissionDict[m[0]][0]
@@ -584,7 +585,6 @@ class FlightPlanner:
                 jrcount=len(Cur_miss)
                 if IFLOG:
                     self.logfile.write(f"Miss {self.drone.id} {self.time} {m} {dl} {jrcount}\n")
-                
                 print(f"Miss {m}  {jrcount} weight {weight}  at {self.time}\n")
                 Penalty=Penalty+(k*weight*self.sigma)*NumMiss+(jrcount*(weight*self.sigma))
                 Reward=Reward-(k*weight*self.sigma)*NumMiss-(jrcount*(weight*self.sigma))   # Get the penalty! 
@@ -704,6 +704,8 @@ class FlightPlanner:
     
     def GetFixDataReward(self,wpc): # Get reward without updating state!!! 
         Reward=0; Covercount=0
+        # if len(cwp)==0:
+        #     cwp=self.wp
         if self.wp!=wpc:
             distance=self.DisMatrix[self.wp][wpc]
         else:
@@ -852,14 +854,16 @@ class FlightPlanner:
             distance=0
         Ttime=distance/self.drone.speed+self.drone.loiter # maybe 1 s
         return Ttime
+    
     def QuickTopDown(self,areas,wpcs, ctime,DL):
         cw=self.wp
         WPC=copy.copy(wpcs)
         #Area=copy.copy(areas)
         cutime=ctime
         WSeq=[]
-        CovA=set()              
-        while len(set(areas)-CovA)>0: # Nearest Neighbor 
+        CovA=set()           
+        UpTime=min(list(self.Mission_DL.values()))   
+        while len(set(areas)-CovA)>0 : # Nearest Neighbor 
             #print([[a[:-1] for a in self.Cover_map[w]] for w in wps])
             ft=[(self.Flytime(cw, w),w) for w in WPC] 
             mint=min([t[0] for t in ft])    
@@ -875,11 +879,40 @@ class FlightPlanner:
             WPC.remove(dw)
             WPC=[w for w in WPC if not self.QuickCheck(cutime, DL, cw, w)]
             WPC=[w for w in WPC if len(set([a[:-1] for a in self.Cover_map[w]]).intersection(set(areas))-CovA)>0]
-            if len(WPC)==0:
+            if len(WPC)==0 or cutime>UpTime:
+            #if len(WPC)==0:
                 #print(f"Out of Time?")
                 break
         #print(f" Nowpc? Height {self.wp[-1]} {len(WPC)} {ctime} {DL} {cutime-ctime} {WSeq} {len(CovA)} {len(set(areas)-CovA)}")
         return len(CovA), cutime-ctime, WSeq
+    
+    def QuickCoverage(self,areas,AllWPCs,ctime,DL): # For one 
+        cw=self.wp
+        cutime=ctime
+        WSeq=[]
+        WPC=copy.copy(AllWPCs)
+        CovA=set() 
+        UpTime=min(list(self.Mission_DL.values()))   
+        #WPCs=[w for w in WPCs if not self.QuickCheck(cutime, DL, cw, w)]
+        while len(set(areas)-CovA)>0 : # 
+            if len(WPC)==0 or cutime>UpTime:
+                break
+            Covlist=[(set([a[:-1] for a in self.Cover_map[w]]).intersection(set(areas)-CovA), self.Flytime(cw,w)) for w in WPC]
+            x,y=max(Covlist, key=lambda x: (len(x[0]))/(x[1]))
+            print(f"\n cover {x} {y} ")
+            adex=Covlist.index((x,y))
+            dw=WPC[adex]
+            cutime=cutime+self.Flytime(cw, dw)
+            cw=dw  
+            CovA.update(x)
+            WSeq.append(cw)
+            WPC.remove(dw)
+            WPC=[w for w in WPC if not self.QuickCheck(cutime, DL, cw, w)]
+            WPC=[w for w in WPC if len(set([a[:-1] for a in self.Cover_map[w]]).intersection(set(areas)-CovA))>0]
+            
+        return len(CovA), cutime-ctime, WSeq
+    
+######################################################################
         #return trat, WSeq
     def QuickCheck(self,ctime,DL,cwp, wp ):
         Delay=self.Flytime(cwp, wp)
@@ -897,32 +930,41 @@ class FlightPlanner:
         stdl=[]
         if len(self.Mission_SR)>0:
             stdl=[self.Mission_DL[x[0]] for x in list(self.Mission_SR.items()) if len(x[1])>0]
-        #if len(stdl)>0:  
+        #if len(stdl)>0: 
+        #min(list(self.Mission_DL.values()))
         DL=min(stdl+[DL]+[self.EndTime])
         Comh=[]
         ##################
+        AllWPCs=[]
         for h in poheights:
             WPCs=[]
             for a in areas: 
                 try:
                     to_wp=[w for w in self.Area_WPC.get((a,mission)) if w[2]==h]
                     to_wp=[w for w in to_wp if w in self.WPCs]
-
                 except:
                     pass
                 WPCs=WPCs+to_wp
             WPCs=list(set(WPCs))
             WPCs=[w for w in WPCs if not (self.CheckReturn(w,((g[0],g[1]),self.Mission_DL[g[0],g[1]]))) ]
+            AllWPCs=AllWPCs+WPCs
             #print(f"Mission {(mission,offset)} {h}")
             if len(WPCs)>0:
-                htime=np.sqrt((h-self.wp[-1])**2)/self.drone.speed
                 Covnum, Ctime, WSeq=self.QuickTopDown(areas,WPCs, self.time,DL)
                 Comh.append([h,Covnum, Ctime, WSeq])
+        Covnum, Ctime, WSeq=self.QuickCoverage(areas, AllWPCs, self.time, DL)
+        if len(WSeq)>0:
+            Comh.append((0,Covnum, Ctime, WSeq))
+        print(f"seee {[i[:3] for i in Comh]}")
+        print(f"see Cover {(Covnum, Ctime, WSeq)} ")
         if len(Comh)==0: # Nowpc
             return 0, 0, 0, [],True##### Compare: 1) CovNum--> Ctime 
         MaxCnum=max(i[1] for i in Comh)
         Items=[i for i in Comh if i[1]==MaxCnum]
         Suh,Cn,Ctime,wseq=sorted(Items,key=lambda x:x[2])[0]
+        if Suh==0:
+            print(f"Use Coverage path! {Comh} ")
+            print()
         return  Suh,Cn,Ctime,wseq, False
     ###########################################################################   
     
@@ -979,6 +1021,40 @@ class FlightPlanner:
             nwpc=WPCs[adex]
             return nwpc, False
     
+    def RewardWPC(self,areas,g): ### Now it is stupid! 1) Add checking reward method! 2) How to handle staying at the same locations? 
+        mission, offset,gid=g
+        WPCs=[]
+        poheights=[h[0] for h in  self.WPC_TakFov[g[0]]] #speed up it
+        for a in areas: 
+            to_wp=[w for w in self.Area_WPC.get((a,mission)) if w[2] in (poheights)]
+            to_wp=[w for w in to_wp if w in self.WPCs]
+            # maxh=max([ww[2] for ww in to_wp])
+            # to_wp=[w for w in to_wp if w[2]==maxh]
+            WPCs=WPCs+to_wp
+        WPCs=list(set(WPCs))
+        WPCs=[w for w in WPCs if not (self.CheckReturn(w,((g[0],g[1]),self.Mission_DL[g[0],g[1]]))) ]
+        if len(WPCs)==0:
+            nwpc=self.ShortUpload.get(self.wp)[1]
+            #print(f"No WPCs is valid--> Return back!")
+            return nwpc, True
+        else:
+            Covlist=[self.GetFixDataReward(w) for w in WPCs]   ###### Here change this!!!
+            x,y,z=max(Covlist, key=lambda x: (x[0])/(x[1]))
+            #print(f"check {x} {y} {z} ")
+            if x==0:
+                nwpc=self.ShortUpload.get(self.wp)[1]
+                return nwpc,True
+            #print(f"which cover more? {(x,y,z)}")
+            #Diss=[self.Distance(self.wp,w) for w in WPCs] #Here the distance can be compute less????
+            adex=Covlist.index((x,y,z))
+            nwpc=WPCs[adex]
+            return nwpc, False
+    
+    
+    
+    
+    
+    
     def CoverNeigWPC(self,areas,g): ### Now it is stupid! 1) Add checking reward method! 2) How to handle staying at the same locations? 
         mission, offset,gid=g
         WPCs=[]
@@ -1007,7 +1083,75 @@ class FlightPlanner:
             adex=Covlist.index((x,y,z))
             nwpc=WPCs[adex]
             return nwpc, False
+        
+#######################################################    
     
+    def MultipleCovWPC(self,CurGrids): 
+        Areas=[]
+        WPCs=[]
+        for g in CurGrids:
+            areas=self.Grid_toCov[g]
+            mission, offset,gid=g
+            poheights=[h[0] for h in  self.WPC_TakFov[g[0]]] #speed up it
+            for a in areas: 
+                to_wp=[w for w in self.Area_WPC.get((a,mission)) if w[2] in (poheights)]
+                to_wp=[w for w in to_wp if w in self.WPCs]
+                # maxh=max([ww[2] for ww in to_wp])
+                # to_wp=[w for w in to_wp if w[2]==maxh]
+                WPCs=WPCs+to_wp
+        WPCs=list(set(WPCs))
+        WPCs=[w for w in WPCs if not (self.CheckReturn(w,((g[0],g[1]),self.Mission_DL[g[0],g[1]]))) ]
+        if len(WPCs)==0:
+            nwpc=self.ShortUpload.get(self.wp)[1]
+            #print(f"No WPCs is valid--> Return back!")
+            return nwpc, True
+        else:
+            Covlist=[self.GetFixDataReward(w) for w in WPCs]   ###### Here change this!!!
+            x,y,z=max(Covlist, key=lambda x: (x[2])/(x[1]))
+            print(f"\n cover {x} {y} {z} ")
+            if z==0:
+                nwpc=self.ShortUpload.get(self.wp)[1]
+                return nwpc,True
+            #print(f"which cover more? {(x,y,z)}")
+            #Diss=[self.Distance(self.wp,w) for w in WPCs] #Here the distance can be compute less????
+            adex=Covlist.index((x,y,z))
+            nwpc=WPCs[adex]
+            return nwpc, False
+        
+    def MultipleRewardWPC(self,CurGrids): 
+        Areas=[]
+        WPCs=[]
+        for g in CurGrids:
+            areas=self.Fix_toCov[g]
+            mission, offset,gid=g
+            poheights=[h[0] for h in  self.WPC_TakFov[g[0]]] #speed up it
+            for a in areas: 
+                to_wp=[w for w in self.Area_WPC.get((a,mission)) if w[2] in (poheights)]
+                to_wp=[w for w in to_wp if w in self.WPCs]
+                # maxh=max([ww[2] for ww in to_wp])
+                # to_wp=[w for w in to_wp if w[2]==maxh]
+                WPCs=WPCs+to_wp
+        WPCs=list(set(WPCs))
+        #print(f"WPC? {WPCs}")
+        WPCs=[w for w in WPCs if not (self.CheckReturn(w,((g[0],g[1]),self.Mission_DL[g[0],g[1]]))) ]
+        if len(WPCs)==0:
+            nwpc=self.ShortUpload.get(self.wp)[1]
+            #print(f"No WPCs is valid--> Return back!")
+            return nwpc, True
+        else:
+            Covlist=[self.GetFixDataReward(w) for w in WPCs]   ###### Here change this!!!
+            x,y,z=max(Covlist, key=lambda x: (x[0])/(x[1]))
+            print(f"\n Reward cover {x} {y} {z} ")
+            if x==0:
+                #nwpc=self.ShortUpload.get(self.wp)[1]
+                return [],True
+            #print(f"which cover more? {(x,y,z)}")
+            #Diss=[self.Distance(self.wp,w) for w in WPCs] #Here the distance can be compute less????
+            adex=Covlist.index((x,y,z))
+            nwpc=WPCs[adex]
+            return nwpc, False
+###################################################
+
     def ImproveRewardWPC(self,areas,g): ### Now it is stupid! 1) Add checking reward method! 2) How to handle staying at the same locations? 
         #print(f" Enter here")
         mission, offset,gid=g
@@ -1134,14 +1278,15 @@ class FlightPlanner:
             count=0; NoUpDL=True
             while count<len(Gridset) and NoUpDL and self.time<=EndTime:
                 CurGrids=copy.copy(Gridset[count])
-                #print(f"check  Gridset {count} {CurGrids}")
+                print(f"check  Gridset {count} {CurGrids}")
                 CurGrids=[g for g in CurGrids if len(self.Grid_toCov[g])>0 ]
-                #print(f" what left {CurGrids}")
+                print(f" what left {CurGrids}")
                 #print(f"Drone {self.drone.id} Enter task {Gridset[count]} at {self.time}")
                 if len(CurGrids)>0:
                     g_num=0
                     while g_num< len(CurGrids) and (NoUpDL and self.time<=EndTime):
                         near_g=CurGrids[g_num] 
+                        #near_g=CurGrids[-1] 
                         New=True
                         SugH=0
                         print(f"If Enter {near_g} {len(self.Grid_toCov[near_g])}")
@@ -1163,6 +1308,9 @@ class FlightPlanner:
                                     reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
                                     Reward=Reward+reward
                                     P=P+Penalty
+                                    if not NoUpDL:
+                                        print(f"Jump out AjustHeight")
+                                        break
                             break
                         g_num=g_num+1
                 count=count+1
@@ -1339,35 +1487,36 @@ class FlightPlanner:
                     cdl=dlv
                     tmp=list(self.Mission_Grid[mm])
             Gridset.append(tmp)
-            #print(f"check  Gridset {Gridset}")
             count=0; NoUpDL=True
             while count<len(Gridset) and NoUpDL and self.time<=EndTime:
                 CurGrids=copy.copy(Gridset[count])
                 CurGrids=[g for g in CurGrids if len(self.Grid_toCov[g])>0 ]
-                #print(f"Drone {self.drone.id} Enter task {Gridset[count]} at {self.time}")
                 if len(CurGrids)>0:
-                    near_g=CurGrids[0] 
-                    Areas=[]
-                    for n_g in CurGrids:
-                        Areas=Areas+self.Grid_toCov[n_g]
-                    while len(self.Grid_toCov[near_g])>0 and (NoUpDL and self.time<=EndTime): # This while loop is not used, because now there is only one item in it. 
-                        areas=self.Grid_toCov[near_g]
-                        #print(f"why {areas} {near_g}")
-                        #nwpc, NoWPCs=self.BestTopDownNeigWPC(areas, near_g) # Here near_g is 
-                        #nwpc, NoWPCs=self.RewardNeigWPC(areas, near_g) # Here near_g is
-                        #nwpc, NoWPCs=self.BestCovNeig    WPC(areas, near_g) # Here near_g is
-                        if New:
+                    print(f"Enter CurGrids {CurGrids}")
+                    while sum([len(self.Grid_toCov[g]) for g in CurGrids])>0 and (NoUpDL and self.time<=EndTime): # This while loop is not used, because now there is only one item in it. 
+                        if len(CurGrids)>1:
+                            nwpc, NoWPCs=self.MultipleCovWPC(CurGrids) # Here near_g is
+                            if NoWPCs:
+                                break
+                            self.waypointSeq.append(nwpc)
+                            reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
+                            Reward=Reward+reward
+                            P=P+Penalty
+                        else:
+                            near_g=CurGrids[0]
+                            areas=self.Grid_toCov[near_g]
                             SugH,_,Ctime,Wseq, NoWPCs=self.AdjustHeightNeigWPC(areas, near_g) # Here near_g is 
-                            #print(f"Check {self.time+Ctime} {NoWPCs}")
-                            New=False
-                        if not NoWPCs and len(Wseq)>0:
-                            for nwpc in Wseq:
-                                self.waypointSeq.append(nwpc)
-                                #planner.DrawWPsequence()
-                                reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
-                                Reward=Reward+reward
-                                P=P+Penalty
-                        break
+                            if not NoWPCs and len(Wseq)>0:
+                                for nwpc in Wseq:
+                                    self.waypointSeq.append(nwpc)
+                                    #planner.DrawWPsequence()
+                                    reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
+                                    Reward=Reward+reward
+                                    P=P+Penalty
+                                    if not NoUpDL:
+                                        print(f"check! ")
+                                        break
+                            break 
                 count=count+1
             if not Improve and count==len(Gridset) and NoUpDL: 
                 nwpc=self.ShortUpload.get(self.wp)[1]
@@ -1383,12 +1532,12 @@ class FlightPlanner:
                     count=0
                     while count<len(Gridset)and NoUpDL and self.time<=EndTime: #Enter improve phase 
                         CurGrids=copy.copy(Gridset[count])
-                        near_g=CurGrids[0] 
-                        #print(f"{self.drone.id} to improve  {near_g} at {self.time} ")
+                        #print(f"improve {CurGrids}")
                         while NoUpDL and self.time<=EndTime:
-                            nwpc, NoWPCs=self.ImproveRewardWPC(self.Fix_toCov[near_g],near_g) # Here near_g is 
+                            nwpc, NoWPCs=self.MultipleRewardWPC(CurGrids) # Here near_g is
+                            #nwpc, NoWPCs=self.MultipleRewardWPC(self.Fix_toCov[near_g],near_g) # Here near_g is 
                             if NoWPCs:
-                                #print(f"Drone {self.drone.id} {count} No Improve at task {near_g} at {self.time}")
+                                print(f"Drone {self.drone.id} {count} No Improve at task {near_g} at {self.time}")
                                 break
                             self.waypointSeq.append(nwpc)
                             reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
@@ -1397,7 +1546,7 @@ class FlightPlanner:
                             P=P+Penalty
                         count=count+1
                 if count==len(Gridset) and NoUpDL:
-                    #print(f" To upload Data")
+                    print(f" To upload Data")
                     nwpc=self.ShortUpload.get(self.wp)[1]
                     self.waypointSeq.append(nwpc)
                     #planner.DrawWPsequence()
@@ -1409,7 +1558,7 @@ class FlightPlanner:
             self.logfile.write(f"Time {self.drone.id} {time.time()-st}\n")
             self.logfile.write(f"Total {self.drone.id} {Reward} {P} {len(self.waypointSeq)} {self.waypointSeq}\n")
         #print(f"Planning time ")    
-        #print(f" drone {self.drone.id} waypoints {Reward}, {P}, {len(self.waypointSeq)} {self.waypointSeq}")
+        print(f" drone {self.drone.id} waypoints {Reward}, {P}, {len(self.waypointSeq)} {self.waypointSeq}")
         return Reward, P, time.time()-st
 
 IFLOG=False
@@ -1422,7 +1571,7 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
     Rewardlist=[]
     Penaltylist=[]
     Runtimelist=[]
-    for drone in Drones[:1]:
+    for drone in Drones[2:6]:
         planner=FlightPlanner(drone,init=init, iniloc=inloc, GCloc=inloc,Missions=Missions,Res=Res) # Here, GCloc and iniloc divided by Res!
         planner.logfile=log
         if GWP==1:
@@ -1442,7 +1591,9 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
         Rewardlist.append(Reward)
         Penaltylist.append(P)
         Runtimelist.append(Runtim)
-        #planner.DrawWPsequence()
+        print(f"Reward {Reward} P {P}")
+        planner.DrawWPsequence()
+    print(f"{TANum} {GWP} {FPnum} {sum(Rewardlist)} {sum(Penaltylist)} ")
     return Rewardlist, Penaltylist, Runtimelist
 
 
@@ -1495,7 +1646,7 @@ if __name__ == "__main__":
     if IFLOG:
         log=open(logfile, "w")
     init=0; Plantime=60*20
-    TANum=1;GWP=1;FPnum=0
+    TANum=1;GWP=1;FPnum=5
     AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=log)
     if IFLOG:
         log.close()
