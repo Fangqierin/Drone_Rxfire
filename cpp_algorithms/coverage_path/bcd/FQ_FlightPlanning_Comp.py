@@ -110,6 +110,7 @@ class FlightPlanner:
             xal=[x[0] for x in areas]
             yal=[x[1] for x in areas]
             tmph=self.WPC_TakFov[tak]
+            self.Connection[self.GCloc]=True
             for wpc in tmph:
                 fov=wpc[1]/(self.Res)####### Already divided by Res!!!
                 mx=math.ceil(min(xal)/fov)*fov   
@@ -260,6 +261,7 @@ class FlightPlanner:
             xal=[x[0] for x in areas]
             yal=[x[1] for x in areas]
             tmph=Tak_H_FOV[tak]
+            self.Connection[self.GCloc]=True
             for wpc in tmph:
                 fov=wpc[1]/(self.Res)####### Already divided by Res!!!
                 x=math.floor(min(xal)/fov)*fov  
@@ -370,6 +372,7 @@ class FlightPlanner:
                     upwpc.add((x,int(y1),z))
                     upwpc.add((x,int(y2),z))
         UW=list(upwpc)
+        self.Connection[self.GCloc]=True
         ##########################################################
         for grid in self.tasks:#Get the minimum and maximum x
             XB,YB=self.CheckBoundary(grid)
@@ -547,6 +550,7 @@ class FlightPlanner:
         # if IFLOG:
         #     logfile.write(f"Drone {self.drone.id} at {self.time}\n")
         self.wp=wpc
+        #print(f"why connect {wpc}")
         CONNECT=self.Connection[wpc]
         areas=self.Cover_map.get(wpc)
         ############ Update time 
@@ -1592,7 +1596,7 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
         if GWP==3:
             planner.GenWaypoint_Regular()
         if FPnum==0:
-            Reward, P, Runtim=WPsequence=planner.DL_Scheduling(Plantime, Improve=True)
+            Reward, P, Runtim=planner.DL_Scheduling(Plantime, Improve=True)
         elif FPnum in [1,2]:
             Reward, P, Runtim=planner.Comp_Scheduling(Plantime,FPnum)
         elif FPnum in [3,4]:
@@ -1636,7 +1640,7 @@ if __name__ == "__main__":
     wind=15
     #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
     fir_name=f"FQ_Sim_{wind}"
-    STtime=40
+    STtime=1
     EFA,EFAdict,bound =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=wind)                  
     TM=TaskManager(Missions)
     print(f"Start Task Generation")
@@ -1661,7 +1665,7 @@ if __name__ == "__main__":
     if IFLOG:
         log=open(logfile, "w")
     init=0; Plantime=60*20
-    TANum=4;GWP=1;FPnum=5
+    TANum=1;GWP=1;FPnum=0
     AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=log)
     if IFLOG:
         log.close()
