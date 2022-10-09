@@ -1,0 +1,1 @@
+../../../farsite/FQ_sim_2/input/Burn.lcp ../../../farsite/FQ_sim_2/input/Burn.input ../../../farsite/FQ_sim_2/input/FQ_sim_2.shp ../../../farsite/FQ_sim_2/input/seelin.shp ../../../farsite/FQ_sim_2/output/40 0

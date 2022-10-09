@@ -98,15 +98,12 @@ class Tello_drone:
 
     def takeoff(self):
         # connects the drone and makes it takeoff
-
         # makes drone fly to designated start height
         self.z = 90
         self.drone.send_control_command("takeoff", timeout = 30)
         #self.drone.takeoff()
-
         # for _ in range(abs(round((initial_height - 90)/self.change))+1):
         #     self.move(False)
-
         # if initial_height > 90:
         #     self.drone.move_up(initial_height - 90)
         # elif initial_height < 90:
@@ -447,8 +444,6 @@ class Tello_drone:
                     time.sleep(1)
                 self.drone.send_rc_control(0,0,0,0)
             self.y = self.waypoints[self.current_waypoint][1]
-
-
             if abs(u_d_distance) >= 20:
                 self.drone.send_control_command("{} {}".format('up' if u_d_distance >=0 else 'down', abs(u_d_distance)),timeout = 40)
             elif abs(u_d_distance) > 0:
@@ -458,15 +453,12 @@ class Tello_drone:
                 self.drone.send_rc_control(0,0,0,0)
             self.z = self.waypoints[self.current_waypoint][2]
 
-    
-
     def hover(self):
         '''
         makes the drone hover in place
         '''
         self.drone.send_rc_control(0,0,0,0)
     
-
     # Streaming and Image Processing Functions
     def stream_current_frame(self):
         # Streams the current frame the drone's camera has captured
@@ -507,7 +499,6 @@ class Tello_drone:
                 "time": "to be implemented"
             }
         )
-
 
 
     # Get functions

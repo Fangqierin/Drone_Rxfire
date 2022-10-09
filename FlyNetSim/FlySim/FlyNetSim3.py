@@ -88,15 +88,15 @@ if __name__ == "__main__":
     gcs_obj = None
 
     time.sleep(0.1)
-    ns_cmd = "xterm -T Network_Simulator -e 'cd " + args.path + " && ./waf --run=\"uav-net-sim\"'"
-    print("[MAIN] Starting the network simulator: " + ns_cmd)
-    proc_instance.append(subprocess.Popen(ns_cmd, shell=True))
+    #ns_cmd = "xterm -T Network_Simulator -e 'cd " + args.path + " && ./waf --run=\"uav-net-sim\"'"
+    #print("[MAIN] Starting the network simulator: " + ns_cmd)
+    #proc_instance.append(subprocess.Popen(ns_cmd, shell=True))
     #time.sleep(3)
-    print("[MAIN] Started the network simulator: " + ns_cmd)
+    #print("[MAIN] Started the network simulator: " + ns_cmd)
 
     # Common Publisher for all the UAVs
-    uav_zmq_tel_connection_str = "tcp://127.0.0.1:5600"  # NS-3
-    #uav_zmq_tel_connection_str = "tcp://127.0.0.1:5551"  # DIRECT
+    #uav_zmq_tel_connection_str = "tcp://127.0.0.1:5600"  # NS-3
+    uav_zmq_tel_connection_str = "tcp://127.0.0.1:5600"  # DIRECT
     uav_zmq_tel_socket = create_zmq("PUB", uav_zmq_tel_connection_str, verbose=True)
 
     for i in range(args.instance):
@@ -104,11 +104,10 @@ if __name__ == "__main__":
                                   " -e dronekit-sitl copter --instance " + str(i), shell=True)
         proc_instance.append(p_sitl)
         #time.sleep(2)
-        uav_id = format(i, "03d")  # type: str
-
+        uav_id = format(i, "03d")
         # Seperate Subcribers with individual filters
-        uav_zmq_control_connection_str = "tcp://127.0.0.1:5601"  # NS-3
-        #uav_zmq_control_connection_str = "tcp://127.0.0.1:5550"  # DIRECT
+        #uav_zmq_control_connection_str = "tcp://127.0.0.1:5601"  # NS-3
+        uav_zmq_control_connection_str = "tcp://127.0.0.1:5500"  # DIRECT
         ftr = "@@@G_" + uav_id
         uav_zmq_control_socket = create_zmq("SUB", uav_zmq_control_connection_str, ftr, True)
         if args.verbose == 2 or args.verbose == 3:
@@ -127,8 +126,8 @@ if __name__ == "__main__":
     else:
         ver = False
 
-    gcs.main(5501, 5500, args.instance, ver)  # NS3
-    #gcs.main(5551, 5550, args.instance,False)  # DIRECT
+    #gcs.main(5501, 5500, args.instance, ver)  # NS3
+    gcs.main(5600, 5500, args.instance,False)  # DIRECT
 '''
     print("[MAIN] Terminating the SITL instances")
     for p in proc_instance:
