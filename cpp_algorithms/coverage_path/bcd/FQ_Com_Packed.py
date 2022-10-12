@@ -22,7 +22,7 @@ import sys
 if __name__ == "__main__":
     try:
         wind=int(sys.argv[1]);
-        STtime=str(sys.argv[2]);
+        STtime=int(sys.argv[2]);
         
     except: 
         wind=15
