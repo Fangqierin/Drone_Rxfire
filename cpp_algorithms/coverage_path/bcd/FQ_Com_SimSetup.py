@@ -10,7 +10,7 @@ import geopandas as gpd
 from FQ_TaskAllocation_WPC import  Auction_WPC, TrackDraw
 from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM,LoadDrones
 from FQ_Task_Generator import  TaskManager 
-from FQ_Firesim import DyFarsitefile, ClearBarrier, CreateDyRxfire
+from FQ_Firesim import DyFarsitefile, ClearBarrier, CreateDyRxfire,CreateRandomRxfire
 from FQ_TG_client import GetFirSim, Decomposition
 import copy
     
@@ -31,43 +31,52 @@ if __name__ == "__main__":
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
-    wind=15; time=60
+    wind=15; time=60; seed=1
     for wind in [5,10,15]:
-        for time in [1,20,40,60]:
-            fir_name=f"FQ_Sim_{wind}"
-            foldername=f"FQ_Tmp_{wind}_{time}"
-            #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
-            EFA,EFAdict,Primdict =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=time,wind=wind)                  
-            #im=imshow_EFA(EFA)
-            #plt.show()
-            #plt.savefig(f"EFA_{wind}_{time}.eps", bbox_inches='tight')
-        
-            TM=TaskManager(Missions)
-            tasks=TM.DeclareGridEFA(EFA,init=0)
-            print(f"check task {tasks}")
-            #DrawTask(tasks,EFA) 
+        for time in  [1,20, 40,60]:
+            for seed in [0,1,2]:# range(10):
+                ############################### For random seed
+                #We have 8 time slots each of 20 minutes 
+                slots=['0000','0020','0040','0100','0120','0140','0200','0220']
+                erwind=3
+                random.seed(seed)
+                windset=np.array([random.randint(-erwind,erwind) for i in range(8)])+np.array([wind for i in range(8)])
+                direction=270
+                erdir=10
+                dirset=np.array([random.randint(-erdir,erdir) for i in range(8)])+np.array([direction for i in range(8)])
+                Winddict={}
+                Inputdict={}
+                ct=0
+                for i in range(0,160,20):
+                    Winddict[i]=(windset[ct],dirset[ct])
+                    Inputdict[slots[ct]]=(windset[ct],dirset[ct])
+                    ct=ct+1
+                ########################################################
+                fir_name=f"FQ_Rand_{wind}_{seed}"
+                foldername=f"FQ_Tmp_{wind}_{time}_{seed}"
+                #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
+                #CreateRandomRxfire(Bardata,fir_name,dir, [2],wind=wind,sed=seed,Inputdict=Inputdict)
+                #print(f"Finish create {wind} {seed}")  
+                
+                tt=min([k for k in list(Winddict.keys()) if k<=time])
+                windd,directt=Winddict[tt]
+                #print(f" {windd} {directt}")
+                EFA,EFAdict,Primdict =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=time,wind=windd,direction=directt,sed=seed)                  
+                imshow_EFA(EFA)
+                #plt.show()
+                #plt.savefig(f"EFA_{wind}_{time}.eps", bbox_inches='tight')
+                TM=TaskManager(Missions)
+                tasks=TM.DeclareGridEFA(EFA,init=0)
+                #print(f" see tasks",TM.cur_tasks)
+                #TM.reset()
+                print(f"check {wind} time {time} seed {seed}")
+                DrawTask(tasks,EFA)
+                plt.show() 
+                #
+                #imshow_EFA(EFA)
+                
+                
             #plt.savefig(f"Task_{wind}_{time}.eps", bbox_inches='tight')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     #
     # def Cluster_Valid_Decision(self, DecomposeSize, Res,UpdateGrid):   # Check the missions in the bigger cluster!

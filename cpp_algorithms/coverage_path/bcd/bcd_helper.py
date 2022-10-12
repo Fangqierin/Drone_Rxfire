@@ -1,5 +1,5 @@
 import numpy as np
-from common_helpers import is_valid
+#from common_helpers import is_valid
 import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.colors as mcolors
@@ -52,7 +52,8 @@ def imshow_EFA(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     #     plt.figure(figsize=figsize)
     #plt.subplot(r,c,i)
     
-    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams['font.family'] = 'serif'
+    plt.rcParams['font.serif'] = ['Times New Roman'] + plt.rcParams['font.serif']
     plt.rcParams.update({'font.size': 10})
     my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
     my_cmap.set_bad(color='w', alpha=0)
@@ -107,8 +108,8 @@ def imshow_Task(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     # if r < 2 and c < 2 or i == 1:
     #     plt.figure(figsize=figsize)
     #plt.subplot(r,c,i)
-    plt.rcParams["font.family"] = "Times New Roman"
-
+    plt.rcParams['font.family'] = 'serif'
+    plt.rcParams['font.serif'] = ['Times New Roman'] + plt.rcParams['font.serif']
     my_cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b','r','g'])
     my_cmap.set_bad(color='w', alpha=0)
     lx,ly=area_map.shape
@@ -179,13 +180,6 @@ def cluster_imshow(area_map,sc=1,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     #ax.set_yticklabels(y_label_list)
     #plt.axis('off');
     return ax
-
-
-
-
-
-
-
 
 
 def bcd_preprocess(area_map):

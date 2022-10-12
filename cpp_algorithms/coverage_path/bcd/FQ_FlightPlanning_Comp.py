@@ -671,10 +671,9 @@ class FlightPlanner:
             else:
                 self.logfile.write(f"Reward {self.drone.id} {self.time} {Reward} {SReward} {Penalty}\n")
                 self.logReward[self.time]=(Reward,SReward,Penalty)
-
-        #print(f"see reward {Reward},sreward {SReward}, penalty  time {Ttime} {self.time}")
+        # if not (Reward==0 and SReward==0 and Penalty==0):
+        #     print(f"see reward {Reward},sreward {SReward}, penalty  time {Ttime} {self.time}")
         return Reward, SReward, Penalty, NoUpDL
-
     def GetDataReward(self,wpc): # Get reward without updating state!!! 
         Reward=0; Covercount=0
         if self.wp!=wpc:
@@ -691,12 +690,61 @@ class FlightPlanner:
             for m,st in self.TaskState[(a[:-1])].items():
                 #print(m,st)
                 grid=list(self.Mission_Grid[m])[0]
+                #Cur_Mission=[a for a in self.Mission_Area.get(m) if self.CheckReleasetime(a,m, dl, self.time, period)]
+                #print(f"see all area {[ar for ar in self.Mission_Area.get(m)]}")
+                #print(a, self.Fix_toCov[grid])
+                #if a[:-1] in [ar for ar in self.Mission_Area.get(m)]:
                 if a[:-1] in self.Fix_toCov[grid]:
                     #print(f"see {m} {st}")
                     mission,offset=m
                     if self.Mission_DL[m]<self.time+Ttime:
                         jr,sr=(0,0)
                     else:
+                        jr,sr=st
+                    ############ Get the reward!!!! 
+                    poheights=list(self.drone.WPCinfo.get(mission).keys())
+                    z=wpc[2]
+                    if z>max(poheights):
+                        rwd=0
+                    else:
+                        z=min([k for k in poheights if k>=z])
+                        rwd=self.drone.WPCinfo.get(mission).get(z)[1] 
+                    #######################################    
+                    if rwd>max(sr,jr):   # if SR<JR is useless, right???  
+                        Reward=Reward+(rwd-max(sr,jr))
+                        if sr==0 and jr==0 and self.Mission_DL[m]>self.time+Ttime:
+                            Covercount=Covercount+1
+        #print(f"see expected {Reward}")# penalty {Penalty}")
+        return Reward, Ttime, Covercount
+    
+    def GetDataReward2(self,wpc): # Get reward without updating state!!! 
+        Reward=0; Covercount=0
+        if self.wp!=wpc:
+            distance=self.DisMatrix[self.wp][wpc]
+        else:
+            distance=0
+        Ttime=distance/self.drone.speed+self.drone.loiter # maybe 1 s
+        areas=self.Cover_map.get(wpc)
+        if areas==None:
+            return 0,self.drone.loiter,0
+        ############ Update time 
+        for a in areas:   # the areas the waypoint can cover!!!! 
+            #print(f"see area {a[:-1]}")
+            for m,st in self.TaskState[(a[:-1])].items():
+                #print(m,st)
+                grid=list(self.Mission_Grid[m])[0]
+              
+                if a[:-1] in [ar for ar in self.Mission_Area.get(m)]:
+                    mission,offset=m
+                    if self.Mission_DL[m]<self.time+Ttime:
+                        period=self.MissionDict[m[0]][0]
+                        thenarea=[ar for ar in self.Mission_Area.get(m) if self.CheckReleasetime(ar,m, self.Mission_DL[m], self.time+Ttime, period)]
+                        if a[:-1] not in thenarea:
+                            continue
+                        jr,sr=(0,0)
+                    else:
+                        if a[:-1] not in self.Fix_toCov[grid]:
+                            continue
                         jr,sr=st
                     ############ Get the reward!!!! 
                     poheights=list(self.drone.WPCinfo.get(mission).keys())
@@ -1217,7 +1265,57 @@ class FlightPlanner:
             #Diss=[self.Distance(self.wp,w) for w in WPCs] #Here the distance can be compute less????
             #print(f"See {x} {y} {z}")
             return nwpc, False
+    
+    def MultiRelaxRewardWPC(self,CurGrids): ### Now it is stupid! 1) Add checking reward method! 2) How to handle staying at the same locations? 
+        #print(f" Enter here")
+        WPCs=[]
+        # for g in CurGrids:
+        #     areas=self.Grid_toCov[g]
+        #     mission, offset,gid=g
+        #     poheights=[h[0] for h in  self.WPC_TakFov[g[0]]] #speed up it
+        #     for a in areas: 
+        #         to_wp=[w for w in self.Area_WPC.get((a,mission)) if w[2] in (poheights)]
+        #         to_wp=[w for w in to_wp if w in self.WPCs]
+        #         # maxh=max([ww[2] for ww in to_wp])
+        #         # to_wp=[w for w in to_wp if w[2]==maxh]
+        #         WPCs=WPCs+to_wp 
+        # WPCs=list(set(WPCs))
+        #WPCs=[w for w in WPCs if not (self.RelexCheckReturn(w,((g[0],g[1]),self.Mission_DL[g[0],g[1]]))) ]
+        WPCs=[w for w in self.WPCs if not (self.CheckReturn(w,[])) ]
+        if len(WPCs)==0:
+            nwpc=self.ShortUpload.get(self.wp)[1]
+            #print(f"No WPCs is valid--> Return back!")
+            return nwpc, True
+        else:
+            Covlist=[self.GetDataReward2(w) for w in WPCs]
+            x,y,z=max(Covlist, key=lambda x: x[0]/x[1])
+            #print(f"See {x} {y} {z}")
+            if x==0:
+                #print(f"get here??")
+                nwpc=self.ShortUpload.get(self.wp)[1]
+                #print(f"No Improve!!")
+                return nwpc,True
+            #coverage_first! 
+            #print(f"See {Covlist}")
+            x,y,z=max(Covlist, key=lambda x: x[2]/x[1])
+            #print(f"See 2 {x} {y} {z}")
+            if z!=0:
+                #print(f"No Cover")
+                adex=Covlist.index((x,y,z))
+                nwpc=WPCs[adex]
+            else:
+                x,y,z=max(Covlist, key=lambda x: x[0]/x[1])
+                adex=Covlist.index((x,y,z))
+                nwpc=WPCs[adex]
+            # x,y,z=max(Covlist, key=lambda x: x[0]/x[1])
+            # adex=Covlist.index((x,y,z))
+            # nwpc=WPCs[adex]
+            #print(f"which cover more? {(x,y,z)}")
+            #Diss=[self.Distance(self.wp,w) for w in WPCs] #Here the distance can be compute less????
+            #print(f"See {x} {y} {z}")
+            return nwpc, False
 
+    
     def CheckReturn(self, wpc,mission):  # check it this waypoint is valid 
         MidDelay=0
         if self.wp!=wpc:
@@ -1475,6 +1573,7 @@ class FlightPlanner:
         if IFLOG:
             self.logfile.write(f"Time {self.drone.id} {time.time()-st}\n")
             self.logfile.write(f"Total {self.drone.id} {Reward} {P} {len(self.waypointSeq)} {self.waypointSeq}\n")
+        #print(f"Total {self.drone.id} {Reward} {P} {len(self.waypointSeq)} {self.waypointSeq}")
         return Reward, P, time.time()-st
     
     def DL_Release_FP(self,EndTime, FPnum, Improve): 
@@ -1509,6 +1608,7 @@ class FlightPlanner:
                         if len(CurGrids)>1:
                             nwpc, NoWPCs=self.MultipleCovWPC(CurGrids) # Here near_g is
                             if NoWPCs:
+                                #print()
                                 break
                             self.waypointSeq.append(nwpc)
                             reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
@@ -1549,8 +1649,12 @@ class FlightPlanner:
                             nwpc, NoWPCs=self.MultipleRewardWPC(CurGrids) # Here near_g is
                             #nwpc, NoWPCs=self.MultipleRewardWPC(self.Fix_toCov[near_g],near_g) # Here near_g is 
                             if NoWPCs:
-                                #print(f"Drone {self.drone.id} {count} No Improve at task {near_g} at {self.time}")
-                                break
+                                if count==len(Gridset)-1:# If No improve for all tasks
+                                    nwpc, NoWPCs=self.MultiRelaxRewardWPC(CurGrids)
+                                    if NoWPCs:
+                                        break
+                                else:
+                                    break
                             self.waypointSeq.append(nwpc)
                             reward,SReward,Penalty,NoUpDL=self.ClusterStateTrans(nwpc)
                             #print(f"Drone {count} {self.drone.id} improve {near_g} {reward} {SReward} {Penalty} {NoUpDL} ")
@@ -1575,11 +1679,12 @@ class FlightPlanner:
 
 IFLOG=True
 
-def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=''):
+def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log='',seed=0):
     if IFLOG:
-        log.write(f"Start {TANum} {GWP} {FPnum}\n")
+        log.write(f"Start {TANum} {GWP} {FPnum} {seed}\n")
     AreaPara=Decomposition(DecomposeSize,Res,tasks) # Need put tasks there!!!
     Drones,Bidders=Auction_Comp(TANum, AreaPara, Drones, Res,Missions,3, EFA,GCloc)
+    #TrackDraw(Drones, EFA)
     Rewardlist=[]
     Penaltylist=[]
     Runtimelist=[]
@@ -1640,11 +1745,12 @@ if __name__ == "__main__":
     wind=15
     #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
     fir_name=f"FQ_Sim_{wind}"
-    STtime=1
+    STtime=60
     EFA,EFAdict,bound =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=wind)                  
     TM=TaskManager(Missions)
-    print(f"Start Task Generation")
+    #print(f"Start Task Generation")
     tasks=TM.DeclareGridEFA(EFA,init=0)
+    DrawTask(tasks,EFA)
     ########################################
     sensorfile='Data/sensor_info.csv'
     PPMfile='Data/PPM_table.csv'
@@ -1665,13 +1771,13 @@ if __name__ == "__main__":
     if IFLOG:
         log=open(logfile, "w")
     init=0; Plantime=60*20
-    TANum=1;GWP=1;FPnum=0
+    TANum=2;GWP=1;FPnum=5
     AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=log)
     if IFLOG:
         log.close()
     #Drones,Bidders=Auction_Comp(TANum, AreaPara, Drones, Res,Missions,3, EFA,GCloc)
     #print(f"see Drones cost {[sum(list(Bidders[i].Tak_UT.values())) for i in range(len(Bidders))]}")
-    #TrackDraw(Drones, EFA)
+    
     ################################# GWP= 1: WPC_SetCover; 2: WPC; 3: Regular
     #######PLAN 1: DD+Return; 2: Reward_Driven+Return; 3: DL+DD+Return; 4: DL+RD+Return; 5: DL+CO+Return; 6: DL+CO+NoReturn 
     

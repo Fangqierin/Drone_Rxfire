@@ -53,7 +53,7 @@ from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM, LoadDrones
 # print(f"TASKS: {tasks}")
 # print(TG.facts)
 
-def GetFirSim(bardata, foldername, MockName,dir, Bursite, time=10, simdur=60,step=1, Res=10,wind=5,direction=270): # the location of the fire line, the length of the fireline and the number of the fires. 
+def GetFirSim(bardata, foldername, MockName,dir, Bursite, time=10, simdur=60,step=1, Res=10,wind=5,direction=270,sed=0,Inputdict=[]): # the location of the fire line, the length of the fireline and the number of the fires. 
     os.system(f"mkdir {dir}/{foldername}")
     os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")
     bardata.to_file(f"{dir}/{foldername}/input/seelin.shp")
@@ -67,7 +67,7 @@ def GetFirSim(bardata, foldername, MockName,dir, Bursite, time=10, simdur=60,ste
         if re.search('_Perimeters',file) and len(file.split('_'))>2:
             st=int(file.split('_')[0])
             tt=int(file.split('_')[1])
-            if  st+tt==time:
+            if  tt==time:
                 collection = list(fiona.open(f"{dir}/{MockName}/output/{file}",'r'))
                 df1 = pd.DataFrame(collection)
                 def isvalid(geom):
@@ -94,9 +94,9 @@ def GetFirSim(bardata, foldername, MockName,dir, Bursite, time=10, simdur=60,ste
     except:
         os.system(f"rm -r {dir}/{foldername}/output")
         os.system(f"mkdir {dir}/{foldername}/output")
-    DyFarsitefile(foldername, dir,time,simdur,wind=wind,direction=direction) # To run the simulation! 
+    DyFarsitefile(foldername, dir,0,simdur,wind=wind,direction=direction,seed=sed,Inputdict=Inputdict) # To run the simulation! 
     ########Do the next 40 minutes simulation! Then read the file, get EFA.
-    EFA,EFAdict,bound = GetEFA(time,simdur,Bursite,dir,foldername, step=step,Res=Res)
+    EFA,EFAdict,bound = GetEFA(0,simdur,Bursite,dir,foldername, step=step,Res=Res)
     #### Crop the EFA 
     mx,my,ax,ay=np.array(bound)//Res-np.array(Bursite)//Res
     #if mx<0: # Remove 

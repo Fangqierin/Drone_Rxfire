@@ -464,7 +464,7 @@ class Bidder:
         #     #return 0+self.coverarea+travelU+self.MaxUploadTime(None)#+(grid[2]/(self.speed*FOV*period))
         l,w=grid[2]
         covt=(math.ceil(l/FOV)*w)/(self.speed*period)
-        return self.coverarea+covt+travelU+self.GetUploadTime(None)#+(grid[2]/(self.speed*FOV*period))#+UploadU#+travel/self.speed
+        return self.coverarea+covt#+travelU+self.GetUploadTime(None)#+(grid[2]/(self.speed*FOV*period))#+UploadU#+travel/self.speed
     def AddGrid_Area(self, grid):
         period=grid[-2]*60
         m=grid[0]
@@ -637,9 +637,9 @@ def Bidding_Area(Grids, Bidders, EFAM):
         rm=[]
         for j in winners:   # once have multiple winner or one winner????? 
             nums=[k for k in range(len(costs[j])) if costs[j][k]==price and Grids[k] not in rm]
-            if len(nums)>1:
-                srnum=sorted([(i, Bidders[j].TraverseSum(Grids[i])) for i in nums], key=lambda x: x[1])
-                nums=[s[0] for s in srnum]
+            # if len(nums)>1:
+            #     srnum=sorted([(i, Bidders[j].TraverseSum(Grids[i])) for i in nums], key=lambda x: x[1])
+            #     nums=[s[0] for s in srnum]
             if len(nums)>0:
                 Bidders[j].AddGrid_Area(Grids[nums[0]])
                 rm.append(Grids[nums[0]])

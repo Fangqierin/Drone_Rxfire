@@ -23,9 +23,10 @@ if __name__ == "__main__":
     try:
         wind=int(sys.argv[1]);
         STtime=str(sys.argv[2]);
+        
     except: 
         wind=15
-        STtime=20
+        STtime=1
         #Plantime=60*20
 
     Missions=defaultdict(dict)  #  Missions: id, period, priority, 
@@ -48,18 +49,15 @@ if __name__ == "__main__":
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
     #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
-    fir_name=f"FQ_Sim_{wind}"
-    foldername=f"FQ_Tmp_{wind}_{STtime}"
-    EFA,EFAdict,bound =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=wind)                  
-    TM=TaskManager(Missions)
-    tasks=TM.DeclareGridEFA(EFA,init=0)
+    #CreateRandomRxfire(Bardata,fir_name,dir, [2],wind=wind,sed=seed,Inputdict=Inputdict)
+    
     ########################################
     sensorfile='Data/sensor_info.csv'
     PPMfile='Data/PPM_table.csv'
     DroneNum=6
-    speeds=[5,5,5,5,3,5]
+    speeds=[5,5,5,5,5,5]
     loiter=[1,1,1,1,1,1]
-    ranges=[300,300,500,300,300,500]
+    ranges=[500,300,500,300,300,500]
     GCloc=(0,500)
     GCloc=(0,0)
     inloc=(0,0,0)
@@ -69,39 +67,70 @@ if __name__ == "__main__":
     #Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi
     ## GWP= 1: WPC_SetCover; 2: WPC_Adjust; 3: Regular
     ###PLAN 0, Ours 1: DD+Return; 2: Reward_Driven+Return; 3: DL+DD+Return; 4: DL+RD+Return; ## 5: DL+CO+Return; 6: DL+CO+NoReturn 
-    logfile=f"./Results/log9_{wind}_{STtime}"
+    logfile=f"./Results/log12_{wind}_{STtime}"
     log=open(logfile, "w")
-    Simfile=f"./Results/Simple9_{wind}_{STtime}"
+    Simfile=f"./Results/Simple12_{wind}_{STtime}"
     Simlog=open(Simfile,"w")
     
     # TANum=1;GWP=1;FPnum=0
     # Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
     #Simlog.write(f"Sum {TANum} {GWP} {FPnum} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {mean(Runtiml)}\n")
     #########################
-    for TANum in [1,2,3,4]:
-        for GWP in [1,2,3]:
-            for FPnum in [0,1,2,3,4,5,6]:
-                Rewardl, Pl, Runtiml,LogTask,LogMiss,LogReward=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
-                Simlog.write(f"Sum {TANum} {GWP} {FPnum} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)}\n")
-                for i in range(len(Rewardl)):
-                    Simlog.write(f"Drone {TANum} {GWP} {FPnum} {i}; {Rewardl[i]} {Pl[i]} {Runtiml[i]}\n")
-                    #Simlog.write(f"Tasks {i}\n")
-                    for tak, timeNum in LogTask[i].items():
-                        Simlog.write(f"Tasks {TANum} {GWP} {FPnum} {i}; {tak}; {sum(list(timeNum.values()))}; ")
-                        for time, num in timeNum.items():
-                            Simlog.write(f"{int(time)} {num}; ")
+    for seed in range(10):
+        ############################### For random seed
+        #We have 8 time slots each of 20 minutes 
+        slots=['0000','0020','0040','0100','0120','0140','0200','0220']
+        erwind=3
+        random.seed(seed)
+        windset=np.array([random.randint(-erwind,erwind) for i in range(8)])+np.array([wind for i in range(8)])
+        direction=270
+        erdir=10
+        dirset=np.array([random.randint(-erdir,erdir) for i in range(8)])+np.array([direction for i in range(8)])
+        Winddict={}
+        Inputdict={}
+        ct=0
+        for i in range(0,160,20):
+            Winddict[i]=(windset[ct],dirset[ct])
+            Inputdict[slots[ct]]=(windset[ct],dirset[ct])
+            ct=ct+1
+        ########################################################
+        fir_name=f"FQ_Rand_{wind}_{seed}"
+        foldername=f"FQ_Tmp_{wind}_{STtime}_{seed}"
+        tt=min([k for k in list(Winddict.keys()) if k<=STtime])
+        windd,directt=Winddict[tt]
+        #print(f" {windd} {directt}")
+        #CreateRandomRxfire(Bardata,fir_name,dir, [2],wind=wind,sed=seed,Inputdict=Inputdict)
+        EFA,EFAdict,Primdict =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=windd,direction=directt,sed=seed)                  
+        #EFA,EFAdict,bound =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=wind)                  
+        TM=TaskManager(Missions)
+        tasks=TM.DeclareGridEFA(EFA,init=0)
+        #TM.reset()
+        for TANum in  [1,2,3,4]:
+            for GWP in [1,2,3]:
+                for FPnum in [0,1,2,3,4,5,6]:
+                    Rewardl, Pl, Runtiml,LogTask,LogMiss,LogReward=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log,seed)
+                    Simlog.write(f"Sum {TANum} {GWP} {FPnum} {seed} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)}\n")
+                    print(f"Sum {TANum} {GWP} {FPnum} {seed} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)}\n")
+                    for i in range(len(Rewardl)):
+                        Simlog.write(f"Drone {TANum} {GWP} {FPnum} {seed} {i}; {Rewardl[i]} {Pl[i]} {Runtiml[i]}\n")
+                        print(f"Drone {TANum} {GWP} {FPnum} {seed} {i}; {Rewardl[i]} {Pl[i]} {Runtiml[i]}\n")
+                        #Simlog.write(f"Tasks {i}\n")
+                        for tak, timeNum in LogTask[i].items():
+                            Simlog.write(f"Tasks {TANum} {GWP} {FPnum} {seed} {i}; {tak}; {sum(list(timeNum.values()))}; ")
+                            for time, num in timeNum.items():
+                                Simlog.write(f"{int(time)} {num}; ")
+                            Simlog.write(f"\n")
+                        #Simlog.write(f"Miss {i} {TANum} {GWP} {FPnum}\n")
+                        for tak, timeNum in LogMiss[i].items():
+                            Simlog.write(f"Miss {TANum} {GWP} {FPnum} {seed} {i}; {TANum} {GWP} {FPnum} {tak}; {sum(list(timeNum.values()))}; ")
+                            for time, num in timeNum.items():
+                                Simlog.write(f"{int(time)} {num}; ")
+                            Simlog.write(f"\n")
+                        Simlog.write(f"Reward {TANum} {GWP} {FPnum} {seed} {i}; ")
+                        for time, Rdset in LogReward[i].items():
+                            r,s,p=Rdset
+                            Simlog.write(f"{int(time)} {r} {s} {p}; ")
                         Simlog.write(f"\n")
-                    #Simlog.write(f"Miss {i} {TANum} {GWP} {FPnum}\n")
-                    for tak, timeNum in LogMiss[i].items():
-                        Simlog.write(f"Miss {TANum} {GWP} {FPnum} {i}; {TANum} {GWP} {FPnum} {tak}; {sum(list(timeNum.values()))}; ")
-                        for time, num in timeNum.items():
-                            Simlog.write(f"{int(time)} {num}; ")
-                        Simlog.write(f"\n")
-                    Simlog.write(f"Reward {TANum} {GWP} {FPnum} {i}; ")
-                    for time, Rdset in LogReward[i].items():
-                        r,s,p=Rdset
-                        Simlog.write(f"{int(time)} {r} {s} {p}; ")
-                    Simlog.write(f"\n")
      #################################
     log.close()
     Simlog.close()

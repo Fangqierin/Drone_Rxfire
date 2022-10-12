@@ -59,30 +59,35 @@ def ClearBarrier(data):
     # da2.plot()
     # plt.show()  
     
-def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_res=5, wind=5,direction=270): # The simulation time 100 =1:00) duration<24 hours!
+def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_res=5, wind=5,direction=270,seed=-1,InputDict=[]): # The simulation time 100 =1:00) duration<24 hours!
     fin = open(f"{dir}/{foldername}/input/Burn.input", "w")
-    with open(f"{dir}/Template_burn/input/Burn.input", "r") as ftmp:
+    with open(f"{dir}/Template_burn/input/Burn_Random.input", "r") as ftmp:
         filedata = ftmp.readlines()
     checkwind=False
     FARSITE_START_TIME=''
+    
+    if initime[0]<10:
+        intime=f"0{initime[0]}"
+    else:
+        intime=f"{initime[0]}"
+    if initime[1]<10:
+        intime=intime+f"0{initime[1]}"
+    else:
+        intime=intime+f"{initime[1]}"
+    
     for line in filedata:
         if re.match(r'FARSITE_START_TIME:*',line):
             time=line[:-1].split(' ')[-1]
-            checkwind=True
-            if initime[0]<10:
-                time=f"0{initime[0]}"
-            else:
-                time=f"{initime[0]}"
-            if initime[1]<10:
-                time=time+f"0{initime[1]}"
-            else:
-                time=time+f"{initime[1]}"
-            FARSITE_START_TIME=r'05 04 '+f"{time}"
+            FARSITE_START_TIME=r'05 04 '+f"{intime}"
             fin.write(f"FARSITE_START_TIME: {FARSITE_START_TIME}\n")
+        elif re.match(r'05 04*',line):
+            fin.write(f"05 04 {intime} 2400\n")
         elif checkwind  and re.match(r'2013 5 4 '+f"{time}",line):
             wind=int(line[:-1].split(' ')[-3])
             winddric=int(line[:-1].split(' ')[-2])
             fin.write(line)
+        elif seed!=-1 and re.match(f'SPOTTING_SEED:',line): 
+            fin.write(f'SPOTTING_SEED: {seed}\n')
         elif re.match(r'FARSITE_END_TIME:*',line):
             ent=[]
             ent.append(initime[0]+dura[0])
@@ -106,8 +111,14 @@ def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_r
             fin.write(f"FARSITE_DISTANCE_RES: {float(dis_res)}\n")
         elif re.match(f"FARSITE_PERIMETER_RES: ",line):
             fin.write(f"FARSITE_PERIMETER_RES: {float(pre_res)}\n")
-        elif re.match(f"2013 5 4 0000 58 26 0.00",line):
-            fin.write(f"2013 5 4 0000 58 26 0.00 {wind} {direction} 0\n")
+        elif len(InputDict)>0 and re.match(f"2013 5 4",line):
+            slot=line.split(' ')[3]
+            wd, dir=InputDict[slot]
+            #elif re.match(f"2013 5 4 0000 58 26 0.00",line):
+            fin.write(f"2013 5 4 {slot} 58 26 0.00 {wd} {dir} 0\n")
+        elif len(InputDict)==0 and re.match(f"2013 5 4",line):
+            slot=line.split(' ')[3]
+            fin.write(f"2013 5 4 {slot} 58 26 0.00 {wind} {direction} 0\n")
         else:
             fin.write(line)
     fin.close()
@@ -148,7 +159,7 @@ def Addfire(foldername, dir, prefix, time, poly):   # Update the ignition file! 
         if re.search('_Perimeters',file) and len(file.split('_'))>2:
             tt=int(file.split('_')[1])
             st=int(file.split('_')[0])
-            if st==prefix and st+tt>prefix+time:
+            if st==prefix and tt>time:
                 try:
                     out=os.system(f"rm {dir}/{foldername}/output/{file}")
                 except:
@@ -170,7 +181,7 @@ def CreateDyRxfire(data, foldername,dir,UID,wind=5,direction=270): # the locatio
         os.system(f"mkdir {dir}/{foldername}/output")
     data.to_file(f"{dir}/{foldername}/input/seelin.shp")
     gap=20
-    offset=50
+    offset=80
     width=3
     SimTime=60
     if len(UID)==1:
@@ -215,22 +226,30 @@ def CreateDyRxfire(data, foldername,dir,UID,wind=5,direction=270): # the locatio
         ptime=time
         time=time+burngap+random.randint(0, 5)
         poly=newdata.loc[count,'geometry']
-        Addfire(foldername, dir, ptime, time-ptime, poly)  # update the  f"{dir}/{foldername}/input/{foldername}.shp file. 
+        print(f"add {ptime} {time}")
+        Addfire(foldername, dir, ptime, time, poly)  # update the  f"{dir}/{foldername}/input/{foldername}.shp file. 
         count=count+1
     if time+simdur<SimTime:
-        DyFarsitefile(foldername, dir,time+simdur,SimTime-time-simdur+60)    #Run with current time with name is time
-
-def DyFarsitefile(foldername, dir,time,simdur,step=1,wind=5,direction=270):   
+        DyFarsitefile(foldername, dir,time,SimTime-time-simdur+60)    #Run with current time with name is time
+        print(f"final {time} {SimTime-time-simdur+60}")
+        
+def DyFarsitefile(foldername, dir,time,simdur,step=1,wind=5,direction=270, seed=-1,Inputdict=[]):   
     #write testfile
     tmp=[0,0]
-    simdur=simdur+20  #I do not why it always stop earlier! 
+    simdur=simdur+40  #I do not why it always stop earlier! 
     if simdur>=60:
         tmp[0]=simdur//60
         tmp[1]=simdur%60
     else:
         tmp[1]=simdur
     #print(f"Sim time {tmp}")
-    WriteInput(foldername,dir,dura=tmp, step=step,wind=wind,direction=direction)
+    intmp=[0,0]
+    if time>=60:
+        intmp[0]=time//60
+        intmp[1]=time%60
+    else:
+        intmp[1]=time
+    WriteInput(foldername,dir,initime=intmp,dura=tmp, step=step,wind=wind,direction=direction,seed=seed,InputDict=Inputdict)
     f = open(f"{dir}/{foldername}/{foldername}_TEST.txt", "w")
     f.write(f"{dir}/{foldername}/input/Burn.lcp ")# write landscape
     f.write(f"{dir}/{foldername}/input/Burn.input ") # write input file
@@ -247,53 +266,74 @@ def DyFarsitefile(foldername, dir,time,simdur,step=1,wind=5,direction=270):
         print(f"Generate the fire simulation successfully! Simulation from {time} duration  {simdur} ")
     except:
         print(f"Got error when simulating the fire spread")
-  
-def TestRunningtime(foldername, dir):
-    Dis_Res=[1,2,3,4,5,10,20]
-    Pre_Res=[1,3,5,10,20]
-    Simtime=[1,2,3,4,5,6]
-    Timestep=[1,2,3,4,5,6,10]
-    Pars={'Dis':Dis_Res,'Pre':Pre_Res,'Sim':Simtime,'Tim':Timestep}
-    logfile=open(f"{dir}/{foldername}_runningtime2.txt", "w")
-    for key, values in Pars.items():
-        for v in values:
-            if key=='Dis':
-                WriteInput(foldername,dir,dis_res=v)
-            elif key=='Pre':
-                WriteInput(foldername,dir,pre_res=v)
-            elif key=='Sim':
-                tmp=[0,0];v=v*60
-                if v>=60:
-                    tmp[0]=v//60
-                    tmp[1]=v%60
-                else:
-                    tmp[1]=v
-                WriteInput(foldername,dir,dura=tmp)
-            elif key=='Tim':
-                WriteInput(foldername,dir,step=v)
-            outputfile=f"{foldername}_{key}_{v}"
-            try:
-                os.system(f"mkdir {dir}/{outputfile}")
-            except:
-                os.system(f"rm -r {dir}/{outputfile}")
-                os.system(f"mkdir {dir}/{outputfile}")
-            f = open(f"{dir}/{foldername}/{foldername}_TEST.txt", "w")
-            f.write(f"{dir}/{foldername}/input/Burn.lcp ")# write landscape
-            f.write(f"{dir}/{foldername}/input/Burn.input ") # write input file
-            f.write(f"{dir}/{foldername}/input/{foldername}.shp ")# write ignition fire
-            #f.write(f"{dir}/{foldername}/input/FQbarrier.shp ")
-            f.write(f"{dir}/{foldername}/input/seelin.shp ")   # We can change the barrier!!! 
-            f.write(f"{dir}/{outputfile}/runttime 0")   # Output
-            f.close()  
-            #try:
-            cut=time.time()
-            out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt >/dev/null 2>&1")
-            runtime=time.time()-cut
-            logfile.write(f"{key} {v} {runtime}\n") 
-            print(f"Generate the fire simulation successfully! key {key} value {v} ")
-            #except:
-                #print(f"Got error when simulating the fire spread")
-    logfile.close()
+        
+
+    #################################################################
+
+def CreateRandomRxfire(data, foldername,dir,UID,wind=5,direction=270,sed=0,Inputdict=[]): # the location of the fireline, the length of the fireline and the number of the fires. 
+    random.seed(sed)
+    # Create 8 wind +-3 and direction +-20
+    os.system(f"mkdir {dir}/{foldername}")
+    os.system(f"cp -r {dir}/Template_burn/input {dir}/{foldername}")
+    try:
+        os.system(f"rm -r  {dir}/{foldername}/output")
+        os.system(f"mkdir {dir}/{foldername}/output")
+    except:
+        os.system(f"mkdir {dir}/{foldername}/output")
+    data.to_file(f"{dir}/{foldername}/input/seelin.shp")
+    gap=20
+    offset=80
+    width=3
+    SimTime=60
+    if len(UID)==1:
+        # Get Boundary: 
+        newdata = gpd.GeoDataFrame()
+        newdata['geometry'] = None
+        poly=data.loc[UID[0],'geometry']
+        poly=Polygon(poly)
+        site=data.loc[UID[0],'geometry']
+        x,y=site.coords.xy
+        mx,my,bx,by=(min(x),min(y),max(x),max(y))
+        x=mx+offset
+        cout=0
+        while x<bx-offset:
+            line=[(int(x),int(my)-10),(int(x),int(by)+10)]
+            if poly.intersection(LineString(line)).geom_type == 'MultiLineString':
+                for linestr in poly.intersection(LineString(line)):
+                    c=list(linestr.coords)
+                    y=[i[1] for i in c]
+                    if y[0]+offset<y[1]-offset:
+                        coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
+                        newdata.loc[cout, 'geometry'] = Polygon(coords)
+                        cout=cout+1
+                        #plt.plot([i[0] for i in coords], [i[1] for i in coords])
+            else:
+                c=list(poly.intersection(LineString(line)).coords)
+                y=[i[1] for i in c]
+                if y[0]+offset<y[1]-offset:
+                    coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
+                    newdata.loc[cout, 'geometry'] = Polygon(coords)
+                    cout=cout+1
+            x=x+gap
+    ####################### Start_Sim, NewData is 
+    time=0
+    count=1  # how many fire stripes initially? 
+    cudata=newdata[:count]#newdata.loc[0]
+    burngap=10
+    simdur=40
+    cudata.to_file(f"{dir}/{foldername}/input/{foldername}.shp")
+    while time<=SimTime and count<len(newdata):
+        DyFarsitefile(foldername, dir,time,simdur,wind=wind,direction=direction,seed=sed,Inputdict=Inputdict)    #Run with current time with name is time
+        ptime=time
+        time=time+burngap+random.randint(0, 5)
+        poly=newdata.loc[count,'geometry']
+        #print(f"add {ptime} {time}")
+        Addfire(foldername, dir, ptime, time, poly)  # update the  f"{dir}/{foldername}/input/{foldername}.shp file. 
+        count=count+1
+    if time+simdur<SimTime:
+        DyFarsitefile(foldername, dir,time,SimTime-time-simdur+60,seed=sed,Inputdict=Inputdict)    #Run with current time with name is time
+        #print(f"final {time} {SimTime-time-simdur+60}")
+
             
 def Farsitefile(foldername, dir):   
     os.system(f"mkdir {dir}/{foldername}")
@@ -344,155 +384,200 @@ if __name__ == "__main__":
     CreateDyRxfire(data, BunsiteBound,'FQ_burn',dir, [2])
     #TestRunningtime('FQ_burn',GetFirSimdir)
     
-########################################### Old code, for something else. 
-def CreateRxfire(data, BunsiteBound, foldername,dir,UID): # the location of the fireline, the length of the fireline and the number of the fires. 
-    gap=10
-    offset=20
-    width=3
-    if len(UID)==1:
-        # Get Boundary: 
-        newdata = gpd.GeoDataFrame()
-        newdata['geometry'] = None
-        poly=data.loc[UID[0],'geometry']
-        poly=Polygon(poly)
-        site=data.loc[UID[0],'geometry']
-        x,y=site.coords.xy
-        mx,my,bx,by=(min(x),min(y),max(x),max(y))
-        x=mx+offset
-        cout=0
-        while x<bx-offset:
-            line=[(int(x),int(my)-10),(int(x),int(by)+10)]
-            if poly.intersection(LineString(line)).geom_type == 'MultiLineString':
-                for linestr in poly.intersection(LineString(line)):
-                    c=list(linestr.coords)
-                    y=[i[1] for i in c]
-                    if y[0]+offset<y[1]-offset:
-                        coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
-                        newdata.loc[cout, 'geometry'] = Polygon(coords)
-                        cout=cout+1
-                        #plt.plot([i[0] for i in coords], [i[1] for i in coords])
-            else:
-                c=list(poly.intersection(LineString(line)).coords)
-                y=[i[1] for i in c]
-                if y[0]+offset<y[1]-offset:
-                    coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
-                    newdata.loc[cout, 'geometry'] = Polygon(coords)
-                    cout=cout+1
-                    #plt.plot([i[0] for i in coords], [i[1] for i in coords])
-            x=x+gap
-        newdata.to_file(f"{dir}/{foldername}/input/{foldername}.shp")
-        # newdata.plot()
-        # plt.show()
-    
-    # newdata.to_file(f"{dir}/{foldername}/input/{foldername}.shp")
-    return newdata
-
-
-
-
-
-
-def UpadteEFA(Pmap, area_map,time,EFA):
-    if len(Pmap)==1:
-        img=area_map
-        EFA = np.full(img.shape, -1,dtype=np.uint8)
-        EFA[img == 0] = time
-        x,y= np.where(img==0)
-    else:
-        tmp=area_map-Pmap
-        EFA[tmp==1]=time
-        x,y=np.where(EFA==time)
-    return EFA, x,y
-
-def logEFA(EFAdict,Primdict, filename, shape, Res):
-    f = open(filename, "w") 
-    print(shape[0])
-    f.write(f"{shape[0]} {shape[1]}\n ")
-    for key in EFAdict.keys():
-        row=np.array(EFAdict[key])
-        f.write(f"{key} {len(list(row[0]))} ")
-        for i in list(row[0]):
-            f.write(f"{i},")
-        f.write(f" ")
-        for i in list(row[1]):
-            f.write(f"{i},")
-        f.write(f"\n")
-        f.write(f"Prim {len(list(Primdict.get(key)[0]))} ")
-        for j in list(Primdict.get(key)[0]):
-            f.write(f"{j},")
-        for j in list(Primdict.get(key)[1]):
-            f.write(f"{j},")
-        f.write(f"\n")
-    f.close() 
-
-def GetEFA(filename):
-    lines = []
-    with open(filename) as f:
-        lines = f.readlines()  
-
-def PutIginition(filename,dir):
-    tofile=f"{dir}_0_Perimeters"
-    c1=f"cp {filename}.shp {tofile}.shp"
-    c2=f"cp {filename}.shx {tofile}.shx"
-    os.system(c1)
-    os.system(c2)
-    print(f"Run {c1}")
-    
-def CreateCirecle(center, radius):
-    def get_circle_coord(theta, x_center, y_center, radius):
-        x = radius * math.cos(theta) + x_center
-        y = radius * math.sin(theta) + y_center
-        return (x,y)
-    # This function gets all the pairs of coordinates
-    def get_all_circle_coords(x_center, y_center, radius, n_points):
-        thetas = [i/n_points * math.tau for i in range(n_points)]
-        circle_coords = [get_circle_coord(theta, x_center, y_center, radius) for theta in thetas]
-        return circle_coords
-    x_c=center[0]
-    y_c=center[1]
-    circle_coords = get_all_circle_coords(x_c, y_c, radius, n_points = 20)
-    poly=Polygon(circle_coords)
-
-    return poly
-def GetIgnitionCenter(BunsiteBound,num):
-    sx, sy, bx, by =  BunsiteBound
-    coors=[]
-    for i in range(num):
-        x=random.randint(sx, bx)
-        y=random.randint(sy, by)
-        coors.append([x,y])
-    return coors
-def GetIgnitionRadius(BunsiteBound,num):
-    sx, sy, bx, by =  BunsiteBound
-    rads=[]
-    for i in range(num):
-        r=random.randint(50,min(150,min((bx-sx),(by-sy))))
-        rads.append(r)
-    return rads
-
-
-def GetInigitionNear(U_x,U_y,BunsiteBound):
-    sx, sy, bx, by =  BunsiteBound
-    #print(f"check U_x, U_y {U_x} {U_y}")
-    U_x=max(sx,U_x)
-    U_x=min(U_x,bx)
-    U_y=max(sy,U_y)
-    U_y=min(U_y,by)   
-    #print(f"Why {bx} {U_x}")
-    p_x=random.randint(10,min(100,(bx-U_x)))
-    p_y=random.randint(10,min(100,(by-U_y)))
-    return (U_x+p_x),(U_y+p_y)
-    
-def CreateWildfie(BunsiteBound,num):
-    coors=GetIgnitionCenter(BunsiteBound,num)
-    rads=GetIgnitionRadius(BunsiteBound,num)
-    #print(rads)
-    newdata = gpd.GeoDataFrame()
-    newdata['geometry'] = None
-    for i in range(num):
-        poly=CreateCirecle(coors[i], rads[i])
-        newdata.loc[i, 'geometry'] = poly
-    newdata.to_file('see.shp')
-    return newdata
-
-
+# ########################################### Old code, for something else. 
+# def CreateRxfire(data, BunsiteBound, foldername,dir,UID): # the location of the fireline, the length of the fireline and the number of the fires. 
+#     gap=10
+#     offset=20
+#     width=3
+#     if len(UID)==1:
+#         # Get Boundary: 
+#         newdata = gpd.GeoDataFrame()
+#         newdata['geometry'] = None
+#         poly=data.loc[UID[0],'geometry']
+#         poly=Polygon(poly)
+#         site=data.loc[UID[0],'geometry']
+#         x,y=site.coords.xy
+#         mx,my,bx,by=(min(x),min(y),max(x),max(y))
+#         x=mx+offset
+#         cout=0
+#         while x<bx-offset:
+#             line=[(int(x),int(my)-10),(int(x),int(by)+10)]
+#             if poly.intersection(LineString(line)).geom_type == 'MultiLineString':
+#                 for linestr in poly.intersection(LineString(line)):
+#                     c=list(linestr.coords)
+#                     y=[i[1] for i in c]
+#                     if y[0]+offset<y[1]-offset:
+#                         coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
+#                         newdata.loc[cout, 'geometry'] = Polygon(coords)
+#                         cout=cout+1
+#                         #plt.plot([i[0] for i in coords], [i[1] for i in coords])
+#             else:
+#                 c=list(poly.intersection(LineString(line)).coords)
+#                 y=[i[1] for i in c]
+#                 if y[0]+offset<y[1]-offset:
+#                     coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
+#                     newdata.loc[cout, 'geometry'] = Polygon(coords)
+#                     cout=cout+1
+#                     #plt.plot([i[0] for i in coords], [i[1] for i in coords])
+#             x=x+gap
+#         newdata.to_file(f"{dir}/{foldername}/input/{foldername}.shp")
+#         # newdata.plot()
+#         # plt.show()
+#
+#     # newdata.to_file(f"{dir}/{foldername}/input/{foldername}.shp")
+#     return newdata
+#
+#
+#
+#
+#
+#
+# def UpadteEFA(Pmap, area_map,time,EFA):
+#     if len(Pmap)==1:
+#         img=area_map
+#         EFA = np.full(img.shape, -1,dtype=np.uint8)
+#         EFA[img == 0] = time
+#         x,y= np.where(img==0)
+#     else:
+#         tmp=area_map-Pmap
+#         EFA[tmp==1]=time
+#         x,y=np.where(EFA==time)
+#     return EFA, x,y
+#
+# def logEFA(EFAdict,Primdict, filename, shape, Res):
+#     f = open(filename, "w") 
+#     print(shape[0])
+#     f.write(f"{shape[0]} {shape[1]}\n ")
+#     for key in EFAdict.keys():
+#         row=np.array(EFAdict[key])
+#         f.write(f"{key} {len(list(row[0]))} ")
+#         for i in list(row[0]):
+#             f.write(f"{i},")
+#         f.write(f" ")
+#         for i in list(row[1]):
+#             f.write(f"{i},")
+#         f.write(f"\n")
+#         f.write(f"Prim {len(list(Primdict.get(key)[0]))} ")
+#         for j in list(Primdict.get(key)[0]):
+#             f.write(f"{j},")
+#         for j in list(Primdict.get(key)[1]):
+#             f.write(f"{j},")
+#         f.write(f"\n")
+#     f.close() 
+#
+# def GetEFA(filename):
+#     lines = []
+#     with open(filename) as f:
+#         lines = f.readlines()  
+#
+# def PutIginition(filename,dir):
+#     tofile=f"{dir}_0_Perimeters"
+#     c1=f"cp {filename}.shp {tofile}.shp"
+#     c2=f"cp {filename}.shx {tofile}.shx"
+#     os.system(c1)
+#     os.system(c2)
+#     print(f"Run {c1}")
+#
+# def CreateCirecle(center, radius):
+#     def get_circle_coord(theta, x_center, y_center, radius):
+#         x = radius * math.cos(theta) + x_center
+#         y = radius * math.sin(theta) + y_center
+#         return (x,y)
+#     # This function gets all the pairs of coordinates
+#     def get_all_circle_coords(x_center, y_center, radius, n_points):
+#         thetas = [i/n_points * math.tau for i in range(n_points)]
+#         circle_coords = [get_circle_coord(theta, x_center, y_center, radius) for theta in thetas]
+#         return circle_coords
+#     x_c=center[0]
+#     y_c=center[1]
+#     circle_coords = get_all_circle_coords(x_c, y_c, radius, n_points = 20)
+#     poly=Polygon(circle_coords)
+#
+#     return poly
+# def GetIgnitionCenter(BunsiteBound,num):
+#     sx, sy, bx, by =  BunsiteBound
+#     coors=[]
+#     for i in range(num):
+#         x=random.randint(sx, bx)
+#         y=random.randint(sy, by)
+#         coors.append([x,y])
+#     return coors
+# def GetIgnitionRadius(BunsiteBound,num):
+#     sx, sy, bx, by =  BunsiteBound
+#     rads=[]
+#     for i in range(num):
+#         r=random.randint(50,min(150,min((bx-sx),(by-sy))))
+#         rads.append(r)
+#     return rads
+#
+#
+# def GetInigitionNear(U_x,U_y,BunsiteBound):
+#     sx, sy, bx, by =  BunsiteBound
+#     #print(f"check U_x, U_y {U_x} {U_y}")
+#     U_x=max(sx,U_x)
+#     U_x=min(U_x,bx)
+#     U_y=max(sy,U_y)
+#     U_y=min(U_y,by)   
+#     #print(f"Why {bx} {U_x}")
+#     p_x=random.randint(10,min(100,(bx-U_x)))
+#     p_y=random.randint(10,min(100,(by-U_y)))
+#     return (U_x+p_x),(U_y+p_y)
+#
+# def CreateWildfie(BunsiteBound,num):
+#     coors=GetIgnitionCenter(BunsiteBound,num)
+#     rads=GetIgnitionRadius(BunsiteBound,num)
+#     #print(rads)
+#     newdata = gpd.GeoDataFrame()
+#     newdata['geometry'] = None
+#     for i in range(num):
+#         poly=CreateCirecle(coors[i], rads[i])
+#         newdata.loc[i, 'geometry'] = poly
+#     newdata.to_file('see.shp')
+#     return newdata
+#
+# # def TestRunningtime(foldername, dir):
+# #     Dis_Res=[1,2,3,4,5,10,20]
+# #     Pre_Res=[1,3,5,10,20]
+# #     Simtime=[1,2,3,4,5,6]
+# #     Timestep=[1,2,3,4,5,6,10]
+# #     Pars={'Dis':Dis_Res,'Pre':Pre_Res,'Sim':Simtime,'Tim':Timestep}
+# #     logfile=open(f"{dir}/{foldername}_runningtime2.txt", "w")
+# #     for key, values in Pars.items():
+# #         for v in values:
+# #             if key=='Dis':
+# #                 WriteInput(foldername,dir,dis_res=v)
+# #             elif key=='Pre':
+# #                 WriteInput(foldername,dir,pre_res=v)
+# #             elif key=='Sim':
+# #                 tmp=[0,0];v=v*60
+# #                 if v>=60:
+# #                     tmp[0]=v//60
+# #                     tmp[1]=v%60
+# #                 else:
+# #                     tmp[1]=v
+# #                 WriteInput(foldername,dir,dura=tmp)
+# #             elif key=='Tim':
+# #                 WriteInput(foldername,dir,step=v)
+# #             outputfile=f"{foldername}_{key}_{v}"
+# #             try:
+# #                 os.system(f"mkdir {dir}/{outputfile}")
+# #             except:
+# #                 os.system(f"rm -r {dir}/{outputfile}")
+# #                 os.system(f"mkdir {dir}/{outputfile}")
+# #             f = open(f"{dir}/{foldername}/{foldername}_TEST.txt", "w")
+# #             f.write(f"{dir}/{foldername}/input/Burn.lcp ")# write landscape
+# #             f.write(f"{dir}/{foldername}/input/Burn.input ") # write input file
+# #             f.write(f"{dir}/{foldername}/input/{foldername}.shp ")# write ignition fire
+# #             #f.write(f"{dir}/{foldername}/input/FQbarrier.shp ")
+# #             f.write(f"{dir}/{foldername}/input/seelin.shp ")   # We can change the barrier!!! 
+# #             f.write(f"{dir}/{outputfile}/runttime 0")   # Output
+# #             f.close()  
+# #             #try:
+# #             cut=time.time()
+# #             out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt >/dev/null 2>&1")
+# #             runtime=time.time()-cut
+# #             logfile.write(f"{key} {v} {runtime}\n") 
+# #             print(f"Generate the fire simulation successfully! key {key} value {v} ")
+# #             #except:
+# #                 #print(f"Got error when simulating the fire spread")
+# #     logfile.close()

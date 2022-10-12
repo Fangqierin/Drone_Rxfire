@@ -225,6 +225,7 @@ def UpadteEFA(Pmap, area_map,time,EFA, prim_bound,bound, NF=-1, F=1, P=2, Res=10
 
 
 def GetEFA(init,simdur, BunsiteBound, dir, foldername,step=3, Res=10):
+    #print(f"init {init} ?")
     def isvalid(geom):
         if len(geom['coordinates'][0])>2:
             return 1

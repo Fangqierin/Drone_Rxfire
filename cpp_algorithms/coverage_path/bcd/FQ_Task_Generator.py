@@ -5,6 +5,7 @@ import time
 from experta import *
 from collections import defaultdict
 import numpy as np
+import copy
 class DetectFire(Fact):
     pass
 class Grid(Fact):
@@ -31,11 +32,13 @@ class TaskManager():
         self.TG.declare(Mission(BM=Missions['BM'][0]))
         #self.Mission_dict=defaultdict 
     def reset(self):
-        self.TG.rest()
+        self.TG.reset()
+        global tasks
         tasks=defaultdict(dict)
     def RefineTask(self):
         pass
     def DeclareGridEFA(self, EFAM, init=0):
+        #print(f"see empty tasks  {tasks}")
         rows,columns=EFAM.shape
         self.latime=init
         self.EFA=EFAM
@@ -48,7 +51,8 @@ class TaskManager():
                 self.TG.declare(Grid(id=(x,y),state=st, EFA=EFAM[x,y],time=init))
         self.TG.run()
         self.cur_tasks=tasks
-        return tasks
+        self.reset()
+        return self.cur_tasks
     def ReportFire(self,Grid_fire):
         Update=False
         cutime=max(Grid_fire.values()) 
