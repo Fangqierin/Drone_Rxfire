@@ -10,4 +10,3 @@ nohup python3 FQ_Com_Packed.py 15 1 >& /tmp/log_15_1.txt 2>&1  &
 nohup python3 FQ_Com_Packed.py 15 20 >& /tmp/log_15_20.txt 2>&1  &
 nohup python3 FQ_Com_Packed.py 15 40 >& /tmp/log_15_40.txt 2>&1  &
 nohup python3 FQ_Com_Packed.py 15 60 >& /tmp/log_15_60.txt 2>&1  &
-

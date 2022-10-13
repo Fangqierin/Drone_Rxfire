@@ -282,7 +282,7 @@ def CreateRandomRxfire(data, foldername,dir,UID,wind=5,direction=270,sed=0,Input
         os.system(f"mkdir {dir}/{foldername}/output")
     data.to_file(f"{dir}/{foldername}/input/seelin.shp")
     gap=20
-    offset=80
+    offset=50
     width=3
     SimTime=60
     if len(UID)==1:

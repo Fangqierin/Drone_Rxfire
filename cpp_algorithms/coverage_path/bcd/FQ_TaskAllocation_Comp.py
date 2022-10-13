@@ -200,6 +200,53 @@ def RangeLocDrone(Bidders, GC, GCloc, Grids, sed, Res):
         loc[donF[i][0]]=GridsF[i][0]
     return loc
 
+def RandomLocDrone(Bidders, GC, GCloc, Grids, sed, Res):
+    DNum=len(Bidders)
+    dronestate=[(B.id, B.sensortype, B.range/B.speed) for B in Bidders]
+    donBM=sorted([i for i in dronestate if i[1]=='RGB'], key=lambda x: x[2]) #long --> short
+    donF=sorted([i for i in dronestate if i[1]!='RGB'], key=lambda x: x[2])
+    def Distance(x,y):
+        return math.sqrt((x[0]-y[0])**2+(x[1]-y[1])**2)
+    grids=[(i[0],i[1],i[-1]) for i in Grids]
+    gridBM=[i for i in grids if i[0]=='BM']
+    gridF=[i for i in grids if i[0]!='BM']
+    asgG=[];loc={}
+    asgBM=[]; asgF=[]
+    random.seed(sed)
+    for i in range(len(donF)):
+        drone_id=donF[i][0]
+        #print(f"see range", Bidders[drone_id].range)
+        tmpF=[g for g in gridF]# if Res*Distance(g[-1],GCloc) <=Bidders[drone_id].range]
+        #if i==0:
+        m_d=random.choice(range(len(tmpF)))
+        #else:
+            #Dis=[sum([Distance(i[-1],j[-1]) for j in asgG]) for i in tmpF]
+            #m_d=Dis.index(max(Dis))
+        loc[donF[i][0]]=tmpF[m_d]
+        asgG.append(tmpF[m_d])
+        asgF.append(tmpF[m_d])
+        gridF.remove(tmpF[m_d]) 
+    for i in range(len(donBM)):
+        drone_id=donBM[i][0]
+        #print(f"see range", Bidders[drone_id].range)
+        tmpBM=[g for g in gridBM]# if Res*Distance(g[-1],GCloc) <=Bidders[drone_id].range]
+        #Dis=[sum([Distance(i[-1],j[-1]) for j in asgG]) for i in tmpBM]
+       # m_d=Dis.index(max(Dis))
+        m_d=random.choice(range(len(tmpBM)))
+        loc[donBM[i][0]]=tmpBM[m_d]
+        asgG.append(tmpBM[m_d])
+        asgBM.append(tmpBM[m_d])
+        gridBM.remove(tmpBM[m_d])
+    #tmpBM=random.sample(range(len(gridBM)), min(len(donBM),len(gridBM)))
+    #GridsBM=sorted([(i,Distance(i[-1],GCloc ))  for i in asgBM ], key=lambda x:x[-1]) # short --> long 
+    #GridsF=sorted([(i,Distance(i[-1],GCloc )) for  i in asgF], key=lambda x:x[-1]) 
+    for i in range(len(GridsBM)):
+        loc[donBM[i][0]]=GridsBM[i][0]
+    for i in range(len(GridsF)):
+        loc[donF[i][0]]=GridsF[i][0]
+    return loc
+
+
 def RanLocDrone(Bidders, sed, GCloc, Grids):
     DNum=len(Bidders)
     ######## Need to refine the initial location! Finish Initial location 
@@ -704,7 +751,7 @@ def Auction_Comp(which, AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
         #print(f"see wpcinfo {d.WPCinfo}")
         Bidders.append(Bidder(d,GCloc, Res,Grids,Missions))
     gcloc=np.array(GCloc)//Res
-    loc=ExtrmLocDrone(Bidders,seed, gcloc, Grids, seed, Res)
+    loc=ExtrmLocDrone(Bidders, seed, gcloc, Grids, seed, Res)
     
     #Bidders=Bidding(Grids,Bidders, EFAM)
     #############################
@@ -733,12 +780,13 @@ def Auction_Comp(which, AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
         #DrawWPCs(Bidders)
         Bidders=Bidding_Area(AGrids,Bidders, EFAM)
     if which==4: # Run Voronoi 
+        #loc=ExtrmLocDrone(Bidders,seed, gcloc, Grids, seed, Res)
+        loc=RandomLocDrone(Bidders, seed, gcloc, Grids, seed, Res)
         for i in range(len(Bidders)):
             Bidders[i].AddGrid_VD(loc[i])
             Bidders[i].iniArea=loc[i] ########### Add it for VD
         Bidders=Voronoi(Grids, Bidders, EFAM)
         #TrackDraw(Bidders,EFAM)
-        
     for i in range(len(Bidders)):
         #Bidders[i].CombineGrid()
         Drones[i].area=Bidders[i].area

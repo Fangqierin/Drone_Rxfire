@@ -25,16 +25,19 @@ if __name__ == "__main__":
     dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
     foldername='FQ_sim'
     #Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
-    Bursite=(702500.0,4309700.0,702900.0,4310200.0 )
+    #Bursite=(702500.0,4309700.0,702900.0,4310200.0 )
+    Bursite3=(703000.0,4310230.0,703500.0,4310780.0)
+    Bursite=(703000.0,4310230.0,703500.0,4310780.0)
+
     Res=10
     #########We should meet sometimes,################# Do decomposition~ 
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
     wind=15; time=60; seed=1
-    for wind in [5,10,15]:
-        for time in  [1,20, 40,60]:
-            for seed in [0,1,2]:# range(10):
+    for wind in [15]:
+        for time in [60]:# [1,20, 40,60]:
+            for seed in range(10):
                 ############################### For random seed
                 #We have 8 time slots each of 20 minutes 
                 slots=['0000','0020','0040','0100','0120','0140','0200','0220']
@@ -52,11 +55,12 @@ if __name__ == "__main__":
                     Inputdict[slots[ct]]=(windset[ct],dirset[ct])
                     ct=ct+1
                 ########################################################
-                fir_name=f"FQ_Rand_{wind}_{seed}"
-                foldername=f"FQ_Tmp_{wind}_{time}_{seed}"
+                fir_name=f"FQ_Rand_U3_{wind}_{seed}"
+                foldername=f"FQ_Tmp_U3_{wind}_{time}_{seed}"
                 #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
-                #CreateRandomRxfire(Bardata,fir_name,dir, [2],wind=wind,sed=seed,Inputdict=Inputdict)
-                #print(f"Finish create {wind} {seed}")  
+                #CreateRandomRxfire(Bardata,fir_name,dir, [0],wind=wind,sed=seed,Inputdict=Inputdict)
+                print(f"Finish create {wind} {seed}")  
+                
                 tt=min([k for k in list(Winddict.keys()) if k<=time])
                 windd,directt=Winddict[tt]
                 #print(f" {windd} {directt}")
@@ -69,8 +73,8 @@ if __name__ == "__main__":
                 #print(f" see tasks",TM.cur_tasks)
                 #TM.reset()
                 print(f"check {wind} time {time} seed {seed}")
-                DrawTask(tasks,EFA)
-                plt.show() 
+                # DrawTask(tasks,EFA)
+                # plt.show() 
                 #
                 #imshow_EFA(EFA)
                 

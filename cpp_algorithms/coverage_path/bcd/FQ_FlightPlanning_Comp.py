@@ -1683,7 +1683,9 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
     if IFLOG:
         log.write(f"Start {TANum} {GWP} {FPnum} {seed}\n")
     AreaPara=Decomposition(DecomposeSize,Res,tasks) # Need put tasks there!!!
+    ct=time.time()
     Drones,Bidders=Auction_Comp(TANum, AreaPara, Drones, Res,Missions,3, EFA,GCloc)
+    TaskAllTime=time.time()-ct
     #TrackDraw(Drones, EFA)
     Rewardlist=[]
     Penaltylist=[]
@@ -1717,7 +1719,7 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
         #print(f"Reward {Reward} P {P}")
         #planner.DrawWPsequence()
     print(f"{TANum} {GWP} {FPnum} {sum(Rewardlist)} {sum(Penaltylist)} ")
-    return Rewardlist, Penaltylist, Runtimelist,LogTask,LogMiss,LogReward
+    return TaskAllTime,Rewardlist, Penaltylist, Runtimelist,LogTask,LogMiss,LogReward
 
 
 if __name__ == "__main__":
