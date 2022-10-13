@@ -6,9 +6,9 @@ Simulation Info:
 	Landscape Resolution: 30.0
 	Landscape Size: 104 x 105
 	Inputs File: /home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/FQ_Tmp_15_60/input/Burn.input
-	Farsite Start Time: 05 04 0000
-	Farsite End Time:   05 04 0120
-	Total Sim Time:     72.000000
+	Farsite Start Time: 05 04 0100
+	Farsite End Time:   05 04 0240
+	Total Sim Time:     84.000000
 	Ignition File:      /home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/FQ_Tmp_15_60/input/FQ_Tmp_15_60.shp
 	Barriers File:      /home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/FQ_Tmp_15_60/input/seelin.shp
 	Time Step:                  1.000000
@@ -27,44 +27,27 @@ Simulation Info:
 	Dist Check Method:          Fire Level
 	Acceleration:               On
 	Backing Spread:             Calculated from Elliptical Dimensions
-	Simulation Started:         5/4 0:00
-	Simulation Ended:           05/04  01:12
-	Elapsed Time:               00 01:12
+	Simulation Started:         5/4 1:00
+	Simulation Ended:           05/04  02:24
+	Elapsed Time:               00 01:24
 	Restore Ignitions:          No
 	Preserve Inactive Enclaves: Yes
 	Tree Species Number:        1
 	Conditoning Start:          0/0
 	Burn Periods:           1
-          05 04 0000 2400
+          05 04 0100 2400
 	Relative Burn Periods:      1
-          0.000000 - 1440.000000
+          0.000000 - 1380.000000
 	Internal Weather:            -20
-	Internal Winds:              26
+	Internal Winds:              9
 5 4 0 15 270 0
-5 4 100 15 50 0
-5 4 200 11 60 0
-5 4 300 11 60 0
-5 4 400 11 60 0
-5 4 500 14 70 0
-5 4 600 14 70 0
-5 4 700 14 70 0
-5 4 800 11 80 0
-5 4 900 11 80 0
-5 4 1000 11 80 0
-5 4 1100 9 80 49
-5 4 1200 10 90 49
-5 4 1300 10 90 49
-5 4 1400 11 90 49
-5 4 1500 10 90 49
-5 4 1600 9 0 49
-5 4 1700 2 20 56
-5 4 1800 2 20 56
-5 4 1900 2 20 56
-5 4 2000 6 100 56
-5 4 2100 6 100 56
-5 4 2200 6 100 56
-5 4 2300 9 70 52
-5 5 0 9 70 52
-5 5 600 9 70 52
+5 4 20 15 270 0
+5 4 40 11 60 0
+5 4 100 11 60 0
+5 4 120 11 60 0
+5 4 140 14 70 0
+5 4 200 14 70 0
+5 4 220 14 70 0
+5 4 820 14 70 0
 
-	Total Farsite Run Time: 24.451 Seconds
+	Total Farsite Run Time: 2.885 Seconds

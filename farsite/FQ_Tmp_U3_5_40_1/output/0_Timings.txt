@@ -1,0 +1,53 @@
+Farsite BenchMark Results
+
+
+Simulation Info:
+	Landscape File: /home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/FQ_Tmp_U3_5_40_1/input/Burn.lcp
+	Landscape Resolution: 30.0
+	Landscape Size: 104 x 105
+	Inputs File: /home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/FQ_Tmp_U3_5_40_1/input/Burn.input
+	Farsite Start Time: 05 04 0000
+	Farsite End Time:   05 04 0140
+	Total Sim Time:     84.000000
+	Ignition File:      /home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/FQ_Tmp_U3_5_40_1/input/FQ_Tmp_U3_5_40_1.shp
+	Barriers File:      /home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/FQ_Tmp_U3_5_40_1/input/seelin.shp
+	Time Step:                  1.000000
+	Distance Resolution:        5.000000
+	Perimeter Resolution:       5.000000
+	Enable Spotting:            Yes
+	Spot Probability:           0.030000
+	Spot Ignition Delay:        0.000000
+	Spot Grid Resolution:        15
+	Spotting Seed:               1
+	Minimum Spotting Distance:  30.000000
+	Foliar Moisture:            100.0000
+	Enable Crowning:            Yes
+	Crown Fire Method:          Finney
+	                            Crown Density NOT LINKED to Crown Cover
+	Dist Check Method:          Fire Level
+	Acceleration:               On
+	Backing Spread:             Calculated from Elliptical Dimensions
+	Simulation Started:         5/4 0:00
+	Simulation Ended:           05/04  01:24
+	Elapsed Time:               00 01:24
+	Restore Ignitions:          No
+	Preserve Inactive Enclaves: Yes
+	Tree Species Number:        1
+	Conditoning Start:          0/0
+	Burn Periods:           1
+          05 04 0000 2400
+	Relative Burn Periods:      1
+          0.000000 - 1440.000000
+	Internal Weather:            -20
+	Internal Winds:              9
+5 4 0 3 275 0
+5 4 20 3 275 0
+5 4 40 3 275 0
+5 4 100 3 275 0
+5 4 120 3 275 0
+5 4 140 3 275 0
+5 4 200 3 275 0
+5 4 220 3 275 0
+5 4 820 3 275 0
+
+	Total Farsite Run Time: 0.321 Seconds
