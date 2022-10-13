@@ -24,6 +24,7 @@ if __name__ == "__main__":
         wind=int(sys.argv[1]);
         STtime=int(sys.argv[2]);
         Unit=int(sys.argv[3])
+        #print("unit",Unit)
     except: 
         wind=15
         STtime=1
