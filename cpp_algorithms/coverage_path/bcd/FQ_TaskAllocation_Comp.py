@@ -207,9 +207,9 @@ def RandomLocDrone(Bidders, GC, GCloc, Grids, sed, Res):
     donF=sorted([i for i in dronestate if i[1]!='RGB'], key=lambda x: x[2])
     def Distance(x,y):
         return math.sqrt((x[0]-y[0])**2+(x[1]-y[1])**2)
-    grids=[(i[0],i[1],i[-1]) for i in Grids]
-    gridBM=[i for i in grids if i[0]=='BM']
-    gridF=[i for i in grids if i[0]!='BM']
+    #grids=[(i[0],i[1],i[-1]) for i in Grids]
+    gridBM=[i for i in Grids if i[0]=='BM']
+    gridF=[i for i in Grids if i[0]!='BM']
     asgG=[];loc={}
     asgBM=[]; asgF=[]
     random.seed(sed)
@@ -239,7 +239,8 @@ def RandomLocDrone(Bidders, GC, GCloc, Grids, sed, Res):
         gridBM.remove(tmpBM[m_d])
     #tmpBM=random.sample(range(len(gridBM)), min(len(donBM),len(gridBM)))
     #GridsBM=sorted([(i,Distance(i[-1],GCloc ))  for i in asgBM ], key=lambda x:x[-1]) # short --> long 
-    #GridsF=sorted([(i,Distance(i[-1],GCloc )) for  i in asgF], key=lambda x:x[-1]) 
+    GridsBM=[(i,Distance(i[-1],GCloc ))  for i in asgBM ]# short --> long 
+    GridsF=[(i,Distance(i[-1],GCloc )) for  i in asgF]
     for i in range(len(GridsBM)):
         loc[donBM[i][0]]=GridsBM[i][0]
     for i in range(len(GridsF)):
@@ -584,6 +585,7 @@ class Bidder:
         self.assignGrid.append(grid[1])
         self.area.append(grid)
         self.MissionSet.add(grid[0])
+        #print(f"see grid{grid}")
         self.Tak_Area[m].update(set([i[:-1] for i in grid[3]]))
 
     def GetDistance(self,g1,g2):
@@ -752,7 +754,7 @@ def Auction_Comp(which, AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
         Bidders.append(Bidder(d,GCloc, Res,Grids,Missions))
     gcloc=np.array(GCloc)//Res
     loc=ExtrmLocDrone(Bidders, seed, gcloc, Grids, seed, Res)
-    
+    #print(f"Check other {loc}")
     #Bidders=Bidding(Grids,Bidders, EFAM)
     #############################
     #########Fire first, then others
@@ -782,6 +784,7 @@ def Auction_Comp(which, AreaPara, Drones, Res,Missions, seed, EFAM, GCloc):
     if which==4: # Run Voronoi 
         #loc=ExtrmLocDrone(Bidders,seed, gcloc, Grids, seed, Res)
         loc=RandomLocDrone(Bidders, seed, gcloc, Grids, seed, Res)
+        #print(f"why loc {loc}")
         for i in range(len(Bidders)):
             Bidders[i].AddGrid_VD(loc[i])
             Bidders[i].iniArea=loc[i] ########### Add it for VD

@@ -17,7 +17,7 @@ StMiss=defaultdict(dict)
 for wind in Winds:
     for ST in STt:
         STtime=ST
-        Simfile=f"./Results/Simple12_{wind}_{STtime}"
+        Simfile=f"./Results/Simple14_1_{wind}_{STtime}"
         log=open(Simfile,"r")
         filedata = log.readlines()
         SumRreward=defaultdict(dict)
