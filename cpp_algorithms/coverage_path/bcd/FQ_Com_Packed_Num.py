@@ -68,9 +68,9 @@ if __name__ == "__main__":
     #Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi
     ## GWP= 1: WPC_SetCover; 2: WPC_Adjust; 3: Regular
     ###PLAN 0, Ours 1: DD+Return; 2: Reward_Driven+Return; 3: DL+DD+Return; 4: DL+RD+Return; ## 5: DL+CO+Return; 6: DL+CO+NoReturn 
-    logfile=f"./Results/log18_{Unit}_{DroneNum}_{STtime}"
+    logfile=f"./Results/log19_{Unit}_{DroneNum}_{STtime}"
     log=open(logfile, "w")
-    Simfile=f"./Results/Simple18_{Unit}_{DroneNum}_{STtime}"
+    Simfile=f"./Results/Simple19_{Unit}_{DroneNum}_{STtime}"
     Simlog=open(Simfile,"w")
     # TANum=1;GWP=1;FPnum=0
     # Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
