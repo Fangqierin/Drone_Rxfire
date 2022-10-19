@@ -1732,7 +1732,7 @@ if __name__ == "__main__":
     ################ Get tasks.
     #dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
     dir='../../../farsite'
-    foldername='FQ_sim'
+    #foldername='FQ_sim'
     # logfile=f"logtask.txt"
     # if IFLOG:
     #     logfile=open(logfile, "w")    
@@ -1744,11 +1744,15 @@ if __name__ == "__main__":
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
-    wind=5
+    wind=20
     #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
-    fir_name=f"FQ_Sim_{wind}"
-    STtime=1
-    EFA,EFAdict,bound =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=wind)                  
+    #fir_name=f"FQ_Sim_{wind}"
+    seed=9
+    STtime=40
+    fir_name=f"FQ_Rand_U3_{wind}_{seed}"
+    foldername=f"FQ_Tmp_U3_{wind}_{STtime}_{seed}"
+    
+    EFA,EFAdict,bound =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=wind,sed=seed)                  
     TM=TaskManager(Missions)
     #print(f"Start Task Generation")
     tasks=TM.DeclareGridEFA(EFA,init=0)
@@ -1773,8 +1777,8 @@ if __name__ == "__main__":
     if IFLOG:
         log=open(logfile, "w")
     init=0; Plantime=60*20
-    TANum=4;GWP=1;FPnum=5
-    AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=log)
+    TANum=4;GWP=3;FPnum=3
+    AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=log,seed=seed)
     if IFLOG:
         log.close()
     #Drones,Bidders=Auction_Comp(TANum, AreaPara, Drones, Res,Missions,3, EFA,GCloc)
