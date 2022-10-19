@@ -28,7 +28,7 @@ if __name__ == "__main__":
     except: 
         wind=15
         STtime=1
-        Unit=2
+        Unit=3
         #Plantime=60*20
 
     Missions=defaultdict(dict)  #  Missions: id, period, priority, 

@@ -1717,7 +1717,7 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
         Penaltylist.append(P)
         Runtimelist.append(Runtim)
         #print(f"Reward {Reward} P {P}")
-        #planner.DrawWPsequence()
+        planner.DrawWPsequence()
     print(f"{TANum} {GWP} {FPnum} {sum(Rewardlist)} {sum(Penaltylist)} ")
     return TaskAllTime,Rewardlist, Penaltylist, Runtimelist,LogTask,LogMiss,LogReward
 
@@ -1744,10 +1744,10 @@ if __name__ == "__main__":
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
-    wind=15
+    wind=5
     #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
     fir_name=f"FQ_Sim_{wind}"
-    STtime=60
+    STtime=1
     EFA,EFAdict,bound =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=wind)                  
     TM=TaskManager(Missions)
     #print(f"Start Task Generation")
@@ -1756,7 +1756,7 @@ if __name__ == "__main__":
     ########################################
     sensorfile='Data/sensor_info.csv'
     PPMfile='Data/PPM_table.csv'
-    DroneNum=6
+    DroneNum=3
     speeds=[5,5,5,5,3,5]
     loiter=[1,2,1,1,1,2]
     ranges=[300,200,500,300,300,500]

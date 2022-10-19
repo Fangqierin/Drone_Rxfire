@@ -119,12 +119,21 @@ def ExtrmLocDrone(Bidders, GC, GCloc, Grids, sed, Res):
     MaxRange=Res*max([Distance(i[-1],GCloc) for i in Grids])
     #MaxBM=max([Distance(i[-1],GCloc) for i in gridBM])
     dronestate=[(B.id, B.sensortype, max(0,MaxRange-B.range)/B.speed) for B in Bidders] #Smaller is better
-    donBM=sorted([i for i in dronestate if i[1]=='RGB'], key=lambda x: x[2], reverse=True) #long --> short
     donF=sorted([i for i in dronestate if i[1]!='RGB'], key=lambda x: x[2],reverse=True)
+    addF=[]
+    if len(donF)>len(gridF):
+        #print(donF[:len(gridF)], donF[len(gridF):])
+        addF=donF[len(gridF):]
+        donF=donF[:len(gridF)]
+        #print(f"check { len(donF)} {len(gridF)} ")
+    donBM=sorted([i for i in dronestate if i[1]=='RGB']+addF, key=lambda x: x[2], reverse=True) #long --> short
     asgG=[];loc={}
     asgBM=[]; asgF=[]
     random.seed(sed)
     for i in range(len(donF)):
+        # if len(gridF)==0:
+        #     print(f"check {i} {len(asgF)} {len(donF)}")
+        #     break
         if i==0:
             Dis=[Distance(g[-1],GCloc) for g in gridF]
         elif len(donF)>1 and i==1:
@@ -135,6 +144,7 @@ def ExtrmLocDrone(Bidders, GC, GCloc, Grids, sed, Res):
         asgG.append(gridF[m_d])
         asgF.append(gridF[m_d])
         gridF.remove(gridF[m_d]) 
+    #if i!=len(donF)
     for a in range(len(donBM)):
         if a==0:
             Dis=[Distance(i[-1],GCloc) for i in gridBM]

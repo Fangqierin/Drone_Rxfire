@@ -9,7 +9,7 @@ import math
 import re
 Winds=[5,10,15]
 STt=[1,20,40,60]
-
+Unit=2
 STtime=60
 StReward=defaultdict(dict)
 StMiss=defaultdict(dict)
@@ -17,7 +17,7 @@ StMiss=defaultdict(dict)
 for wind in Winds:
     for ST in STt:
         STtime=ST
-        Simfile=f"./Results/Simple14_1_{wind}_{STtime}"
+        Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
         log=open(Simfile,"r")
         filedata = log.readlines()
         SumRreward=defaultdict(dict)
@@ -32,6 +32,7 @@ for wind in Winds:
                 FPv=int(itms[3])
                 seev=int(itms[4])
                 SumRreward[(TKv,WPv,FPv,seev)]=float(itms[5]) # sumreward
+                #print(TKv,WPv,FPv,seev)
                 SumMiss[(TKv,WPv,FPv,seev)]=int(float(itms[6])/10)
                 Runtime[(TKv,WPv,FPv,seev)]=float(itms[-1])
         StReward[(wind,STtime)]=SumRreward
@@ -59,6 +60,9 @@ conf_co=1.960
 wind=15
 i=0
 for tav in TAKM:
+    print([StReward[wind,st] for st in STt] )
+    for k in range(10):
+        print(tav, k, [StReward[wind,st][tav,1,5,k] for st in STt] )
     Rd=[np.mean([StReward[wind,st][tav,1,5,k] for k in range(10)]) for st in STt]
     Rdst=np.array([np.std([StReward[wind,st][tav,1,5,k] for k in range(10)]) for st in STt])
     Rder=conf_co*(Rdst/math.sqrt(10))
@@ -71,11 +75,10 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],
-        ['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
-plt.savefig(f"./Results/TA_comp_{wind}.eps", bbox_inches='tight')
+plt.savefig(f"./Results/TA_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 #plt.grid( linestyle = '--', linewidth = 1)
 #plt.show()
 plt.clf()
@@ -94,11 +97,10 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],
-        ['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
-plt.savefig(f"./Results/TA_miss_{wind}.eps", bbox_inches='tight')
+plt.savefig(f"./Results/TA_miss_{Unit}_{wind}.eps", bbox_inches='tight')
 #plt.show()
 #####################################################
 
@@ -126,11 +128,10 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],
-        ['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 #plt.show()
-plt.savefig(f"./Results/FP_comp_{wind}.eps", bbox_inches='tight')
+plt.savefig(f"./Results/FP_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 ############################
 plt.clf()
 i=0
@@ -148,11 +149,10 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],
-        ['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 #plt.show()
-plt.savefig(f"./Results/FP_miss_{wind}.eps", bbox_inches='tight')
+plt.savefig(f"./Results/FP_miss_{Unit}_{wind}.eps", bbox_inches='tight')
 
 
 
