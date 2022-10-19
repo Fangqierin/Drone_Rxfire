@@ -30,7 +30,7 @@ if __name__ == "__main__":
         STtime=60
         Unit=1
         #Plantime=60*20
-    wind=15
+    wind=10
     Missions=defaultdict(dict)  #  Missions: id, period, priority, 
     Missions['BM']=[ 10, 2]  #Other area 
     Missions['FI']=[ 5, 1]  #track the fire 
@@ -58,11 +58,11 @@ if __name__ == "__main__":
     #DroneNum=6
     speeds=[5]*DroneNum#,5,5,5,5,5]
     loiter=[3]*DroneNum#[1,1,1,1,1,1,1,1,1,1]
-    ranges=[500,300,300,500,500,300,300,500,500,300,300,500,500,300]
+    ranges=[500,300,300,500,500,300,300,500,500,300,300,500,500,300,300,500,500,300]
     GCloc=(0,500)
     GCloc=(0,0)
     inloc=(0,0,0)
-    sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S']]
+    sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']]
     Drones=LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgrp, Res,loiter,ranges)
     init=0;Plantime=60*20
     #Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi

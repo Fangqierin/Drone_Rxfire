@@ -74,7 +74,7 @@ for tav in TAKM:
     i=i+1
 plt.legend()
 #Adding Xticks
-plt.xlabel('Number of drones')
+plt.xlabel('Number of Drones')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
 plt.xticks([r + barWidth for r in range(len(Nums))],['4', '6', '8', '10'])
@@ -86,17 +86,6 @@ plt.savefig(f"./Results/TA_Num_{Unit}_{wind}.eps", bbox_inches='tight')
 plt.clf()
 ################## Miss 
 i=0
-# for tav in TAKM:
-#     Rd=[np.mean([StMiss[wind,st][tav,1,5,k] for k in range(10)]) for st in STt]
-#     #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-#     Rdst=np.array([np.std([StMiss[wind,st][tav,1,5,k] for k in range(10)]) for st in STt])
-#     Rder=conf_co*(Rdst/math.sqrt(10))
-#     plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[tav-1])
-#     #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[tav-1])
-#     i=i+1
-# plt.legend()
-# #Adding Xticks
-# plt.xlabel('Plan Duration (Minute)')
 for tav in TAKM:
     #print([StReward[num,st] for num in Nums] )
     # for k in range(10):
@@ -110,63 +99,75 @@ for tav in TAKM:
     i=i+1
 plt.legend()
 #Adding Xticks
-plt.xlabel('Number of drones')
+plt.xlabel('Number of Drones')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
 plt.xticks([r + barWidth for r in range(len(Nums))],['4', '6', '8', '10'])
 plt.grid( linestyle = '--', linewidth = 1)
 plt.savefig(f"./Results/TA_Num_miss_{Unit}_{wind}.eps", bbox_inches='tight')
-plt.show()
-
+#plt.show()
+plt.clf()
 #####################################################
 Label=[ 'UTA-DL_Dis', 'UTA-NN', 'UTA-RB','UTA-DL_NN','UTA-DL_RB','UTA-DFP','UTA-DFP']
 
 FPM=[5,1,2,3,4]
 barWidth = 0.15
-Brs=[np.arange(len(STt))]
+Brs=[np.arange(len(Nums))]
 #br1 = np.arange(len(STt))
 for i in FPM:
     Brs.append([x + barWidth for x in Brs[-1]])
 plt.clf()
 i=0
+st=60
 for fpm in FPM:
 #for tav in TAKM:
-    Rd=[np.mean([StReward[wind,st][2,1,fpm,k] for k in range(10)])  for st in STt]
+    Rd=[np.mean([StReward[num,st][2,1,fpm,k] for k in range(10)])  for num in Nums]
     #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-    Rdst=np.array([np.std([StReward[wind,st][2,1,fpm,k] for k in range(10)]) for st in STt])
+    Rdst=np.array([np.std([StReward[num,st][2,1,fpm,k] for k in range(10)]) for num in Nums])
     Rder=conf_co*(Rdst/math.sqrt(10))
     plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
     #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
     i=i+1
 plt.legend()
-plt.xlabel('Plan Duration (Minute)')
+plt.xlabel('Number of Drones')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
 #plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-plt.show()
-plt.savefig(f"./Results/FP_comp_{Unit}_{wind}.eps", bbox_inches='tight')
+#plt.show()
+#plt.savefig(f"./Results/FP_Num_{Unit}_{wind}.eps", bbox_inches='tight')
 ############################
 plt.clf()
 i=0
+# for fpm in FPM:
+# #for tav in TAKM:
+#     Rd=[np.mean([StMiss[wind,st][2,1,fpm,k] for k in range(10)])  for st in STt]
+#     Rdst=np.array([np.std([StMiss[wind,st][2,1,fpm,k] for k in range(10)]) for st in STt])
+#     Rder=conf_co*(Rdst/math.sqrt(10))
+#     #Rd=[StMiss[wind,st][2,1,fpm] for st in STt]
+#     #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
+#     #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
+#     plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
+#     i=i+1
+# plt.legend()
+# plt.xlabel('Number of Drones')
 for fpm in FPM:
 #for tav in TAKM:
-    Rd=[np.mean([StMiss[wind,st][2,1,fpm,k] for k in range(10)])  for st in STt]
-    Rdst=np.array([np.std([StMiss[wind,st][2,1,fpm,k] for k in range(10)]) for st in STt])
-    Rder=conf_co*(Rdst/math.sqrt(10))
-    #Rd=[StMiss[wind,st][2,1,fpm] for st in STt]
+    Rd=[np.mean([StMiss[num,st][2,1,fpm,k] for k in range(10)])  for num in Nums]
     #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-    #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
+    Rdst=np.array([np.std([StReward[num,st][2,1,fpm,k] for k in range(10)]) for num in Nums])
+    Rder=conf_co*(Rdst/math.sqrt(10))
     plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
+    #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
     i=i+1
 plt.legend()
-plt.xlabel('Plan Duration (Minute)')
+plt.xlabel('Number of Drones')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
 #plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 plt.show()
-plt.savefig(f"./Results/FP_miss_{Unit}_{wind}.eps", bbox_inches='tight')
+plt.savefig(f"./Results/FP_Num_miss_{Unit}_{wind}.eps", bbox_inches='tight')
 
 
 
