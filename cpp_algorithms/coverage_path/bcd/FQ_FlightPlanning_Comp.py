@@ -1717,7 +1717,7 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
         Penaltylist.append(P)
         Runtimelist.append(Runtim)
         #print(f"Reward {Reward} P {P}")
-        planner.DrawWPsequence()
+        #planner.DrawWPsequence()
     print(f"{TANum} {GWP} {FPnum} {sum(Rewardlist)} {sum(Penaltylist)} ")
     return TaskAllTime,Rewardlist, Penaltylist, Runtimelist,LogTask,LogMiss,LogReward
 
@@ -1773,7 +1773,7 @@ if __name__ == "__main__":
     if IFLOG:
         log=open(logfile, "w")
     init=0; Plantime=60*20
-    TANum=2;GWP=1;FPnum=5
+    TANum=4;GWP=1;FPnum=5
     AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=log)
     if IFLOG:
         log.close()

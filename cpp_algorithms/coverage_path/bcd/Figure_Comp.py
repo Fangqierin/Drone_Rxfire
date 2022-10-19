@@ -8,8 +8,8 @@ import math
 #from .constants import OB, NO
 import re
 Winds=[5,10,15]
-STt=[1,20,40,60]
-Unit=2
+STt=[20,40,60]
+Unit=3
 STtime=60
 StReward=defaultdict(dict)
 StMiss=defaultdict(dict)
@@ -75,12 +75,12 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
 plt.savefig(f"./Results/TA_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 #plt.grid( linestyle = '--', linewidth = 1)
-#plt.show()
+plt.show()
 plt.clf()
 ################## Miss 
 i=0
@@ -97,11 +97,11 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
 plt.savefig(f"./Results/TA_miss_{Unit}_{wind}.eps", bbox_inches='tight')
-#plt.show()
+plt.show()
 #####################################################
 
 
@@ -128,9 +128,9 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-#plt.show()
+plt.show()
 plt.savefig(f"./Results/FP_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 ############################
 plt.clf()
@@ -149,9 +149,9 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-#plt.show()
+plt.show()
 plt.savefig(f"./Results/FP_miss_{Unit}_{wind}.eps", bbox_inches='tight')
 
 

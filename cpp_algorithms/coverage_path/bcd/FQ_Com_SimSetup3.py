@@ -35,7 +35,7 @@ if __name__ == "__main__":
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
     wind=15; time=60; seed=1
-    for wind in [15]:
+    for wind in [20,25]:#[15]:
         for time in [60]:# [1,20, 40,60]:
             for seed in range(10):
                 ############################### For random seed
@@ -58,9 +58,9 @@ if __name__ == "__main__":
                 fir_name=f"FQ_Rand_U3_{wind}_{seed}"
                 foldername=f"FQ_Tmp_U3_{wind}_{time}_{seed}"
                 #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
-                #CreateRandomRxfire(Bardata,fir_name,dir, [0],wind=wind,sed=seed,Inputdict=Inputdict)
+                CreateRandomRxfire(Bardata,fir_name,dir, [0],wind=wind,sed=seed,Inputdict=Inputdict)
                 print(f"Finish create {wind} {seed}")  
-                
+                '''
                 tt=min([k for k in list(Winddict.keys()) if k<=time])
                 windd,directt=Winddict[tt]
                 #print(f" {windd} {directt}")
@@ -77,7 +77,7 @@ if __name__ == "__main__":
                 # plt.show() 
                 #
                 #imshow_EFA(EFA)
-                
+                '''
                 
             #plt.savefig(f"Task_{wind}_{time}.eps", bbox_inches='tight')
 

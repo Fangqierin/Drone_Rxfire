@@ -223,6 +223,14 @@ def RandomLocDrone(Bidders, GC, GCloc, Grids, sed, Res):
     asgG=[];loc={}
     asgBM=[]; asgF=[]
     random.seed(sed)
+      
+    addF=[]
+    if len(donF)>len(gridF):
+        #print(donF[:len(gridF)], donF[len(gridF):])
+        addF=donF[len(gridF):]
+        donF=donF[:len(gridF)]
+        #print(f"check { len(donF)} {len(gridF)} ")
+    donBM=sorted([i for i in dronestate if i[1]=='RGB']+addF, key=lambda x: x[2], reverse=True) #long --> short   
     for i in range(len(donF)):
         drone_id=donF[i][0]
         #print(f"see range", Bidders[drone_id].range)

@@ -8,8 +8,8 @@ import math
 #from .constants import OB, NO
 import re
 Winds=[5,10,15]
-STt=[1,20,40,60]
-
+STt=[20,40,60]
+Unit=3
 STtime=60
 StReward=defaultdict(dict)
 StMiss=defaultdict(dict)
@@ -17,7 +17,7 @@ StRuntime=defaultdict(dict)
 for wind in Winds:
     for ST in STt:
         STtime=ST
-        Simfile=f"./Results/Simple12_{wind}_{STtime}"
+        Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
         log=open(Simfile,"r")
         filedata = log.readlines()
         SumRreward=defaultdict(dict)
@@ -80,20 +80,19 @@ plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Running Time of UTA-DFP (s)')
 #plt.rcParams['axes.color_cycle'] 
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],
-        ['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-plt.savefig(f"./Results/FP_Runtime_Unit1.eps", bbox_inches='tight')
-plt.show()
-#plt.clf() 
-'''
+#plt.savefig(f"./Results/FP_Runtime_Unit1.eps", bbox_inches='tight')
+#plt.show()
+plt.clf() 
+
 ####################################### Get the Total tasks in different seeds 
 SumTasks=defaultdict(dict)
 AvTasks=defaultdict(dict)
 for wind in Winds:
     for ST in STt:
         STtime=ST
-        Simfile=f"./Results/Simple12_{wind}_{STtime}"
+        Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
         log=open(Simfile,"r")
         filedata = log.readlines()
         SumRreward=defaultdict(dict)
@@ -133,9 +132,9 @@ fig,ax = plt.subplots(figsize =(6, 5))
 
 plt.rcParams.update({'font.size': 9})
 
-tick_labels_1 = ['5','5','5','5']
+tick_labels_1 = ['5']* len(STt)
 #print(tick_labels_1)
-tick_labels_2 = ['10\n0-20 min','10\n20-40 min', '10\n40-60 min','10\n60-80 min']
+tick_labels_2 = ['10\n0-20 min','10\n20-40 min', '10\n40-60 min']#,'10\n60-80 min']
 tick_labels_3 = ['15'] * len(STt)
 # #print([x - 0.4, x - 0.1, x + 0.2])
 # all_x = np.concatenate([x - 0.4, x - 0.1, x + 0.2])
@@ -210,7 +209,7 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Number of Subtasks')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 #plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 
 #ax.set_xticklabels(('5', '10', '15','5', '10', '15','5', '10', '15','5', '10', '15'))#,ha='center')
@@ -224,7 +223,7 @@ plt.grid( linestyle = '--', linewidth = 1)
 plt.show()
 plt.clf() 
 
-'''
+
 
 
 
