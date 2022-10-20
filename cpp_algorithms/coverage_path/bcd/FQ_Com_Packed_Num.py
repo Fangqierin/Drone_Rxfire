@@ -96,15 +96,15 @@ if __name__ == "__main__":
         ########################################################
         if Unit==1:
             fir_name=f"FQ_Rand_{wind}_{seed}"
-            foldername=f"FQ_Tmp_{wind}_{STtime}_{seed}"
+            foldername=f"FQ_Tmp_{DroneNum}_{STtime}_{seed}"
             Bursite=(702460.0,4309700.0,702860.0,4310200.0 )
         if Unit==2:
             fir_name=f"FQ_Rand_U2_{wind}_{seed}"
-            foldername=f"FQ_Tmp_U2_{wind}_{STtime}_{seed}"
+            foldername=f"FQ_Tmp_U2_{DroneNum}_{STtime}_{seed}"
             Bursite=(702850.0,4310030.0,703250.0,4310360.0)
         if Unit==3:
             fir_name=f"FQ_Rand_U3_{wind}_{seed}"
-            foldername=f"FQ_Tmp_U3_{wind}_{STtime}_{seed}"
+            foldername=f"FQ_Tmp_U3_{DroneNum}_{STtime}_{seed}"
             Bursite=(703000.0,4310230.0,703500.0,4310780.0)
         
         tt=min([k for k in list(Winddict.keys()) if k<=STtime])
