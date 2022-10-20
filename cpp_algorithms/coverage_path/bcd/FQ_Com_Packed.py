@@ -26,8 +26,8 @@ if __name__ == "__main__":
         Unit=int(sys.argv[3])
         #print("unit",Unit)
     except: 
-        wind=20
-        STtime=40
+        wind=25
+        STtime=1
         Unit=3
         #Plantime=60*20
 
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     #Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi
     ## GWP= 1: WPC_SetCover; 2: WPC_Adjust; 3: Regular
     ###PLAN 0, Ours 1: DD+Return; 2: Reward_Driven+Return; 3: DL+DD+Return; 4: DL+RD+Return; ## 5: DL+CO+Return; 6: DL+CO+NoReturn 
-    logfile=f"./Results/log19_{Unit}_{wind}_{STtime}"
+    logfile=f"./Results/log222_{Unit}_{wind}_{STtime}"
     log=open(logfile, "w")
-    Simfile=f"./Results/Simple19_{Unit}_{wind}_{STtime}"
+    Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
     Simlog=open(Simfile,"w")
     # TANum=1;GWP=1;FPnum=0
     # Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
@@ -119,8 +119,8 @@ if __name__ == "__main__":
         TaskGTime=time.time()-ct
         #TM.reset()
         Simlog.write(f"TaskGen {TaskGTime}\n")
-        for TANum in [1,2,3,4]:
-            for GWP in [1,2,3]:
+        for TANum in  [1,2,3,4]:
+            for GWP in [2]:#[1,2,3]:
                 for FPnum in [0,1,2,3,4,5,6]:
                     TaskATime,Rewardl, Pl, Runtiml,LogTask,LogMiss,LogReward=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log,seed)
                     Simlog.write(f"Sum {TANum} {GWP} {FPnum} {seed} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)} {TaskATime}\n")
