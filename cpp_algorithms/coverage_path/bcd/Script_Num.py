@@ -7,4 +7,4 @@ nohup python3 FQ_Com_Packed_Num.py 14 60 1 >& /tmp/log_num_14_60_19_1.txt 2>&1  
 nohup python3 FQ_Com_Packed_Num.py 16 60 1 >& /tmp/log_num_14_60_19_1.txt 2>&1  &
 
 #[1] 2840473
-#[2] 2840474 
+#[2] 2840474 g

@@ -8,8 +8,8 @@ import math
 #from .constants import OB, NO
 import re
 Winds=[5,10,15]
-STt=[20,40,60]
-Unit=3
+STt=[1,20,40,60]
+Unit=1
 STtime=60
 StReward=defaultdict(dict)
 StMiss=defaultdict(dict)
@@ -57,7 +57,7 @@ Colors=['b','g','y']
 
 #conf_co=1.645
 conf_co=1.960
-wind=15
+wind=5
 i=0
 for tav in TAKM:
     print([StReward[wind,st] for st in STt] )
@@ -75,7 +75,7 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
 plt.savefig(f"./Results/TA_comp_{Unit}_{wind}.eps", bbox_inches='tight')
@@ -97,7 +97,7 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
 plt.savefig(f"./Results/TA_miss_{Unit}_{wind}.eps", bbox_inches='tight')
@@ -130,8 +130,8 @@ plt.ylabel('Total Reward')
 #plt.yscale('symlog')
 #plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-plt.show()
 plt.savefig(f"./Results/FP_comp_{Unit}_{wind}.eps", bbox_inches='tight')
+plt.show()
 ############################
 plt.clf()
 i=0
@@ -151,9 +151,8 @@ plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
 #plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-plt.show()
 plt.savefig(f"./Results/FP_miss_{Unit}_{wind}.eps", bbox_inches='tight')
-
+plt.show()
 
 
 

@@ -68,15 +68,15 @@ if __name__ == "__main__":
     #Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi
     ## GWP= 1: WPC_SetCover; 2: WPC_Adjust; 3: Regular
     ###PLAN 0, Ours 1: DD+Return; 2: Reward_Driven+Return; 3: DL+DD+Return; 4: DL+RD+Return; ## 5: DL+CO+Return; 6: DL+CO+NoReturn 
-    logfile=f"./Results/log19_{Unit}_{DroneNum}_{STtime}"
+    logfile=f"./Results/log20_{Unit}_{DroneNum}_{STtime}"
     log=open(logfile, "w")
-    Simfile=f"./Results/Simple19_{Unit}_{DroneNum}_{STtime}"
+    Simfile=f"./Results/Simple20_{Unit}_{DroneNum}_{STtime}"
     Simlog=open(Simfile,"w")
     # TANum=1;GWP=1;FPnum=0
     # Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
     #Simlog.write(f"Sum {TANum} {GWP} {FPnum} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {mean(Runtiml)}\n")
     #########################
-    for seed in range(10):
+    for seed in [1]:#range(10):
         ############################### For random seed
         #We have 8 time slots each of 20 minutes 
         slots=['0000','0020','0040','0100','0120','0140','0200','0220']
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         #TM.reset()
         Simlog.write(f"TaskGen {TaskGTime}\n")
         for TANum in  [1,2,3,4]:
-            for GWP in [1,2,3]:
+            for GWP in [1]:#,2,3]:
                 for FPnum in [0,1,2,3,4,5,6]:
                     TaskATime,Rewardl, Pl, Runtiml,LogTask,LogMiss,LogReward=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log,seed)
                     Simlog.write(f"Sum {TANum} {GWP} {FPnum} {seed} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)} {TaskATime}\n")

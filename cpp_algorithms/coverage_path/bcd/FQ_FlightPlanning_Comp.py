@@ -667,7 +667,8 @@ class FlightPlanner:
                             #print(f"maybe area is not released {a}")
         if IFLOG:
             if Reward==0 and SReward==0 and Penalty==0:
-                self.logfile.write(f"Hover {self.drone.id} {self.time}\n")
+                #self.logfile.write(f"Hover {self.drone.id} {self.time}\n")
+                pass
             else:
                 self.logfile.write(f"Reward {self.drone.id} {self.time} {Reward} {SReward} {Penalty}\n")
                 self.logReward[self.time]=(Reward,SReward,Penalty)
