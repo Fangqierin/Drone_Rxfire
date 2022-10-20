@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
     #Simlog.write(f"Sum {TANum} {GWP} {FPnum} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {mean(Runtiml)}\n")
     #########################
-    for seed in [1]:#range(10):
+    for seed in range(10):
         ############################### For random seed
         #We have 8 time slots each of 20 minutes 
         slots=['0000','0020','0040','0100','0120','0140','0200','0220']
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         Simlog.write(f"TaskGen {TaskGTime}\n")
         for TANum in  [1,2,3,4]:
             for GWP in [1]:#,2,3]:
-                for FPnum in [0,1,2,3,4,5,6]:
+                for FPnum in  [0,1,2,3,4,5,6]:
                     TaskATime,Rewardl, Pl, Runtiml,LogTask,LogMiss,LogReward=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log,seed)
                     Simlog.write(f"Sum {TANum} {GWP} {FPnum} {seed} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)} {TaskATime}\n")
                     print(f"Sum {TANum} {GWP} {FPnum} {seed} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)}\n")
