@@ -6,8 +6,6 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 
 
-
-
 def imshow_scatter(path, color="orange", alpha=1, s=20):
     """
     Prints the points in the path
@@ -33,11 +31,21 @@ def imshow(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     for y in range(ly):
         ax.axhline(y, lw=0.5, color='k')#, zorder=7)
     #ax.imshow(area_map.T,interpolation='none',cmap=my_cmap,origin='lower')
-    neg=ax.imshow(area_map.T,interpolation='none',cmap=cmap,origin='lower',extent=[0, lx, 0, ly],zorder=0)
+    neg=ax.imshow(area_map.T,interpolation='none',origin='lower',extent=[0, lx, 0, ly],zorder=0,cmap = matplotlib.colors.ListedColormap(['green', 'red']))
+    ax = plt.gca();
+    ax.set_xticks(np.arange(0, 5, 1))
+    ax.set_yticks(np.arange(0, 7, 1))
+    # Minor ticks
+    ax.set_xticks(np.arange(0, 4, 1), minor=True)
+    ax.set_yticks(np.arange(0, 6, 1), minor=True)
+    ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
+    
+    
     # plt.xlim(0, lx-1) 
     # plt.ylim(0,ly-1)
     #plt.axis('off');
-    fig.colorbar(neg)
+    
+    #fig.colorbar(neg)
 
     return ax
 
@@ -64,7 +72,7 @@ def imshow_EFA(area_map,r=1,c=1,i=1,figsize=(5,5),cmap="viridis"):
     for y in range(ly):
         ax.axhline(y, lw=0.5, color='k')#, zorder=7)
     #ax.imshow(area_map.T,interpolation='none',cmap=my_cmap,origin='lower')
-    norm = mcolors.DivergingNorm(vmin=0, vmax = 60, vcenter=20)
+    norm = mcolors.DivergingNorm(vmin=0, vmax = 40, vcenter=20)
 
     map=ax.imshow(area_map.T,interpolation='none',cmap='hot',origin='lower',extent=[0, lx, 0, ly],zorder=0,norm=norm)
     # plt.xlim(0, lx-1) 

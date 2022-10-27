@@ -57,7 +57,7 @@ if __name__ == "__main__":
     PPMfile='Data/PPM_table.csv'
     DroneNum=6
     speeds=[5,5,5,5,5,5]
-    loiter=[1,1,1,1,1,1]
+    loiter=[2,2,2,2,2,2]
     ranges=[500,300,500,300,300,500]
     GCloc=(0,500)
     GCloc=(0,0)

@@ -10,6 +10,7 @@ from bcd_helper import imshow, imshow_scatter
 import matplotlib.pyplot as plt
 import geopandas as gpd
 from skimage.draw import polygon
+import matplotlib
 #from common_helpers import get_all_area_maps, get_random_coords, get_area_map
 
 def visit(matrix, x, y, memory,obstacle):
@@ -198,42 +199,145 @@ def get_raster(gpdf_final, scale=2000, BunsiteBound=0,CRS = f"EPSG:4326",NF=-1,F
     return p, mix
 
 if __name__ == "__main__":
-    start_point = (0, 0)
-    #start_point = (1484, 2226)
-    file="try.shp"
-    file='9_Perimeters.shp'
-    data=gpd.read_file(file)
-    for index, row in data.iterrows():
-        poly = row['geometry']
-    BunsiteBound=(-2096325.0,2037105.0,-2092695.0,2040735.0)
-    scale = get_scale(BunsiteBound, meter=1)
-    area_map, fire = get_raster(data, scale, BunsiteBound,NF=-1,F=0)
-    img=area_map
-    matrix = np.full(img.shape, 0, dtype=np.uint8)
-    matrix[img == -1] = 255 
-    AllM=[0,1,2,3,4,255]
-    Mission=255
-    AllM.remove(Mission)
-    coverage_path,critical,cri_end = Planner(matrix,start_point,direction='UP',cover=Mission, obstacle=AllM)
-    if len(coverage_path)>0:
-        end_point = coverage_path[-1]
-        x,y = np.array(coverage_path).T
-        #Display 
-        # for i in range(int(len(x)/400)):
-        #      imshow(matrix, figsize=(8, 8), cmap="cividis")   
-        #      imshow_scatter([start_point],color="lightgreen")
-        #      imshow_scatter([end_point],color="red")
-        #      # imshow_scatter(critical, alpha=0.4, color="red",s=20)
-        #      # imshow_scatter(cri_end, alpha=0.4, color="black",s=50)
-        #      imshow_scatter(coverage_path, alpha=0.4, color="black",s=5)
-        #      plt.plot(x[0:i*400+2],y[0:i*400+2])
-        #      plt.show()
-        imshow(matrix, figsize=(8, 8), cmap="cividis")   
-        imshow_scatter(critical, alpha=0.4, color="red",s=20)
-        imshow_scatter(cri_end, alpha=0.4, color="black",s=50)
-        plt.plot(x,y)
-        plt.show()
-        
+    # start_point = (0, 0)
+    # #start_point = (1484, 2226)
+    # file="try.shp"
+    # file='9_Perimeters.shp'
+    # data=gpd.read_file(file)
+    # for index, row in data.iterrows():
+    #     poly = row['geometry']
+    # BunsiteBound=(-2096325.0,2037105.0,-2092695.0,2040735.0)
+    # scale = get_scale(BunsiteBound, meter=1)
+    # area_map, fire = get_raster(data, scale, BunsiteBound,NF=-1,F=0)
+    # img=area_map
+    # matrix = np.full(img.shape, 0, dtype=np.uint8)
+    # matrix[img == -1] = 255 
+    # AllM=[0,1,2,3,4,255]
+    # Mission=255
+    # AllM.remove(Mission)
+    # coverage_path,critical,cri_end = Planner(matrix,start_point,direction='UP',cover=Mission, obstacle=AllM)
+    # if len(coverage_path)>0:
+    #     end_point = coverage_path[-1]
+    #     x,y = np.array(coverage_path).T
+    #     #Display 
+    #     # for i in range(int(len(x)/400)):
+    #     #      imshow(matrix, figsize=(8, 8), cmap="cividis")   
+    #     #      imshow_scatter([start_point],color="lightgreen")
+    #     #      imshow_scatter([end_point],color="red")
+    #     #      # imshow_scatter(critical, alpha=0.4, color="red",s=20)
+    #     #      # imshow_scatter(cri_end, alpha=0.4, color="black",s=50)
+    #     #      imshow_scatter(coverage_path, alpha=0.4, color="black",s=5)
+    #     #      plt.plot(x[0:i*400+2],y[0:i*400+2])
+    #     #      plt.show()
+    #     imshow(matrix, figsize=(8, 8), cmap="cividis")   
+    #     imshow_scatter(critical, alpha=0.4, color="red",s=20)
+    #     imshow_scatter(cri_end, alpha=0.4, color="black",s=50)
+    #     plt.plot(x,y)
+    #     plt.show()
+    plt.rcParams['font.family'] = 'serif'
+    plt.rcParams['font.serif'] = ['Times New Roman'] + plt.rcParams['font.serif']
+    plt.rcParams.update({'font.size': 13})
+    inittime=0
+    Grid_map=np.full((5,7),0)
+    Grid_map[0,0]=0
+    Grid_map[1,0]=1
+    Grid_map[1,1]=1
+    Grid_map[3,1]=0
+    Grid_map[2,1]=1
+    #Grid_map[3,2]=1
+    # imshow(Grid_map)
+    # plt.show()
+    cmap = plt.cm.gray
+    cmap.set_bad((1, 0, 0, 1))
+    ax=plt.axes(projection='3d')
+
+    FOV=10
+    z=1
+    WPC=[]
+    x=0
+    while x <50: 
+        y=0
+        while y <70: 
+             xc=x+FOV/2
+             yc=y+FOV/2
+             WPC.append((xc,yc,z))
+             y=y+FOV
+        x=x+FOV
+    ax.scatter([w[0] for w in WPC], [w[1] for w in WPC],[w[2] for w in WPC])
+    WPC=[]
+    FOV=20
+    x=0
+    z=2
+    while x <50: 
+        y=0
+        while y <70: 
+             xc=x+FOV/2
+             yc=y+FOV/2
+             WPC.append((xc,yc,z))
+             y=y+FOV
+        x=x+FOV
+    fig=plt.figure()
+    #ax.plot3D([i[0] for i in self.waypointSeq], [i[1] for i in self.waypointSeq],[i[2] for i in self.waypointSeq])
+    #ax.scatter([i[0] for i in self.waypointSeq], [i[1] for i in self.waypointSeq],[i[2] for i in self.waypointSeq])
+    ax.scatter([w[0] for w in WPC], [w[1] for w in WPC],[w[2] for w in WPC])
+    ax.set_zlim3d(0,2.5)
+    #conw=[w for w in self.waypointSeq ]
+    #plt.show()
+    
+    # Create a path 
+    print(WPC)
+    iniw=(0,0,0)
+    def Distance(w1,w2):
+        dis=np.sqrt(((w1[0]-w2[0]))**2+((w1[1]-w2[1]))**2+((w1[2]-w2[2]))**2)
+        return dis
+    tt=0
+    SQ=[iniw]
+    ww=iniw
+    while tt<15 and len(WPC)>0:
+        wn=[(w, Distance(w,ww)) for w in WPC]
+        short=min(tmp[1] for tmp in wn)
+        print(short,wn)
+
+        wcc=[i[0] for i in wn if int(i[1])==int(short)]
+        print(wcc,short, [i[1]==short for i in wn])
+        if len(wcc)>1:
+            #www=[i[0] for i in wcc]
+            wttmp=[(k, (k[0]-ww[0])**2) for k in wcc]
+            
+            short=min([i[1] for i in wttmp])
+            print(wttmp,short)
+            wcc=[i[0] for i in wttmp if i[1]==short]
+        print(wcc)
+        SQ.append(wcc[0])
+        WPC.remove(wcc[0])
+        ww=wcc[0]
+        tt=tt+1
+    SQ.append(iniw)
+    print(SQ)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z');
+    ax.plot3D([w[0] for w in SQ], [w[1] for w in SQ],[w[2] for w in SQ])
+    
+    plt.show()
+    
+    
+    #plt.imshow(Grid_map,cmap=cmap,interpolation='nearest')#, vmin=0, vmax=255)
+    #plt.grid( linestyle = '--', linewidth = 1)
+    #plt.figure()
+    #im=plt.imshow(Grid_map, origin='lower',interpolation='none',cmap = matplotlib.colors.ListedColormap(['green', 'red']))
+    
+    # ax = plt.gca();
+    # ax.set_xticks(np.arange(0, 7, 1))
+    # ax.set_yticks(np.arange(0, 5, 1))
+    # # Minor ticks
+    # ax.set_xticks(np.arange(-.5, 6, 1), minor=True)
+    # ax.set_yticks(np.arange(-.5, 4, 1), minor=True)
+    # ax.grid(which='minor', color='w', linestyle='-', linewidth=2)
+    #
+    # plt.show()
+    #
+
         
         
         

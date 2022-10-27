@@ -57,7 +57,7 @@ if __name__ == "__main__":
     PPMfile='Data/PPM_table.csv'
     #DroneNum=6
     speeds=[5]*DroneNum#,5,5,5,5,5]
-    loiter=[3]*DroneNum#[1,1,1,1,1,1,1,1,1,1]
+    loiter=[2]*DroneNum#[1,1,1,1,1,1,1,1,1,1]
     ranges=[500,300,300,500,500,300,300,500,500,300,300,500,500,300,300,500,500,300]
     GCloc=(0,500)
     GCloc=(0,0)
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     #Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi
     ## GWP= 1: WPC_SetCover; 2: WPC_Adjust; 3: Regular
     ###PLAN 0, Ours 1: DD+Return; 2: Reward_Driven+Return; 3: DL+DD+Return; 4: DL+RD+Return; ## 5: DL+CO+Return; 6: DL+CO+NoReturn 
-    logfile=f"./Results/log20_{Unit}_{DroneNum}_{STtime}"
+    logfile=f"./Results/logFQ_{Unit}_{DroneNum}_{STtime}"
     log=open(logfile, "w")
-    Simfile=f"./Results/Simple20_{Unit}_{DroneNum}_{STtime}"
+    Simfile=f"./Results/SimpleFQ_{Unit}_{DroneNum}_{STtime}"
     Simlog=open(Simfile,"w")
     # TANum=1;GWP=1;FPnum=0
     # Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)

@@ -34,14 +34,25 @@ import time
 from FQ_GenTask import GetEFA
 from FQ_Task_Generator import  TaskManager 
 #from FQ_Task_Generator import TG, DetectFire, tasks, Timer,Grid, Phase2
-#from FQ_TG_client import DrawTask
+from bcd_helper import imshow, imshow_scatter,imshow_EFA,DrawTask
+from FQ_Drones_Info import Sensor, Drone, ReadSen_PPM,LoadDrones
+
 from mongotriggers import MongoTrigger 
 from pymongo import MongoClient
+from FQ_FlightPlanning_Comp import AllComp
+
 ####################################### Rxfire
 def CreateRectangle(x_dl,y_dl, weight,height):# gag 10 m
-    x_r=x_dl+weight
-    y_u=y_dl+height
-    coords=[(x_dl,y_dl), (x_r,y_dl), (x_r,y_u), (x_dl,y_u), (x_dl, y_dl)]
+    print(weight, height)
+    
+    x_r=x_dl+weight-2
+    y_u=y_dl+height-2
+    print(x_dl,x_r)
+    #coords=[(x_dl-1,y_dl-1), (x_r,y_dl-1), (x_r,y_u), (x_dl-1,y_u), (x_dl-1, y_dl-1)]
+    x_dl=x_dl+1
+    y_dl=y_dl+1
+    coords=[(x_dl,y_dl), (x_r,y_dl), (x_r,y_u), (x_dl,y_u), (x_dl, y_dl-1)]
+
     poly=Polygon(coords)
     return poly 
 
@@ -220,10 +231,13 @@ def EventUpdateEFA(Grid_fire, prefix, time,simdur,BunsiteBound,dir,fname,Res=1):
     poly = gpd.GeoDataFrame()
     i=0
     for g in list(Grid_fire.keys()):
-        llx,lly=mx+g[0]*Res,my+g[1]*Res
+        llx,lly=mx+g[0]*Res-Res,my+g[1]*Res-Res
         fire=CreateRectangle(llx,lly,Res,Res)
+        #print(fire)
         poly.loc[i,'geometry']=fire
         i=i+1
+    poly.plot()
+    plt.show()
     AddFireGrid(fname, dir, prefix, time, poly)
     RunFarsite_Test(fname, dir,time,simdur=simdur)
     EFA,EFAdict,bound = GetEFA(time,simdur,BunsiteBound,dir,fname,Res=Res) 
@@ -242,6 +256,8 @@ def UpdateFireIgnition(foldername, dir,BunsiteBound,Grid_map, Res, time,simdur, 
         llx,lly=mx+x[i]*Res,my+y[i]*Res
         fire=CreateRectangle(llx,lly,Res,Res)
         poly.loc[i,'geometry']=fire
+    poly.plot()
+    plt.show()
     gdr=poly
     gdr.to_file(f"{dir}/{foldername}/input/{foldername}.shp")    # Write fire ignition file!  
     RunFarsite_Test(foldername, dir,time,simdur=simdur) # Run the simulation 
@@ -250,7 +266,11 @@ def UpdateFireIgnition(foldername, dir,BunsiteBound,Grid_map, Res, time,simdur, 
     bx=EFA.shape[0]+bx
     by=EFA.shape[1]+by
     EFA=EFA[int(mx):int(bx),int(my):int(by)]
-    tasks=TM.DeclareGridEFA(EFA,init=inittime) # Generate tasks 
+    imshow(EFA)
+    plt.show()
+    TM=TaskManager(Missions)
+    tasks=TM.DeclareGridEFA(EFA,init=0)
+    #tasks=TM.DeclareGridEFA(EFA,init=inittime) # Generate tasks 
     
     return EFA,tasks
 
@@ -270,6 +290,8 @@ def UpdateReportFire(Grid_fire,simdur,BunsiteBound,dir,foldername,Res, TM):
         AddFireGrid(foldername, dir, prefix, time, poly) # Create the ignition file
         RunFarsite_Test(foldername, dir,time,simdur=simdur) #Run the simulation 
         EFA,EFAdict,bound = GetEFA(time,simdur,BunsiteBound,dir,foldername,Res=Res) # Read output, and EFA
+        # imshow(EFA)
+        # plt.show()
         mx,my,bx,by=np.array(BunsiteBound)//Res-np.array(bound)//Res
         bx=EFA.shape[0]+bx
         by=EFA.shape[1]+by
@@ -282,42 +304,7 @@ def UpdateReportFire(Grid_fire,simdur,BunsiteBound,dir,foldername,Res, TM):
     return Update, EFA,tasks
     
 Phase2=False
-
-    
-if __name__ == "__main__":
-    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/Rxfire/Burn_1/output/Burn_1'
-    igfile='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/Rxfire/Burn_1/input/FQburn'
-    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
-    file='CARB_BurnUnits/CARB_BurnUnits.shp'
-    data=gpd.read_file(f"{dir}/{file}")
-    foldername='FQ_test'
-    data=ClearBarrier(data)
-    Missions=defaultdict(dict)  #  Missions: period, priority, 
-    Missions['BM']=[ 10, 1]  #Other area 
-    Missions['FI']=[ 5, 1]  #track the fire 
-    Missions['FT']=[ 3, 3]  # track the fire perimeter and the risky area (arrival within 10 min)
-    Missions['FL']=[ 3, 2]  # FL is tracking the fire perimeter.
-    Missions['FD']=[ 5, 3]
-    Res=2.5 # Grid size
-    Len=8*2
-    Width=6*2
-    simdur=120
-    TM=TaskManager(Missions,theta=9, plantime=simdur) # Create the task manager! 
-    client = MongoClient("mongodb://169.234.54.191:27017/")
-    Statetrigger = MongoTrigger(client)
-    firedb = client["fireMap"]
-    # # Create Collection (table) called grids
-    gridCollection = firedb.gridStates
-    EFACollection = firedb.wpEFA
-    statelist=[(int(x['State']), int(x['Time'])) for x in gridCollection.find()]
-    State_dict=dict(zip(list(range(1,len(statelist)+1)),statelist))
-    Grid_map=np.full((int(Len/2),int(Width/2)),0)
-    Unvisited=list(range(1,len(statelist)+1))
-    timeStep=3
-    BunsiteBound=PutSite(data, [2], Len*Res,Width*Res,foldername, dir) # Create folders and input files! 
-    inittime=0
-
-    def tryInsert(op_document): 
+def tryInsert(op_document): 
         print(f"see get state {op_document} ")
         print([i for i in gridCollection.find({'_id':op_document['o2']['_id'] })][0])
         '''
@@ -350,93 +337,149 @@ if __name__ == "__main__":
                 print(f"see need to do event-driven ")
         #return Update
         '''
-    def tryUpate(op_document): 
-        global Phase2
-        global BunsiteBound
-        global Res
-        global simdur
-        global TM
-        print(f"see get state {Phase2} {op_document['o2']['_id']}")
-        print([i for i in gridCollection.find({'_id':op_document['o2']['_id'] })][0])
-        getit=[i for i in gridCollection.find({'_id':op_document['o2']['_id'] })][0]
-        Update=False
-        id=int(getit['Grid ID'])
-        state=int(getit['State'])
-        time=int(getit['Time'])
-        x,y=getit['Cords']
-        if State_dict[id][1]!=time:
-            State_dict[id]=(State_dict[id][0],time)
-            cutime=time
-            if not Phase2:
-                try:
-                    Unvisited.remove(id)
-                except:
-                    pass
-        if State_dict[id][0]!=state:
-            State_dict[id]=(state,State_dict[id][1])
-            #print(f"check {(x,y)}")
-            Grid_map[int(y),int(x)]=state
-            #print(f"update  id {id} to state {state}")
+def tryUpate(op_document): 
+    global Phase2
+    global BunsiteBound
+    global Res
+    global simdur
+    global TM
+    print(f"see get state {Phase2} {op_document['o2']['_id']}")
+    print([i for i in gridCollection.find({'_id':op_document['o2']['_id'] })][0])
+    getit=[i for i in gridCollection.find({'_id':op_document['o2']['_id'] })][0]
+    Update=False
+    id=int(getit['Grid ID'])
+    state=int(getit['State'])
+    time=int(getit['Time'])
+    x,y=getit['Cords']
+    if State_dict[id][1]!=time:
+        State_dict[id]=(State_dict[id][0],time)
+        cutime=time
         if not Phase2:
-            if len(Unvisited)==0:
-                Phase2=True
-                cutime=0
-                latime=0
-                #print(f"see state {State_dict}")
-                #print(f"see Grid map {Grid_map}")
-                EFA, tasks=UpdateFireIgnition(foldername, dir, BunsiteBound,Grid_map, Res, inittime,simdur, TM)    
-                print(EFA)
-                #Write the EFA to EFA
-                r,w=Grid_map.shape
-                print(f"check EFA {[i for i in EFACollection.find()]}")
-                for i in range(r):
-                    for j in range(w):
-                        print(i,j, EFA[j,j])
-                        get=[i for i in EFACollection.find({'Cords': (j,i)})][0]
-                        EFACollection.update_one({'Cords': (j,i)}, {'$set': {'Grid ID': int(get['Grid ID']),'Cords': (j,i),'EFA': int(EFA[j,i])}})
-                print([i for i in EFACollection.find({'Cords': (j,i)})][0])         
-                print(tasks)
-                #DrawTask(tasks,EFA) 
-                Update=True
-        else:
-            if cutime>latime+timeStep:
-                latime=cutime
-                Update=True
-                print(f"see need to do event-driven ")
-        #return Update
+            try:
+                Unvisited.remove(id)
+            except:
+                pass
+    if State_dict[id][0]!=state:
+        State_dict[id]=(state,State_dict[id][1])
+        #print(f"check {(x,y)}")
+        Grid_map[int(y),int(x)]=state
+        #print(f"update  id {id} to state {state}")
+    if not Phase2:
+        if len(Unvisited)==0:
+            Phase2=True
+            cutime=0
+            latime=0
+            #print(f"see state {State_dict}")
+            #print(f"see Grid map {Grid_map}")
+            EFA, tasks=UpdateFireIgnition(foldername, dir, BunsiteBound,Grid_map, Res, inittime,simdur, TM)    
+            print(EFA)
+            #Write the EFA to EFA
+            r,w=Grid_map.shape
+            print(f"check EFA {[i for i in EFACollection.find()]}")
+            for i in range(r):
+                for j in range(w):
+                    print(i,j, EFA[j,j])
+                    get=[i for i in EFACollection.find({'Cords': (j,i)})][0]
+                    EFACollection.update_one({'Cords': (j,i)}, {'$set': {'Grid ID': int(get['Grid ID']),'Cords': (j,i),'EFA': int(EFA[j,i])}})
+            print([i for i in EFACollection.find({'Cords': (j,i)})][0])         
+            print(tasks)
+            #DrawTask(tasks,EFA) 
+            Update=True
+    else:
+        if cutime>latime+timeStep:
+            latime=cutime
+            Update=True
+            print(f"see need to do event-driven ")
+    
+if __name__ == "__main__":
+    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/Rxfire/Burn_1/output/Burn_1'
+    igfile='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite/Rxfire/Burn_1/input/FQburn'
+    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
+    file='CARB_BurnUnits/CARB_BurnUnits.shp'
+    data=gpd.read_file(f"{dir}/{file}")
+    foldername='FQ_test'
+    data=ClearBarrier(data)
+    Missions=defaultdict(dict)  #  Missions: period, priority, 
+    Missions['BM']=[ 10, 1]  #Other area 
+    Missions['FI']=[ 5, 1]  #track the fire 
+    Missions['FT']=[ 3, 3]  # track the fire perimeter and the risky area (arrival within 10 min)
+    Missions['FL']=[ 3, 2]  # FL is tracking the fire perimeter.
+    Missions['FD']=[ 5, 3]
+    Res=2.5 # Grid size
+    Len=4
+    Width=6
+    simdur=120
+    TM=TaskManager(Missions,theta=9, plantime=simdur) # Create the task manager! 
+    #client = MongoClient("mongodb://169.234.54.191:27017/")
+    #Statetrigger = MongoTrigger(client)
+    #firedb = client["fireMap"]
+    # # Create Collection (table) called grids
+    #gridCollection = firedb.gridStates
+    #EFACollection = firedb.wpEFA
+    #statelist=[(int(x['State']), int(x['Time'])) for x in gridCollection.find()]
+    #State_dict=dict(zip(list(range(1,len(statelist)+1)),statelist))
+    #Grid_map=np.full((int(Len/2),int(Width/2)),0)
+    Grid_map=np.full((5,7),0)
+    Grid_map[0,0]=0
+    Grid_map[1,0]=1
+    Grid_map[1,1]=1
+    Grid_map[3,1]=0
+    Grid_map[2,1]=1
+    #Grid_map[3,2]=1
+    Unvisited=list(range(1,35+1))
+    timeStep=3
+    BunsiteBound=PutSite(data, [2], Len*Res,Width*Res,foldername, dir) # Create folders and input files! 
+    inittime=0
+    #Example 1: 
+    ##### Get the fire simulation!!! 
+    EFA, tasks=UpdateFireIgnition(foldername, dir, BunsiteBound,Grid_map, Res, inittime,simdur, TM)    
+    imshow_EFA(EFA)
+    print(tasks)
+    DrawTask(tasks,EFA) 
+    plt.show()
+    ########################################
+    sensorfile='Data/sensor_info.csv'
+    PPMfile='Data/PPM_table.csv'
+    DroneNum=1
+    speeds=[5,5,5,5,3,5]
+    loiter=[1,2,1,1,1,2]
+    ranges=[300,200,500,300,300,500]
+    GCloc=(0,500)
+    GCloc=(0,0)
+    inloc=(0,0,0)
+    sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']]
+    #sensgrp=[['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['DJI_Air2S'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r'],['ZENMUSE_XT2_t','ZENMUSE_XT2_r']]
+    Drones=LoadDrones(sensorfile,PPMfile,DroneNum, speeds, sensgrp, Res,loiter,ranges)
+     ########################## Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi
+    # SimTime=2*60*60 #(seconds for plan 6 times 
+    #wind=5
+    
+    #logfile=f"./Results/try_{wind}_{STtime}"
+    log=''
+    #if IFLOG:
+        #log=open(logfile, "w")
+    init=0; Plantime=60*20
+    TANum=2;GWP=1;FPnum=5
+    DecomposeSize=Res
+    seed=0
+    AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=log,seed=seed)
+    #Example 2:
+    #Grid_fire={(0,6):10, (2,3):10}
+    #Update, nEFA, tasks =UpdateReportFire(Grid_fire,simdur,BunsiteBound,dir,foldername,Res, TM)
+    #DrawTask(tasks,EFA) 
+    
+            #return Update
         #Phase2=True
-    Statetrigger.register_insert_trigger(tryUpate, 'fireMap', 'gridStates')
-    Statetrigger.register_update_trigger(tryUpate, 'fireMap', 'gridStates')
+    #Statetrigger.register_insert_trigger(tryUpate, 'fireMap', 'gridStates')
+    #Statetrigger.register_update_trigger(tryUpate, 'fireMap', 'gridStates')
     #Statetrigger.register_op_trigger(tryUpate, 'fireMap', 'gridStates')
-    Statetrigger.tail_oplog()
-    print(f" is it over")
-    print(Statetrigger)
+    #Statetrigger.tail_oplog()
+    #print(f" is it over")
+    #print(Statetrigger)
     # while True:
     #     pass
     #Statetriggers.stop_tail()
 
-    '''
-    
-    #Example 1: 
-    Grid_map=np.full((8,6),0)
-    Grid_map[0,1]=1
-    Grid_map[1,1]=1
-    Grid_map[3,1]=1
-    Grid_map[2,1]=1 
-    ##### Get the fire simulation!!! 
-    EFA, tasks=UpdateFireIgnition(foldername, dir, BunsiteBound,Grid_map, Res, inittime,simdur, TM)    
-    DrawTask(tasks,EFA) 
-    
-    #Example 2:
-    Grid_fire={(0,6):10, (2,3):10}
-    
-    Update, nEFA, tasks =UpdateReportFire(Grid_fire,simdur,BunsiteBound,dir,foldername,Res, TM)
-    DrawTask(tasks,EFA) 
-    
-    '''
-    
-    
-    
     
     
     #DeclareGrid(TG, EFA,init=1, tasks=tasks,Missions=Missions)

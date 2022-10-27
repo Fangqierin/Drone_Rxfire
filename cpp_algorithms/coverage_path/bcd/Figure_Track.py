@@ -93,9 +93,9 @@ for tav in TAKM:
     for i in Times:
         for donm in Dones:
             #print(donm,CCRreward[(tav,1,5,seed,donm)].keys())
-            if CCRreward[(tav,1,5,seed,donm)].get(i)!=None:
+            if CCRreward[(tav,2,5,seed,donm)].get(i)!=None:
                 #print(donm,tav,CCRreward[(tav,1,5,seed,donm)][i][0])
-                Acrwd=Acrwd+CCRreward[(tav,1,5,seed,donm)][i][0]
+                Acrwd=Acrwd+CCRreward[(tav,2,5,seed,donm)][i][0]
                 #print(f"why {tav} {seed} {donm}")
             
         # if i in allt:
@@ -122,7 +122,7 @@ for tav in TAKM:
     for i in Times:
         for donm in Dones:
             #print(donm,CCRreward[(tav,1,5,seed,donm)].keys())
-            if CCRreward[(tav,1,5,seed,donm)].get(i)!=None:
+            if CCRreward[(tav,2,5,seed,donm)].get(i)!=None:
                 #print(donm,tav,CCRreward[(tav,1,5,seed,donm)][i][0])
                 Acrwd=Acrwd+CCRreward[(tav,1,5,seed,donm)][i][2]/10
                 #print(f"why {tav} {seed} {donm}")
@@ -153,7 +153,7 @@ for fpm in FPM:
     for i in Times:
         for donm in Dones:
             #print(donm,CCRreward[(tav,1,5,seed,donm)].keys())
-            if CCRreward[(2,1,fpm,seed,donm)].get(i)!=None:
+            if CCRreward[(2,2,fpm,seed,donm)].get(i)!=None:
                 #print(donm,tav,CCRreward[(tav,1,5,seed,donm)][i][0])
                 Acrwd=Acrwd+CCRreward[(2,1,fpm,seed,donm)][i][0]
                 #print(f"why {tav} {seed} {donm}")
@@ -184,7 +184,7 @@ for fpm in FPM:
     for i in Times:
         for donm in Dones:
             #print(donm,CCRreward[(tav,1,5,seed,donm)].keys())
-            if CCRreward[(2,1,fpm,seed,donm)].get(i)!=None:
+            if CCRreward[(2,2,fpm,seed,donm)].get(i)!=None:
                 #print(donm,tav,CCRreward[(tav,1,5,seed,donm)][i][0])
                 Acrwd=Acrwd+CCRreward[(2,1,fpm,seed,donm)][i][2]/10
                 #print(f"why {tav} {seed} {donm}")

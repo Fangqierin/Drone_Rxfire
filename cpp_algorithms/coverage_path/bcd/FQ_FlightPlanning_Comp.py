@@ -1678,7 +1678,7 @@ class FlightPlanner:
         print(f" drone {self.drone.id} waypoints {Reward}, {P}, {len(self.waypointSeq)} {self.waypointSeq}")
         return Reward, P, time.time()-st
 
-IFLOG=True
+IFLOG=False
 
 def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log='',seed=0):
     if IFLOG:
@@ -1696,7 +1696,8 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
     LogReward=[]
     for drone in Drones:
         planner=FlightPlanner(drone,init=init, iniloc=inloc, GCloc=inloc,Missions=Missions,Res=Res) # Here, GCloc and iniloc divided by Res!
-        planner.logfile=log
+        if IFLOG:
+            planner.logfile=log
         if GWP==1:
             planner.GenWaypoint_SetCover()
         if GWP==2:
@@ -1718,7 +1719,7 @@ def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,Decompos
         Penaltylist.append(P)
         Runtimelist.append(Runtim)
         #print(f"Reward {Reward} P {P}")
-        #planner.DrawWPsequence()
+        planner.DrawWPsequence()
     print(f"{TANum} {GWP} {FPnum} {sum(Rewardlist)} {sum(Penaltylist)} ")
     return TaskAllTime,Rewardlist, Penaltylist, Runtimelist,LogTask,LogMiss,LogReward
 

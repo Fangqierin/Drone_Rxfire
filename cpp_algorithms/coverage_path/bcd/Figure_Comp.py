@@ -7,7 +7,7 @@ from collections import defaultdict
 import math
 #from .constants import OB, NO
 import re
-Winds=[5,10,15]
+Winds=[5,10,15]#,20,25]
 STt=[1,20,40,60]
 Unit=1
 STtime=60
@@ -17,6 +17,10 @@ StMiss=defaultdict(dict)
 for wind in Winds:
     for ST in STt:
         STtime=ST
+        # if  STtime==1 or wind in [20,25]:
+        #     Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
+        #     print(Simfile)
+        # else:
         Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
         log=open(Simfile,"r")
         filedata = log.readlines()
@@ -25,12 +29,16 @@ for wind in Winds:
         Runtime=defaultdict(dict)
         for line in filedata:
             if re.match(r'Sum', line):
+                
+                    #print(f"why",line)
                 itms=line[:-1].split(' ')
                 #print(itms)
                 TKv=int(itms[1])
                 WPv=int(itms[2])
                 FPv=int(itms[3])
                 seev=int(itms[4])
+                if STtime==1 and wind==5:
+                    print(f"whyyy {(TKv,WPv,FPv,seev)}")
                 SumRreward[(TKv,WPv,FPv,seev)]=float(itms[5]) # sumreward
                 #print(TKv,WPv,FPv,seev)
                 SumMiss[(TKv,WPv,FPv,seev)]=int(float(itms[6])/10)
@@ -41,7 +49,7 @@ for wind in Winds:
 #print(SumRreward)
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.serif'] = ['Times New Roman'] + plt.rcParams['font.serif']
-plt.rcParams.update({'font.size': 10})
+plt.rcParams.update({'font.size': 13})
 
 barWidth = 0.25
 fig = plt.subplots(figsize =(6, 6))
@@ -57,7 +65,7 @@ Colors=['b','g','y']
 
 #conf_co=1.645
 conf_co=1.960
-wind=5
+wind=10
 i=0
 for tav in TAKM:
     print([StReward[wind,st] for st in STt] )
@@ -75,7 +83,7 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
 plt.savefig(f"./Results/TA_comp_{Unit}_{wind}.eps", bbox_inches='tight')
@@ -97,7 +105,7 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
 plt.savefig(f"./Results/TA_miss_{Unit}_{wind}.eps", bbox_inches='tight')

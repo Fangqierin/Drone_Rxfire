@@ -55,9 +55,12 @@ def ClearBarrier(data):
     newdata.loc[1, 'geometry'] = polygons[4].boundary
     newdata.loc[2, 'geometry'] = u.boundary
     #da2=gpd.read_file(f"{dir}/{foldername}/input/seelin.shp")
+    newdata.plot(color='green')
+
+    #plt.show() 
     return newdata
-    # da2.plot()
-    # plt.show()  
+    
+     
     
 def WriteInput(foldername, dir,step=1,initime=(0,0),dura=(2,0), dis_res=5, pre_res=5, wind=5,direction=270,seed=-1,InputDict=[]): # The simulation time 100 =1:00) duration<24 hours!
     fin = open(f"{dir}/{foldername}/input/Burn.input", "w")
@@ -179,6 +182,7 @@ def CreateDyRxfire(data, foldername,dir,UID,wind=5,direction=270): # the locatio
         os.system(f"mkdir {dir}/{foldername}/output")
     except:
         os.system(f"mkdir {dir}/{foldername}/output")
+    print(f"mkdir {dir}/{foldername}/output")
     data.to_file(f"{dir}/{foldername}/input/seelin.shp")
     gap=20
     offset=80
@@ -205,7 +209,7 @@ def CreateDyRxfire(data, foldername,dir,UID,wind=5,direction=270): # the locatio
                         coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
                         newdata.loc[cout, 'geometry'] = Polygon(coords)
                         cout=cout+1
-                        #plt.plot([i[0] for i in coords], [i[1] for i in coords])
+                        plt.plot([i[0] for i in coords], [i[1] for i in coords])
             else:
                 c=list(poly.intersection(LineString(line)).coords)
                 y=[i[1] for i in c]
@@ -215,6 +219,7 @@ def CreateDyRxfire(data, foldername,dir,UID,wind=5,direction=270): # the locatio
                     cout=cout+1
             x=x+gap
     ####################### Start_Sim, NewData is 
+    plt.show()
     time=0
     count=1  # how many fire stripes initially? 
     cudata=newdata[:count]#newdata.loc[0]
@@ -281,10 +286,10 @@ def CreateRandomRxfire(data, foldername,dir,UID,wind=5,direction=270,sed=0,Input
     except:
         os.system(f"mkdir {dir}/{foldername}/output")
     data.to_file(f"{dir}/{foldername}/input/seelin.shp")
-    gap=20
+    gap=15
     offset=50
-    width=3
-    SimTime=60
+    width=2
+    SimTime=40
     if len(UID)==1:
         # Get Boundary: 
         newdata = gpd.GeoDataFrame()
@@ -306,7 +311,8 @@ def CreateRandomRxfire(data, foldername,dir,UID,wind=5,direction=270,sed=0,Input
                         coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
                         newdata.loc[cout, 'geometry'] = Polygon(coords)
                         cout=cout+1
-                        #plt.plot([i[0] for i in coords], [i[1] for i in coords])
+                        #newdata.plot()
+                        plt.plot([i[0] for i in coords], [i[1] for i in coords],color='red')
             else:
                 c=list(poly.intersection(LineString(line)).coords)
                 y=[i[1] for i in c]
@@ -314,10 +320,19 @@ def CreateRandomRxfire(data, foldername,dir,UID,wind=5,direction=270,sed=0,Input
                     coords=[(x,y[0]+offset), (x,y[1]-offset), (x+width,y[1]-offset), (x+width,y[0]+offset), (x, y[0]+offset)]
                     newdata.loc[cout, 'geometry'] = Polygon(coords)
                     cout=cout+1
+                    plt.plot([i[0] for i in coords], [i[1] for i in coords],color='red')
             x=x+gap
     ####################### Start_Sim, NewData is 
+    plt.rcParams['font.family'] = 'serif'
+    plt.rcParams['font.serif'] = ['Times New Roman'] + plt.rcParams['font.serif']
+    plt.rcParams.update({'font.size': 13})
+    plt.grid( linestyle = '--', linewidth = 1)
+    plt.xlabel('X (Meter)')
+    plt.ylabel('Y (Meter)')
+    plt.savefig(f"./Results/StripFire.eps", bbox_inches='tight')
+    plt.show()
     time=0
-    count=1  # how many fire stripes initially? 
+    count=3  # how many fire stripes initially? 
     cudata=newdata[:count]#newdata.loc[0]
     burngap=10
     simdur=40
