@@ -1678,7 +1678,7 @@ class FlightPlanner:
         print(f" drone {self.drone.id} waypoints {Reward}, {P}, {len(self.waypointSeq)} {self.waypointSeq}")
         return Reward, P, time.time()-st
 
-IFLOG=False
+IFLOG=True
 
 def AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log='',seed=0):
     if IFLOG:
