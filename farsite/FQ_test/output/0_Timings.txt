@@ -15,11 +15,11 @@ Simulation Info:
 	Distance Resolution:        5.000000
 	Perimeter Resolution:       5.000000
 	Enable Spotting:            Yes
-	Spot Probability:           0.050000
+	Spot Probability:           0.030000
 	Spot Ignition Delay:        0.000000
 	Spot Grid Resolution:        15
 	Spotting Seed:               253114
-	Minimum Spotting Distance:  30.000000
+	Minimum Spotting Distance:  50.000000
 	Foliar Moisture:            100.0000
 	Enable Crowning:            Yes
 	Crown Fire Method:          Finney
@@ -40,8 +40,8 @@ Simulation Info:
           0.000000 - 1440.000000
 	Internal Weather:            -20
 	Internal Winds:              26
-5 4 0 14 50 0
-5 4 100 14 50 0
+5 4 0 15 270 0
+5 4 100 15 270 0
 5 4 200 11 60 0
 5 4 300 11 60 0
 5 4 400 11 60 0
@@ -67,4 +67,4 @@ Simulation Info:
 5 5 0 9 70 52
 5 5 600 9 70 52
 
-	Total Farsite Run Time: 0.133 Seconds
+	Total Farsite Run Time: 0.234 Seconds

@@ -15,7 +15,7 @@ Simulation Info:
 	Distance Resolution:        5.000000
 	Perimeter Resolution:       5.000000
 	Enable Spotting:            Yes
-	Spot Probability:           0.020000
+	Spot Probability:           0.030000
 	Spot Ignition Delay:        0.000000
 	Spot Grid Resolution:        15
 	Spotting Seed:               0
@@ -50,4 +50,4 @@ Simulation Info:
 5 4 220 8 272 0
 5 4 820 8 272 0
 
-	Total Farsite Run Time: 0.155 Seconds
+	Total Farsite Run Time: 0.578 Seconds
