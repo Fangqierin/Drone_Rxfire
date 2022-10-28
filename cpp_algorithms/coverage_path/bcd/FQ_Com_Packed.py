@@ -119,8 +119,8 @@ if __name__ == "__main__":
         TaskGTime=time.time()-ct
         #TM.reset()
         Simlog.write(f"TaskGen {TaskGTime}\n")
-        for TANum in  [1,2,3,4]:
-            for GWP in [2]:#[1,2,3]:
+        for TANum in  [2,3,4]:
+            for GWP in [1]:#[1,2,3]:
                 for FPnum in [0,1,2,3,4,5,6]:
                     TaskATime,Rewardl, Pl, Runtiml,LogTask,LogMiss,LogReward=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log,seed)
                     Simlog.write(f"Sum {TANum} {GWP} {FPnum} {seed} {sum(Rewardl)} {sum(Pl)} {max(Runtiml)} {np.mean(Runtiml)} {TaskATime}\n")

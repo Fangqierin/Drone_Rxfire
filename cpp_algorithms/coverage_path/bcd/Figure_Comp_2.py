@@ -7,21 +7,22 @@ from collections import defaultdict
 import math
 #from .constants import OB, NO
 import re
-Winds=[5,10,15,20,25]
+Winds=[5,10,15]#,20,25]
 STt=[1,20,40,60]
-Unit=3
+Unit=2
 STtime=60
+
 StReward=defaultdict(dict)
 StMiss=defaultdict(dict)
-
+Seed=list(range(10))
 for wind in Winds:
     for ST in STt:
         STtime=ST
-        if  STtime==1 or wind in [20,25]:
-            Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
-            print(Simfile)
-        else:
-            Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
+        # if  STtime==1 or wind in [20,25]:
+        #     Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
+        #     print(Simfile)
+        # else:
+        Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
         log=open(Simfile,"r")
         filedata = log.readlines()
         SumRreward=defaultdict(dict)
@@ -63,17 +64,17 @@ for i in TAKM:
 Label=['WPC-DFP', 'UTA-DFP', 'ATA-DFP', 'VD-DFP']
 Colors=['b','g','y']
 
-#conf_co=1.645
-conf_co=1.960
+conf_co=1.645
+#conf_co=1.960
 wind=10
-'''
+
 i=0
 for tav in TAKM:
     print([StReward[wind,st] for st in STt] )
     for k in range(10):
-        print(tav, k, [StReward[wind,st][tav,2,5,k] for st in STt] )
-    Rd=[np.mean([StReward[wind,st][tav,2,5,k] for k in range(10)]) for st in STt]
-    Rdst=np.array([np.std([StReward[wind,st][tav,2,5,k] for k in range(10)]) for st in STt])
+        print(tav, k, [StReward[wind,st][tav,1,5,k] for st in STt] )
+    Rd=[np.mean([StReward[wind,st][tav,1,5,k] for k in Seed]) for st in STt]
+    Rdst=np.array([np.std([StReward[wind,st][tav,1,5,k] for k in Seed]) for st in STt])
     Rder=conf_co*(Rdst/math.sqrt(10))
     #print(f"see Rd {Rd}")
     #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
@@ -89,14 +90,14 @@ plt.grid( linestyle = '--', linewidth = 1)
 
 plt.savefig(f"./Results/TA_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 #plt.grid( linestyle = '--', linewidth = 1)
-plt.show()
+#plt.show()
 plt.clf()
 ################## Miss 
 i=0
 for tav in TAKM:
-    Rd=[np.mean([StMiss[wind,st][tav,2,5,k] for k in range(10)]) for st in STt]
+    Rd=[np.mean([StMiss[wind,st][tav,1,5,k] for k in Seed]) for st in STt]
     #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-    Rdst=np.array([np.std([StMiss[wind,st][tav,2,5,k] for k in range(10)]) for st in STt])
+    Rdst=np.array([np.std([StMiss[wind,st][tav,1,5,k] for k in Seed]) for st in STt])
     Rder=conf_co*(Rdst/math.sqrt(10))
     plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[tav-1])
     #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[tav-1])
@@ -106,11 +107,11 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 
 plt.savefig(f"./Results/TA_miss_{Unit}_{wind}.eps", bbox_inches='tight')
-plt.show()
+#plt.show()
 #####################################################
 
 
@@ -119,71 +120,23 @@ Label=[ 'UTA-DL_Dis', 'UTA-NN', 'UTA-RB','UTA-DL_NN','UTA-DL_RB','UTA-DFP','UTA-
 FPM=[5,1,2,3,4]
 barWidth = 0.15
 Brs=[np.arange(len(STt))]
-#br1 = np.arange(len(STt))
-for i in FPM:
-    Brs.append([x + barWidth for x in Brs[-1]])
-plt.clf()
-i=0
-for fpm in FPM:
-#for tav in TAKM:
-    Rd=[np.mean([StReward[wind,st][2,2,fpm,k] for k in range(10)])  for st in STt]
-    #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-    Rdst=np.array([np.std([StReward[wind,st][2,2,fpm,k] for k in range(10)]) for st in STt])
-    Rder=conf_co*(Rdst/math.sqrt(10))
-    plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
-    #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
-    i=i+1
-plt.legend()
-plt.xlabel('Plan Duration (Minute)')
-plt.ylabel('Total Reward')
-#plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
-plt.grid( linestyle = '--', linewidth = 1)
-plt.savefig(f"./Results/FP_comp_{Unit}_{wind}.eps", bbox_inches='tight')
-plt.show()
-############################
-plt.clf()
-i=0
-for fpm in FPM:
-#for tav in TAKM:
-    Rd=[np.mean([StMiss[wind,st][2,2,fpm,k] for k in range(10)])  for st in STt]
-    Rdst=np.array([np.std([StMiss[wind,st][2,2,fpm,k] for k in range(10)]) for st in STt])
-    Rder=conf_co*(Rdst/math.sqrt(10))
-    #Rd=[StMiss[wind,st][2,1,fpm] for st in STt]
-    #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-    #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
-    plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
-    i=i+1
-plt.legend()
-plt.xlabel('Plan Duration (Minute)')
-plt.ylabel('Total Missing Subtasks')
-#plt.yscale('symlog')
-plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
-plt.grid( linestyle = '--', linewidth = 1)
-plt.savefig(f"./Results/FP_miss_{Unit}_{wind}.eps", bbox_inches='tight')
-plt.show()
-'''
-########################################
-
-
 M=['o','*','1','<','+']
 Label0=['WPC-DFP', 0, 'UTA-', 'ATA-', 'VD-']
 Label1=[ 'UTA-DL_Dis', 'NN', 'RM','DNN','DRM','DFP','DFP']
 i=0
 
-
 #br1 = np.arange(len(STt))
-# for i in FPM:
-#     Brs.append([x + barWidth for x in Brs[-1]])
-# plt.clf()
+for i in FPM:
+    Brs.append([x + barWidth for x in Brs[-1]])
+plt.clf()
 i=0
 #for fpm in FPM:
 for tav in [2,4]:
     for fpm in [5,2]:
 #for tav in TAKM:
-        Rd=[np.mean([StReward[wind,st][tav,2,fpm,k] for k in range(10)])  for st in STt]
+        Rd=[np.mean([StReward[wind,st][tav,1,fpm,k] for k in Seed])  for st in STt]
         #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-        Rdst=np.array([np.std([StReward[wind,st][tav,2,fpm,k] for k in range(10)]) for st in STt])
+        Rdst=np.array([np.std([StReward[wind,st][tav,1,fpm,k] for k in Seed]) for st in STt])
         Rder=conf_co*(Rdst/math.sqrt(10))
         #plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
     #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
@@ -197,10 +150,10 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-plt.xticks(STt,['0-20', '20-40', '40-60', '60-80'])
-
 #plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
+plt.xticks(STt,['0-20', '20-40', '40-60', '60-80'])
+
 plt.savefig(f"./Results/FP_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 plt.show()
 ############################
@@ -210,8 +163,8 @@ i=0
 for tav in [2,4]:
     for fpm in [5,2]:
 #for tav in TAKM:
-        Rd=[np.mean([StMiss[wind,st][tav,2,fpm,k] for k in range(10)])  for st in STt]
-        Rdst=np.array([np.std([StMiss[wind,st][tav,2,fpm,k] for k in range(10)]) for st in STt])
+        Rd=[np.mean([StMiss[wind,st][tav,1,fpm,k] for k in Seed])  for st in STt]
+        Rdst=np.array([np.std([StMiss[wind,st][tav,1,fpm,k] for k in Seed]) for st in STt])
         Rder=conf_co*(Rdst/math.sqrt(10))
         #Rd=[StMiss[wind,st][2,1,fpm] for st in STt]
         #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
@@ -228,7 +181,9 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
+#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.xticks(STt,['0-20', '20-40', '40-60', '60-80'])
+
 plt.grid( linestyle = '--', linewidth = 1)
 plt.savefig(f"./Results/FP_miss_{Unit}_{wind}.eps", bbox_inches='tight')
 plt.show()
