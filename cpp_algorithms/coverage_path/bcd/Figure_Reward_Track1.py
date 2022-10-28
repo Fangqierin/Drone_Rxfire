@@ -8,10 +8,8 @@ import math
 #from .constants import OB, NO
 import re
 Winds=[5,10,15,20,25]
-
-
 STt=[1,20,40,60]
-Unit=3
+Unit=1
 if Unit==3:
     Winds=[15,20,25]
 STtime=60
@@ -21,9 +19,8 @@ StRuntime=defaultdict(dict)
 for wind in Winds:
     for ST in STt:
         STtime=ST
-        if Unit==3:
-            if  STtime==1 or wind in [20,25]:
-                Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
+        if  wind in [20,25]:
+            Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
         else:
             Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
         print(f"Simfile {Simfile}")
@@ -62,25 +59,25 @@ Label=['WPC-DFP', 'UTA-DFP', 'ATA-DFP', 'VD-DFP']
 conf_co=1.960
 wind=15
 Label=[ 'UTA-DL_Dis', 'UTA-NN', 'UTA-RB','UTA-DL_NN','UTA-DL_RB','UTA-DFP','UTA-DFP']
-Label=[ '5 MPH wind', '10 MPH wind', '15 MPH wind']
+Label=[ '5 MPH wind', '10 MPH wind', '15 MPH wind','20 MPH wind','25 MPH wind']
 barWidth = 0.2
 Brs=[np.arange(len(STt))]
 
-for i in range(4):
+for i in range(len(Winds)):
     Brs.append([x + barWidth for x in Brs[-1]])
 i=0
-colors=['plum','orange','lightblue']
+#scolors=['plum','orange','lightblue']
 for wind in Winds:
     for fpm in [5]:
     #for tav in TAKM:
         print(f"{wind} ")
-        Rd=[np.mean([StRuntime[wind,st][2,2,fpm,k] for k in range(10)])  for st in STt]
-        Rdst=np.array([np.std([StRuntime[wind,st][2,2,fpm,k] for k in range(10)]) for st in STt])
+        Rd=[np.mean([StRuntime[wind,st][2,1,fpm,k] for k in range(10)])  for st in STt]
+        Rdst=np.array([np.std([StRuntime[wind,st][2,1,fpm,k] for k in range(10)]) for st in STt])
         Rder=conf_co*(Rdst/math.sqrt(10))
         #Rd=[StMiss[wind,st][2,1,fpm] for st in STt]
         #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
         #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
-        plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[i],color=colors[i])#,color=plt.rcParams['axes.color_cycle'][2])
+        plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[i])#,color=colors[i])#,color=plt.rcParams['axes.color_cycle'][2])
         i=i+1
 plt.legend()
 plt.rcParams["image.cmap"] = "Accent"
@@ -92,7 +89,7 @@ plt.ylabel('Running Time of UTA-DFP (s)')
 #plt.yscale('symlog')
 plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-plt.savefig(f"./Results/FP_Runtime_{Unit}_new.eps", bbox_inches='tight')
+#plt.savefig(f"./Results/FP_Runtime_{Unit}_new.eps", bbox_inches='tight')
 plt.show()
 plt.clf() 
 
@@ -102,19 +99,19 @@ AvTasks=defaultdict(dict)
 for wind in Winds:
     for ST in STt:
         STtime=ST
-        if Unit==3:
-            if  STtime==1 or wind in [20,25]:
-                Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
-                
+        #if Unit==3:
+        if  wind in [20,25]:
+            Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
         else:
             Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
+        print(f"see file",Simfile)
         log=open(Simfile,"r")
         filedata = log.readlines()
         SumRreward=defaultdict(dict)
         SumMiss=defaultdict(dict)
         Runtime=defaultdict(dict)
         for line in filedata:
-            if re.match(r'Tasks 1 2 0', line):
+            if re.match(r'Tasks 2 1 0', line):
                 allitm=line[:-3].split('; ') 
                 print(f"{wind} {STtime} allitm {allitm}")
                 #print(allitm)
@@ -150,20 +147,23 @@ plt.rcParams.update({'font.size': 9})
 
 tick_labels_1 = ['5']* len(STt)
 #print(tick_labels_1)
-tick_labels_2 = ['10\n0-20 min','10\n20-40 min', '10\n40-60 min','10\n60-80 min']
-tick_labels_3 = ['15'] * len(STt)
+#tick_labels_2 = ['10\n0-20 min','10\n20-40 min', '10\n40-60 min','10\n60-80 min']
+tick_labels_2 = ['10'] * len(STt)
+tick_labels_3 = ['15\n0-20 min','15\n20-40 min', '15\n40-60 min','15\n60-80 min']
+tick_labels_4 = ['20'] * len(STt)
+tick_labels_5 = ['25'] * len(STt)
 # #print([x - 0.4, x - 0.1, x + 0.2])
 # all_x = np.concatenate([x - 0.4, x - 0.1, x + 0.2])
 # #print(all_x)
-labels=tick_labels_1+tick_labels_2+tick_labels_3
+labels=tick_labels_1+tick_labels_2+tick_labels_3+tick_labels_4+tick_labels_5
 #labels=['5', '10', '15', '5', '10', '15','5', '10', '15','5', '10', '15']
 
 #labels=['5', '10\n0-20', '15','5', '10\n20-40', '15','5', '10\n40-60', '15','5', '10\n60-80', '15']
-Label=[ '5 MPH wind', '10 MPH wind', '15 MPH wind']
-barWidth = 0.24
+#Label=[ '5 MPH wind', '10 MPH wind', '15 MPH wind']
+barWidth = 0.15
 Brs=[np.arange(len(STt))]
 for i in range(len(Winds)-1):
-    Brs.append([x + barWidth+0.04 for x in Brs[-1]])
+    Brs.append([x + barWidth+0.03 for x in Brs[-1]])
 
 Colors=['blue','green','orange']
 
@@ -176,7 +176,7 @@ for tak in ['BM','FI','FT']:
     Rd=np.concatenate([np.array([AvTasks[wind,st][tak] for st in STt]) for  wind in Winds])
     Rdlist.append(Rd)
     if i==0:
-        print(np.concatenate([np.array(Brs[n]) for n in range(len(Brs))]),Rd)
+        #print(np.concatenate([np.array(Brs[n]) for n in range(len(Brs))]),Rd)
         ax.bar(np.concatenate([np.array(Brs[n]) for n in range(len(Brs))]), Rd, width = barWidth, align='center', edgecolor ='grey', color=Colors[i],tick_label=labels,label =tak)
     if i!=0:
         botV=np.array(Rdlist[0])

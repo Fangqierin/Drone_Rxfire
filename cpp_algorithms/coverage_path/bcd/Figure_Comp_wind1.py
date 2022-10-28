@@ -7,22 +7,23 @@ from collections import defaultdict
 import math
 #from .constants import OB, NO
 import re
-Winds=[10,15,20,25]
+Winds=[5,10,15,20,25]
 STt=[1,20,40,60]
-Unit=3
-STtime=60
-
+Unit=1
+#STtime=40
+st=60
 StReward=defaultdict(dict)
 StMiss=defaultdict(dict)
 Seed=list(range(10))
 for wind in Winds:
     for ST in STt:
         STtime=ST
-        if  STtime==1 or wind in [20,25]:
+        if  wind in [20,25]:
             Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
             print(Simfile)
         else:
             Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
+            print(Simfile)
         # # if  STtime==1 or wind in [20,25]:
         # #     Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
         # #     print(Simfile)
@@ -199,7 +200,7 @@ plt.show()
 '''
 ########################################################################################
 FPM=[5,2]
-st=40
+
 M=['o','*','1','<','+']
 Label0=['WPC-DFP', 0, 'UTA-', 'ATA-', 'VD-']
 Label1=[ 'UTA-DL_Dis', 'NN', 'RM','DNN','DRM','DFP','DFP']
@@ -209,10 +210,10 @@ M=['o','*','1','<','+']
 
 for tav in [2,4]:
     for fpm in FPM:
-        Rd=[np.mean([StReward[wind,st][tav,2,fpm,k] for k in range(10)])  for wind in Winds]
+        Rd=[np.mean([StReward[wind,st][tav,1,fpm,k] for k in range(10)])  for wind in Winds]
         print(Rd)
         #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-        Rdst=np.array([np.std([StReward[wind,st][tav,2,fpm,k] for k in range(10)]) for wind in Winds])
+        Rdst=np.array([np.std([StReward[wind,st][tav,1,fpm,k] for k in range(10)]) for wind in Winds])
         Rder=conf_co*(Rdst/math.sqrt(10))
         #plt.plot(Nums, Rd)
         #plt.errorbar(Nums, Rd, Rder, marker='s', mfc='red', mec='green', ms=20, mew=4)
@@ -228,7 +229,7 @@ for tav in [2,4]:
     #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
     i=i+1
 plt.legend()
-plt.xlabel('Number of Drones')
+plt.xlabel('Wind Speed (mph)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
 #plt.xlim(8,16)
@@ -238,7 +239,7 @@ plt.grid( linestyle = '--', linewidth = 1)
 plt.xticks(Winds, Winds)
 
 #plt.yscale('symlog')
-plt.savefig(f"./Results/FP_winds_{Unit}_{wind}.eps", bbox_inches='tight')
+plt.savefig(f"./Results/FP_winds_{Unit}_{wind}_{st}.eps", bbox_inches='tight')
 plt.show()
 
 ############################
@@ -261,9 +262,9 @@ i=0
 i=0
 for tav in [2,4]:
     for fpm in FPM:
-        Rd=[np.mean([StMiss[wind,st][tav,2,fpm,k] for k in range(10)])  for wind in Winds]
+        Rd=[np.mean([StMiss[wind,st][tav,1,fpm,k] for k in range(10)])  for wind in Winds]
         #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-        Rdst=np.array([np.std([StMiss[wind,st][tav,2,fpm,k] for k in range(10)]) for wind in Winds])
+        Rdst=np.array([np.std([StMiss[wind,st][tav,1,fpm,k] for k in range(10)]) for wind in Winds])
         Rder=conf_co*(Rdst/math.sqrt(10))
         #plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
         #plt.errorbar(Nums, Rd, Rder, marker='s',  ms=8, mew=4,label =Label[fpm])
@@ -276,17 +277,17 @@ for tav in [2,4]:
     #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
         i=i+1
 plt.legend()
-plt.xlabel('Number of Drones')
+plt.xlabel('Wind Speed (mph)')
 plt.ylabel('Total Missing Subtasks')
 #plt.xlim(7.5,16)
-plt.ylim(0)
+#plt.ylim(0)
 plt.xticks(Winds, Winds)
 
 #plt.yscale('symlog')
 #plt.xticks([r + barWidth for r in range(len(Nums))],Nums)
 plt.grid( linestyle = '--', linewidth = 1)
 #plt.yscale('symlog')
-plt.savefig(f"./Results/FP_miss_wind_{Unit}_{wind}.eps", bbox_inches='tight')
+plt.savefig(f"./Results/FP_miss_wind_{Unit}_{wind}_{st}.eps", bbox_inches='tight')
 plt.show()
 
 

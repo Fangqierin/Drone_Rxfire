@@ -7,7 +7,7 @@ from collections import defaultdict
 import math
 #from .constants import OB, NO
 import re
-Winds=[5,10,15,20,25]
+Winds=[5,10,15]
 
 
 STt=[1,20,40,60]
@@ -92,7 +92,7 @@ plt.ylabel('Running Time of UTA-DFP (s)')
 #plt.yscale('symlog')
 plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-plt.savefig(f"./Results/FP_Runtime_{Unit}_new.eps", bbox_inches='tight')
+plt.savefig(f"./Results/FP_Runtime_{Unit}.eps", bbox_inches='tight')
 plt.show()
 plt.clf() 
 
@@ -193,7 +193,7 @@ plt.figtext(0.01, 0.034, 'Plan Duration:', fontsize = 10)
 plt.figtext(0.01, 0.07, 'Wind (mph):', fontsize = 10)
 plt.grid( linestyle = '--', linewidth = 1)
 plt.tight_layout()
-plt.savefig(f"./Results/TaskNum_{Unit}_new.eps", bbox_inches='tight')
+plt.savefig(f"./Results/TaskNum_{Unit}.eps", bbox_inches='tight')
 plt.show()
 # i=0
 # #fig = plt.figure()

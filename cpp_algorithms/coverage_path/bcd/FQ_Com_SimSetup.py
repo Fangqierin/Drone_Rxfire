@@ -32,9 +32,9 @@ if __name__ == "__main__":
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
     wind=15; time=60; seed=1
-    for wind in [20]:#[5,10,15]:
+    for wind in [5,10,15]:#[20]:#:
         for time in [0]: #[1,20, 40,60]:
-            for seed in range(6,10):#[0]:# [0,1,2]:# 
+            for seed in range(10):#[0]:# [0,1,2]:# 
                 ############################### For random seed
                 #We have 8 time slots each of 20 minutes 
                 slots=['0000','0020','0040','0100','0120','0140','0200','0220']

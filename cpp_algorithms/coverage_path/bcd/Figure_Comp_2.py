@@ -9,7 +9,7 @@ import math
 import re
 Winds=[5,10,15]#,20,25]
 STt=[1,20,40,60]
-Unit=1
+Unit=2
 STtime=60
 
 StReward=defaultdict(dict)
@@ -87,6 +87,7 @@ plt.ylabel('Total Reward')
 #plt.yscale('symlog')
 #plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
+plt.xticks(STt,['0-20', '20-40', '40-60', '60-80'])
 
 plt.savefig(f"./Results/TA_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 #plt.grid( linestyle = '--', linewidth = 1)
