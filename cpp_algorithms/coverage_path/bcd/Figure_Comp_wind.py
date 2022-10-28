@@ -7,7 +7,7 @@ from collections import defaultdict
 import math
 #from .constants import OB, NO
 import re
-Winds=[5,10,15]#,20,25]
+Winds=[5,10,15,20,25]
 STt=[1,20,40,60]
 Unit=1
 STtime=60
@@ -23,6 +23,10 @@ for wind in Winds:
         #     print(Simfile)
         # else:
         Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
+        if wind in [20,25]:
+            Simfile=f"./Results/Simple222_{Unit}_{wind}_{STtime}"
+        else:
+            Simfile=f"./Results/Simple14_{Unit}_{wind}_{STtime}"
         log=open(Simfile,"r")
         filedata = log.readlines()
         SumRreward=defaultdict(dict)
@@ -66,7 +70,7 @@ Colors=['b','g','y']
 
 conf_co=1.645
 #conf_co=1.960
-wind=10
+wind=20
 
 i=0
 for tav in TAKM:
