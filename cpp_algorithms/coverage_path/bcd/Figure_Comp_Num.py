@@ -20,7 +20,7 @@ StMiss=defaultdict(dict)
 for num in Nums:
     for ST in [60]:
         #STtime=Nums
-        Simfile=f"./Results/SimpleFQ_{Unit}_{num}_{STtime}"
+        Simfile=f"./Results/Simple14_{Unit}_{num}_{STtime}"
         log=open(Simfile,"r")
         filedata = log.readlines()
         SumRreward=defaultdict(dict)

@@ -9,7 +9,7 @@ import math
 import re
 Winds=[10]
 STt=[1,20,40,60]
-Unit=1
+Unit=2
 STtime=60
 StReward=defaultdict(dict)
 StMiss=defaultdict(dict)
@@ -26,10 +26,8 @@ for wind in [10]:#Winds:
         SumRreward=defaultdict(dict)
         for line in filedata:
             if re.match(r'Reward', line):
-                
                 content=line[:-1].split('; ')
                 itms=content[0].split(' ')
-                
                 TKv=int(itms[1])
                 WPv=int(itms[2])
                 FPv=int(itms[3])

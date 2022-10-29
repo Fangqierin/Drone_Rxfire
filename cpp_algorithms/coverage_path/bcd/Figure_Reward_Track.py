@@ -7,11 +7,11 @@ from collections import defaultdict
 import math
 #from .constants import OB, NO
 import re
-Winds=[5,10,15,20,25]
+Winds=[5,10,15]#,20,25]
 
 
 STt=[1,20,40,60]
-Unit=3
+Unit=2
 if Unit==3:
     Winds=[15,20,25]
 STtime=60

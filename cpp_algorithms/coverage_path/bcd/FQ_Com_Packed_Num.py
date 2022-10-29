@@ -58,7 +58,7 @@ if __name__ == "__main__":
     #DroneNum=6
     speeds=[5]*DroneNum#,5,5,5,5,5]
     loiter=[2]*DroneNum#[1,1,1,1,1,1,1,1,1,1]
-    ranges=[500,300,300,500,500,300,300,500,500,300,300,500,500,300,300,500,500,300]
+    ranges=[500,300,500,300,300,500,300,500,500,300,300,500,500,300,300,500,500,300]
     GCloc=(0,500)
     GCloc=(0,0)
     inloc=(0,0,0)
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     #Do decomposition~  1: Normal 2: Inter 3: Area 4: Voronoi
     ## GWP= 1: WPC_SetCover; 2: WPC_Adjust; 3: Regular
     ###PLAN 0, Ours 1: DD+Return; 2: Reward_Driven+Return; 3: DL+DD+Return; 4: DL+RD+Return; ## 5: DL+CO+Return; 6: DL+CO+NoReturn 
-    logfile=f"./Results/logFQ_{Unit}_{DroneNum}_{STtime}"
+    logfile=f"./Results/logFQ2_{Unit}_{DroneNum}_{STtime}"
     log=open(logfile, "w")
-    Simfile=f"./Results/SimpleFQ_{Unit}_{DroneNum}_{STtime}"
+    Simfile=f"./Results/SimpleFQ2_{Unit}_{DroneNum}_{STtime}"
     Simlog=open(Simfile,"w")
     # TANum=1;GWP=1;FPnum=0
     # Rewardl, Pl, Runtiml=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log)
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         TaskGTime=time.time()-ct
         #TM.reset()
         Simlog.write(f"TaskGen {TaskGTime}\n")
-        for TANum in  [1,2,3,4]:
+        for TANum in [2,3,4]:# [1,2,3,4]:
             for GWP in [1]:#,2,3]:
                 for FPnum in  [0,1,2,3,4,5,6]:
                     TaskATime,Rewardl, Pl, Runtiml,LogTask,LogMiss,LogReward=AllComp( TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log,seed)
