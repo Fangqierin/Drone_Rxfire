@@ -58,6 +58,7 @@ for i in TAKM:
 Label=['WPC-DFP', 'UTA-DFP', 'ATA-DFP', 'VD-DFP']
 Colors=['b','g','y']
 
+
 conf_co=1.645
 #conf_co=1.960
 wind=10
@@ -131,16 +132,23 @@ for i in FPM:
 plt.clf()
 i=0
 st=60
+M=['o','*','1','<','+']
+
 for tav in [2,4]:
     for fpm in FPM:
         Rd=[np.mean([StReward[num,st][tav,1,fpm,k] for k in range(10)])  for num in Nums]
         print(Rd)
         #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-        Rdst=np.array([np.std([StReward[num,st][2,1,fpm,k] for k in range(10)]) for num in Nums])
+        Rdst=np.array([np.std([StReward[num,st][tav,1,fpm,k] for k in range(10)]) for num in Nums])
         Rder=conf_co*(Rdst/math.sqrt(10))
         #plt.plot(Nums, Rd)
         #plt.errorbar(Nums, Rd, Rder, marker='s', mfc='red', mec='green', ms=20, mew=4)
-        plt.errorbar(Nums, Rd, Rder, marker='s',  ms=8, mew=4,label =f"{Label0[tav]}{Label1[fpm]}")
+        #plt.errorbar(Nums, Rd, Rder, marker='s',  ms=8, mew=4,label =f"{Label0[tav]}{Label1[fpm]}")
+        if tav==2:
+            line='-'
+        else:
+            line='--'
+        plt.errorbar(Nums, Rd, Rder, marker=M[i], linestyle=line, ms=5, mew=5,capsize=3,label =f"{Label0[tav]}{Label1[fpm]}")
 
     #plt.plot(list(range(len(Nums))), Rd)
     #plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
@@ -153,10 +161,8 @@ plt.ylabel('Total Reward')
 #plt.xticks([r + barWidth for r in range(len(Nums))],Nums)
 plt.grid( linestyle = '--', linewidth = 1)
 #plt.yscale('symlog')
-
 plt.savefig(f"./Results/FP_Num_{Unit}_{wind}.eps", bbox_inches='tight')
 plt.show()
-
 ############################
 plt.clf()
 i=0
@@ -172,17 +178,22 @@ i=0
 #     i=i+1
 # plt.legend()
 # plt.xlabel('Number of Drones')
-for fpm in FPM:
-#for tav in TAKM:
-    Rd=[np.mean([StMiss[num,st][2,1,fpm,k] for k in range(10)])  for num in Nums]
-    #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
-    Rdst=np.array([np.std([StMiss[num,st][2,1,fpm,k] for k in range(10)]) for num in Nums])
-    Rder=conf_co*(Rdst/math.sqrt(10))
-    #plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
-    plt.errorbar(Nums, Rd, Rder, marker='s',  ms=8, mew=4,label =Label[fpm])
-
-    #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
-    i=i+1
+for tav in [2,4]:
+    for fpm in FPM:
+    #for tav in TAKM:
+        Rd=[np.mean([StMiss[num,st][tav,1,fpm,k] for k in range(10)])  for num in Nums]
+        #print(f" {wind} {st} {tav} {} {StMiss[wind,st][tav,1,0]}")
+        Rdst=np.array([np.std([StMiss[num,st][tav,1,fpm,k] for k in range(10)]) for num in Nums])
+        Rder=conf_co*(Rdst/math.sqrt(10))
+        #plt.bar(Brs[i], Rd, width = barWidth, yerr=Rder, align='center',capsize=5, edgecolor ='grey', label =Label[fpm])
+        if tav==2:
+            line='-'
+        else:
+            line='--'
+        #plt.errorbar(Nums, Rd, Rder, marker='s',  ms=8, mew=4,label =Label[fpm])
+        plt.errorbar(Nums, Rd, Rder, marker=M[i], linestyle=line, ms=5, mew=5,capsize=3,label =f"{Label0[tav]}{Label1[fpm]}")
+        #plt.bar(Brs[i], Rd, width = barWidth, edgecolor ='grey', label =Label[fpm])
+        i=i+1
 plt.legend()
 plt.xlabel('Number of Drones')
 plt.ylabel('Total Missing Subtasks')
@@ -193,7 +204,6 @@ plt.grid( linestyle = '--', linewidth = 1)
 #plt.yscale('symlog')
 plt.savefig(f"./Results/FP_Num_miss_{Unit}_{wind}.eps", bbox_inches='tight')
 plt.show()
-
 
 
 
