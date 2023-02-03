@@ -83,9 +83,8 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-
 plt.savefig(f"./Results/TA_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 #plt.grid( linestyle = '--', linewidth = 1)
 plt.show()
@@ -105,15 +104,14 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
-
 plt.savefig(f"./Results/TA_miss_{Unit}_{wind}.eps", bbox_inches='tight')
 plt.show()
 #####################################################
 
 
-Label=[ 'UTA-DL_Dis', 'UTA-NN', 'UTA-RB','UTA-DL_NN','UTA-DL_RB','UTA-DFP','UTA-DFP']
+Label=[ 'UTA-DL_Dis', 'UTA-NN', 'UTA-RM','UTA-DNN','UTA-DRM','UTA-DFP','UTA-DFP']
 
 FPM=[5,1,2,3,4]
 barWidth = 0.15
@@ -136,7 +134,7 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Reward')
 #plt.yscale('symlog')
-#plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))], ['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 plt.savefig(f"./Results/FP_comp_{Unit}_{wind}.eps", bbox_inches='tight')
 plt.show()
@@ -157,7 +155,7 @@ plt.legend()
 plt.xlabel('Plan Duration (Minute)')
 plt.ylabel('Total Missing Subtasks')
 #plt.yscale('symlog')
-#plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
+plt.xticks([r + barWidth for r in range(len(STt))],['0-20', '20-40', '40-60', '60-80'])
 plt.grid( linestyle = '--', linewidth = 1)
 plt.savefig(f"./Results/FP_miss_{Unit}_{wind}.eps", bbox_inches='tight')
 plt.show()
