@@ -65,7 +65,7 @@ Colors=['b','g','y']
 
 #conf_co=1.645
 conf_co=1.960
-wind=25
+wind=10
 '''
 i=0
 for tav in TAKM:

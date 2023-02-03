@@ -1746,17 +1746,21 @@ if __name__ == "__main__":
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
-    wind=20
+    wind=15
     #CreateDyRxfire(Bardata,fir_name,dir, [2],wind=wind)
     #fir_name=f"FQ_Sim_{wind}"
-    seed=9
-    STtime=40
-    fir_name=f"FQ_Rand_U3_{wind}_{seed}"
-    foldername=f"FQ_Tmp_U3_{wind}_{STtime}_{seed}"
+    seed=0
+    STtime=60
+    fir_name=f"FQ_Rand_{wind}_{seed}"
+    foldername=f"FQ_Tmp_{wind}_{STtime}_{seed}"
     
     EFA,EFAdict,bound =GetFirSim(Bardata,  foldername, fir_name, dir, Bursite, Res=Res,time=STtime,wind=wind,sed=seed)                  
+    imshow_EFA(EFA)
+    plt.show()
     TM=TaskManager(Missions)
     #print(f"Start Task Generation")
+    imshow(EFA)
+    
     tasks=TM.DeclareGridEFA(EFA,init=0)
     DrawTask(tasks,EFA)
     ########################################
@@ -1779,7 +1783,7 @@ if __name__ == "__main__":
     if IFLOG:
         log=open(logfile, "w")
     init=0; Plantime=60*20
-    TANum=4;GWP=3;FPnum=3
+    TANum=4;GWP=3;FPnum=5
     AllComp(TANum,GWP,FPnum,Drones,init, Plantime,inloc,GCloc, Missions,DecomposeSize,EFA, Res,tasks,log=log,seed=seed)
     if IFLOG:
         log.close()

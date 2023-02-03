@@ -9,11 +9,11 @@ import math
 import re
 Winds=[10]
 STt=[1,20,40,60]
-Unit=2
+Unit=1
 STtime=60
 StReward=defaultdict(dict)
 StMiss=defaultdict(dict)
-
+mss=6
 for wind in [10]:#Winds:
     for ST in STt:
         STtime=ST
@@ -91,16 +91,16 @@ for tav in TAKM:
     for i in Times:
         for donm in Dones:
             #print(donm,CCRreward[(tav,1,5,seed,donm)].keys())
-            if CCRreward[(tav,2,5,seed,donm)].get(i)!=None:
+            if CCRreward[(tav,1,5,seed,donm)].get(i)!=None:
                 #print(donm,tav,CCRreward[(tav,1,5,seed,donm)][i][0])
-                Acrwd=Acrwd+CCRreward[(tav,2,5,seed,donm)][i][0]
+                Acrwd=Acrwd+CCRreward[(tav,1,5,seed,donm)][i][0]
                 #print(f"why {tav} {seed} {donm}")
             
         # if i in allt:
         #     Acrwd=Acrwd+Allv[i][0]
         TimRwd[i]=Acrwd
     #print(tav,TimRwd)
-    plt.plot(tt,list(TimRwd.values()),label=Label[tav-1],marker=M[c],markevery=50)
+    plt.plot(tt,list(TimRwd.values()),label=Label[tav-1],marker=M[c],ms=mss,markevery=50)
     c=c+1
 plt.legend()
 plt.xlabel('Time (Minute)')
@@ -109,7 +109,7 @@ plt.grid( linestyle = '--', linewidth = 1)
 plt.xlim(STtime,STtime+21)
 plt.xticks(np.arange(min(tt), max(tt)+1, 2))
 plt.savefig(f"./Results/TA_comp_Snt_{wind}_{STtime}.eps", bbox_inches='tight')
-#plt.show()
+plt.show()
 plt.clf()
 
 c=0
@@ -120,7 +120,7 @@ for tav in TAKM:
     for i in Times:
         for donm in Dones:
             #print(donm,CCRreward[(tav,1,5,seed,donm)].keys())
-            if CCRreward[(tav,2,5,seed,donm)].get(i)!=None:
+            if CCRreward[(tav,1,5,seed,donm)].get(i)!=None:
                 #print(donm,tav,CCRreward[(tav,1,5,seed,donm)][i][0])
                 Acrwd=Acrwd+CCRreward[(tav,1,5,seed,donm)][i][2]/10
                 #print(f"why {tav} {seed} {donm}")
@@ -128,7 +128,7 @@ for tav in TAKM:
         #     Acrwd=Acrwd+Allv[i][0]
         TimRwd[i]=Acrwd
     #print(tav,TimRwd)
-    plt.plot(tt,list(TimRwd.values()),label=Label[tav-1],marker=M[c],markevery=50)
+    plt.plot(tt,list(TimRwd.values()),label=Label[tav-1],marker=M[c],ms=mss,markevery=50)
     c=c+1
 plt.legend()
 plt.xlabel('Time (Minute)')
@@ -138,10 +138,10 @@ plt.xlim(STtime,STtime+21)
 plt.xticks(np.arange(min(tt), max(tt)+1, 2))
 plt.savefig(f"./Results/TA_miss_Snt_{wind}_{STtime}.eps", bbox_inches='tight')
 
-#plt.show()
+plt.show()
 plt.clf()
 #######################################################################
-Label=[ 'UTA-DL_Dis', 'UTA-NN', 'UTA-RB','UTA-DL_NN','UTA-DL_RB','UTA-DFP','UTA-DFP']
+Label=[ 'UTA-DL_Dis', 'UTA-NN', 'UTA-RM','UTA-DNN','UTA-DRM','UTA-DFP','UTA-DFP']
 FPM=[5,1,2,3,4]
 c=0
 for fpm in FPM:
@@ -151,7 +151,7 @@ for fpm in FPM:
     for i in Times:
         for donm in Dones:
             #print(donm,CCRreward[(tav,1,5,seed,donm)].keys())
-            if CCRreward[(2,2,fpm,seed,donm)].get(i)!=None:
+            if CCRreward[(2,1,fpm,seed,donm)].get(i)!=None:
                 #print(donm,tav,CCRreward[(tav,1,5,seed,donm)][i][0])
                 Acrwd=Acrwd+CCRreward[(2,1,fpm,seed,donm)][i][0]
                 #print(f"why {tav} {seed} {donm}")
@@ -159,7 +159,7 @@ for fpm in FPM:
         #     Acrwd=Acrwd+Allv[i][0]
         TimRwd[i]=Acrwd
     #print(tav,TimRwd)
-    plt.plot(tt,list(TimRwd.values()),label=Label[fpm],marker=M[c],markevery=50)
+    plt.plot(tt,list(TimRwd.values()),label=Label[fpm],marker=M[c],ms=mss,markevery=50)
     c=c+1
 plt.legend()
 plt.xlabel('Time (Minute)')
@@ -182,7 +182,7 @@ for fpm in FPM:
     for i in Times:
         for donm in Dones:
             #print(donm,CCRreward[(tav,1,5,seed,donm)].keys())
-            if CCRreward[(2,2,fpm,seed,donm)].get(i)!=None:
+            if CCRreward[(2,1,fpm,seed,donm)].get(i)!=None:
                 #print(donm,tav,CCRreward[(tav,1,5,seed,donm)][i][0])
                 Acrwd=Acrwd+CCRreward[(2,1,fpm,seed,donm)][i][2]/10
                 #print(f"why {tav} {seed} {donm}")
@@ -190,7 +190,7 @@ for fpm in FPM:
         #     Acrwd=Acrwd+Allv[i][0]
         TimRwd[i]=Acrwd
     #print(tav,TimRwd)
-    plt.plot(tt,list(TimRwd.values()),label=Label[fpm],marker=M[c],markevery=50)
+    plt.plot(tt,list(TimRwd.values()),label=Label[fpm],marker=M[c],ms=mss, markevery=50)
     c=c+1
 plt.legend()
 plt.xlabel('Time (Minute)')
