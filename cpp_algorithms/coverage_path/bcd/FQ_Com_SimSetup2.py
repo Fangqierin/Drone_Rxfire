@@ -22,7 +22,8 @@ if __name__ == "__main__":
     #Missions['FL']=[ 3, 2]  # FL is tracking the fire perimeter.
     #Missions['FD']=[ 2, 3]
     ################ Get tasks.
-    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
+    #dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
+    dir='../../../farsite'
     foldername='FQ_sim'
     #Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
     #Bursite=(702500.0,4309700.0,702900.0,4310200.0 )
@@ -33,10 +34,11 @@ if __name__ == "__main__":
     file='CARB_BurnUnits/CARB_BurnUnits.shp'
     data=gpd.read_file(f"{dir}/{file}")
     Bardata=ClearBarrier(data)
-    wind=15; time=60; seed=1
+    wind=15; time=60; seed=2
     for wind in  [15]:
-        for time in [60]:# [1,20, 40,60]:
+        for time in [1]:# [1,20, 40,60]:
             for seed in [1]:#range(10):
+                seed=2
                 ############################### For random seed
                 #We have 8 time slots each of 20 minutes 
                 slots=['0000','0020','0040','0100','0120','0140','0200','0220']

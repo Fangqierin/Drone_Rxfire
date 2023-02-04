@@ -22,7 +22,7 @@ if __name__ == "__main__":
     #Missions['FL']=[ 3, 2]  # FL is tracking the fire perimeter.
     #Missions['FD']=[ 2, 3]
     ################ Get tasks.
-    dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
+    #dir='/home/fangqiliu/eclipse-workspace_Python/Drone_path/CoveragePathPlanning-master/farsite'
     dir='../../../farsite'
     foldername='FQ_sim'
     #Bursite=(702460.0,4309700.0,703540.0,4310820.0 )
