@@ -56,7 +56,6 @@ def ClearBarrier(data):
     newdata.loc[2, 'geometry'] = u.boundary
     #da2=gpd.read_file(f"{dir}/{foldername}/input/seelin.shp")
     #newdata.plot(color='green')
-
     #plt.show() 
     return newdata
     
@@ -268,6 +267,7 @@ def DyFarsitefile(foldername, dir,time,simdur,step=1,wind=5,direction=270, seed=
         out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt  >/dev/null 2>&1")
         #out=os.system(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt")
         #print(f"see out", out.read())
+        print(f"{dir}/src/TestFARSITE {dir}/{foldername}/{foldername}_TEST.txt")
         print(f"Generate the fire simulation successfully! Simulation from {time} duration  {simdur} ")
     except:
         print(f"Got error when simulating the fire spread")
@@ -275,7 +275,7 @@ def DyFarsitefile(foldername, dir,time,simdur,step=1,wind=5,direction=270, seed=
 
     #################################################################
 
-def CreateRandomRxfire(data, foldername,dir,UID,wind=5,direction=270,sed=0,Inputdict=[]): # the location of the fireline, the length of the fireline and the number of the fires. 
+def CreateRandomRxfire(data, foldername,dir,UID,wind=5,direction=270,sed=0,Inputdict=[],Offset=80): # the location of the fireline, the length of the fireline and the number of the fires. 
     random.seed(sed)
     # Create 8 wind +-3 and direction +-20
     os.system(f"mkdir {dir}/{foldername}")
@@ -287,7 +287,7 @@ def CreateRandomRxfire(data, foldername,dir,UID,wind=5,direction=270,sed=0,Input
         os.system(f"mkdir {dir}/{foldername}/output")
     data.to_file(f"{dir}/{foldername}/input/seelin.shp")
     gap=20
-    offset=50
+    offset=Offset
     width=3
     SimTime=60
     if len(UID)==1:
