@@ -10,7 +10,7 @@ import re
 Winds=[5,10,15]
 STt=[1,20,40,60]
 Unit=3
-for Unit in [1,2,3]:
+for Unit in [1,2]:
     STtime=60
     StReward=defaultdict(dict)
     StMiss=defaultdict(dict)
