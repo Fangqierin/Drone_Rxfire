@@ -11,7 +11,7 @@ import re
 STt=[1,20,40,60]
 for Unit in [1,2]:
     if Unit==1:
-        Winds=[5,10,15,20,25]
+        Winds=[5,10,15]#,20,25]
     else:
         Winds=[5,10,15]
     # if Unit==3:
@@ -152,7 +152,7 @@ for Unit in [1,2]:
     fig,ax = plt.subplots(figsize =(6, 5))
     plt.rcParams.update({'font.size': 9})
     
-    if Unit==1:
+    if Unit==10:
         tick_labels_1 = ['5']* len(STt)
         tick_labels_2 = ['10'] * len(STt)
         tick_labels_3 = ['15\n0-20 min','15\n20-40 min', '15\n40-60 min','15\n60-80 min']
